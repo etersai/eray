@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #TODO: automation for branches.
+# git remote set-url origin git@github.com:etersai/repo_name.git (set from url to ssh)
 
 current_branch=$(git branch --show-current)
 
