@@ -156,7 +156,7 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
 // CANVAS_HEIGHT 360
 int main(void)
 {
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "eray-trace");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "eray");
     SetTargetFPS(60);
     srand(time(NULL)); 
 
