@@ -118,21 +118,28 @@ void eray_put_pixel_relative_to_origin(eCanvas* canvas, ivec2 pos, uint32_t colo
     eray_put_pixel(canvas, converted, color); 
 }
 
-void eray_convert_canvas_to_rayimage(const eCanvas* canvas, Image* ray_image)
+// void eray_convert_canvas_to_rayimage(const eCanvas* canvas, Image* ray_image)
+// {
+//     ray_image->width   = canvas->width;
+//     ray_image->height  = canvas->height;
+//     ray_image->data    = canvas->data; 
+//     ray_image->mipmaps = 1;
+//     ray_image->format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+// }
+
+Texture2D eray_create_texture_from_canvas(const eCanvas* canvas)
 {
-    ray_image->width   = canvas->width;
-    ray_image->height  = canvas->height;
-    ray_image->data    = canvas->data; 
-    ray_image->mipmaps = 1;
-    ray_image->format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+    Image img = {0};
+
+    img.width   = canvas->width;
+    img.height  = canvas->height;
+    img.data    = canvas->data; 
+    img.mipmaps = 1;
+    img.format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+
+    return LoadTextureFromImage(img);
 }
 
-Texture2D eray_canvas_texturize(const eCanvas* canvas)
-{
-    Image temp = {0};
-    eray_convert_canvas_to_rayimage(canvas, &temp);
-    return LoadTextureFromImage(temp);
-}
 
 int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
 {
@@ -159,38 +166,40 @@ int main(void)
     canvas.origin.y = CANVAS_HEIGHT / 2; // [180] 
     canvas_fill(&canvas, 0xff000000);
          
-    //Camera
     eCamera camera = {0}; 
     camera_set_pos(&camera, (fvec3){0.0f, 0.0f, 0.0f});   
     camera_set_aspect_ratio(&camera, (float)canvas.width/(float)canvas.height);
     
     camera_calulcate_pixel_ndc(&camera, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
     debug_log_msg_format("%f", camera.aspect_ratio);
     
     Sphere2D sphere = {((ivec2){0, 0}), 50};
-           
-    ivec2 pos = IVEC2(0, 0);
-    for (pos.y=0; pos.y<canvas.height; pos.y++) {
-        for (pos.x=0; pos.x<canvas.width; pos.x++) {
-            ivec2 relative = eray_canvas_top_left_origin_to_center(&canvas, pos); 
-            if (eray_is_point_on_2d_sphere(relative, sphere)) {
-                eray_put_pixel(&canvas, pos, get_random_bits_uint32_t());
-            }
-            else 
-            {
-                eray_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
-            }
-        }
-    }
 
-    Texture2D tex_canvas = eray_canvas_texturize(&canvas);
-    
+    Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
+
     while (!WindowShouldClose())
     {
+
+        ivec2 pos = IVEC2(0, 0);
+        for (pos.y=0; pos.y<canvas.height; pos.y++) {
+            for (pos.x=0; pos.x<canvas.width; pos.x++) {
+                ivec2 relative = eray_canvas_top_left_origin_to_center(&canvas, pos); 
+                if (eray_is_point_on_2d_sphere(relative, sphere)) {
+                    eray_put_pixel(&canvas, pos, get_random_bits_uint32_t());
+                }
+                else 
+                {
+                    eray_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
+                }
+            }
+        }
+        UpdateTexture(tex_canvas, canvas.data);
+
+        sphere.pos.y -= 0.1f;
+
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 1.0f, WHITE);
+            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
             DrawFPS(0, 0); 
         EndDrawing();
     }
