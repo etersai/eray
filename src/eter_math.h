@@ -73,6 +73,7 @@ typedef struct {
 
 typedef int ivec2[2];                         
 typedef float fvec2[2];
+typedef float fvec3[3];
 
 #define IVEC2_ADD(v1, v2, result) do { \
     (result)[0] = (v1)[0] + (v2)[0];   \
@@ -132,6 +133,43 @@ typedef float fvec2[2];
 #define FVEC2_PRINT(v) do { \
     printf("[FVEC2: %f, %f]\n", (v)[0], (v)[1]); \
 } while (0)
+
+
+#define FVEC3_ADD(v1, v2, result) do { \
+    (result)[0] = (v1)[0] + (v2)[0];   \
+    (result)[1] = (v1)[1] + (v2)[1];   \
+    (result)[2] = (v1)[2] + (v2)[2];   \
+} while (0)
+
+#define FVEC3_SUB(v1, v2, result) do { \
+    (result)[0] = (v1)[0] - (v2)[0];   \
+    (result)[1] = (v1)[1] - (v2)[1];   \
+    (result)[2] = (v1)[2] - (v2)[2];   \
+} while (0)
+
+#define FVEC3_MUL(v1, v2, result) do { \
+    (result)[0] = (v1)[0] * (v2)[0];   \
+    (result)[1] = (v1)[1] * (v2)[1];   \
+    (result)[2] = (v1)[2] * (v2)[2];   \
+} while (0)
+
+#define FVEC3_DIV(v1, v2, result) do { \
+    (result)[0] = (v1)[0] / (v2)[0];   \
+    (result)[1] = (v1)[1] / (v2)[1];   \
+    (result)[2] = (v1)[2] / (v2)[2];   \
+} while (0)
+
+#define FVEC3_SCALE(v, s, result) do { \
+    (result)[0] = ((v)[0] * (s)); \
+    (result)[1] = ((v)[1] * (s)); \
+    (result)[2] = ((v)[2] * (s)); \
+} while (0)
+
+#define FVEC3_PRINT(v) do { \
+    printf("[FVEC3: %f, %f, %f]\n", (v)[0], (v)[1], (v)[2]); \
+} while (0)
+
+
 
 #else
     #error "Define either ETER_VEC_STRUCT or ETER_VEC_ARRAY!"

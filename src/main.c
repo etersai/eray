@@ -3,10 +3,8 @@
 
 #define ETER_VEC_STRUCT
 #include "eter_math.h"
-#define ETER_DEBUG_LOG_TOGGLE_NEW_LINE
+#define ETER_DEBUG_LOG_ADD_NEW_LINE
 #include "eter_debug.h"
-#define HEHE_GIVE_BITS
-#include "../hehe.h"
 
 #include "eray_camera.h"
 
@@ -162,7 +160,7 @@ int main(void)
     camera_set_aspect_ratio(&camera, (float)canvas.width/(float)canvas.height);
     
     camera_calulcate_pixel_ndc(&camera, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    debug_log_msg_format("%f", camera.aspect_ratio);
+    debug_log_format("%f", camera.aspect_ratio);
     
     Sphere2D sphere = {((fvec2){0.0f, 0.0f}), 50};
 
@@ -172,11 +170,8 @@ int main(void)
     {
         static int growth_rate = 1;
         sphere.r += growth_rate;
-        if (sphere.r >= 100) {
-            growth_rate = -1;
-        }
-        else if (sphere.r <= 1) {
-            growth_rate = 1;
+        if (sphere.r >= 100 || sphere.r <= 1) {
+            growth_rate *= -1;
         }
 
         ivec2 pos = IVEC2(0, 0);

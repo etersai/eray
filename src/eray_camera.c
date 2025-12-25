@@ -1,11 +1,9 @@
 #include "eray_camera.h"
-
-#include <assert.h>
-#include <stdio.h>
+#include "eter_debug.h"
 
 void camera_set_pos(eCamera* camera, fvec3 pos)
 {
-    assert(camera && "[TODO]"); 
+    debug_assert(camera, "WELCOMING!");
     camera->position.x = pos.x;
     camera->position.y = pos.y;
     camera->position.z = pos.z;
@@ -34,7 +32,7 @@ void camera_calulcate_pixel_ndc(eCamera* camera, int rasterX, int rasterY, int r
 
     // [TODO] add more vectors to my lib. 
     
-    printf("[%f, %f]\n", pixel_screen_space_x, pixel_screen_space_y);
+    debug_log_format("[%f, %f]\n", pixel_screen_space_x, pixel_screen_space_y);
 }
 
 
