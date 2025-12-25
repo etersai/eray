@@ -48,7 +48,7 @@ typedef struct {
 } eCanvas;
 
 typedef struct {
-    ivec2 pos;
+    fvec2 pos;
     int r;
 } Sphere2D;
 
@@ -145,8 +145,8 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
 {
     // (x-a)^2 + (y-b)^2 = r^2
     // inside = (dx*dx + dy*dy) <= r*r;
-    int dx = point.x - sphere.pos.x;
-    int dy = point.y - sphere.pos.y;
+    int dx = point.x - (int)sphere.pos.x;
+    int dy = point.y - (int)sphere.pos.y;
     return ETER_SQUARE(dx) + ETER_SQUARE(dy) <= ETER_SQUARE(sphere.r);
 }
 
@@ -173,13 +173,12 @@ int main(void)
     camera_calulcate_pixel_ndc(&camera, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     debug_log_msg_format("%f", camera.aspect_ratio);
     
-    Sphere2D sphere = {((ivec2){0, 0}), 50};
+    Sphere2D sphere = {((fvec2){0.0f, 0.0f}), 50};
 
     Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
 
     while (!WindowShouldClose())
     {
-
         ivec2 pos = IVEC2(0, 0);
         for (pos.y=0; pos.y<canvas.height; pos.y++) {
             for (pos.x=0; pos.x<canvas.width; pos.x++) {
@@ -194,8 +193,6 @@ int main(void)
             }
         }
         UpdateTexture(tex_canvas, canvas.data);
-
-        sphere.pos.y -= 0.1f;
 
         BeginDrawing();
             ClearBackground(WHITE);
