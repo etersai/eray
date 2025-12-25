@@ -118,15 +118,6 @@ void eray_put_pixel_relative_to_origin(eCanvas* canvas, ivec2 pos, uint32_t colo
     eray_put_pixel(canvas, converted, color); 
 }
 
-// void eray_convert_canvas_to_rayimage(const eCanvas* canvas, Image* ray_image)
-// {
-//     ray_image->width   = canvas->width;
-//     ray_image->height  = canvas->height;
-//     ray_image->data    = canvas->data; 
-//     ray_image->mipmaps = 1;
-//     ray_image->format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-// }
-
 Texture2D eray_create_texture_from_canvas(const eCanvas* canvas)
 {
     Image img = {0};
@@ -193,11 +184,11 @@ int main(void)
             for (pos.x=0; pos.x<canvas.width; pos.x++) {
                 ivec2 relative = eray_canvas_top_left_origin_to_center(&canvas, pos); 
                 if (eray_is_point_on_2d_sphere(relative, sphere)) {
-                    eray_put_pixel(&canvas, pos, get_random_bits_uint32_t());
+                    eray_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
                 }
                 else 
                 {
-                    eray_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
+                    eray_put_pixel(&canvas, pos, get_random_bits_uint32_t());
                 }
             }
         }
@@ -205,7 +196,7 @@ int main(void)
 
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
+            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 1.0f, WHITE);
             DrawFPS(0, 0); 
         EndDrawing();
     }
