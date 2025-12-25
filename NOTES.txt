@@ -1,0 +1,8 @@
+// STUDY //
+// Portable color constructor
+#define RGBA(r, g, b, a) \
+    ((uint32_t)(r) | ((uint32_t)(g) << 8) | \
+     ((uint32_t)(b) << 16) | ((uint32_t)(a) << 24))
+
+#define ERAY_COLOR_RED    RGBA(255, 0, 0, 255)
+#define ERAY_COLOR_ORANGE RGBA(60, 107, 250, 255)
