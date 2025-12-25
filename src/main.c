@@ -179,6 +179,15 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+        static int growth_rate = 1;
+        sphere.r += growth_rate;
+        if (sphere.r >= 100) {
+            growth_rate = -1;
+        }
+        else if (sphere.r <= 1) {
+            growth_rate = 1;
+        }
+
         ivec2 pos = IVEC2(0, 0);
         for (pos.y=0; pos.y<canvas.height; pos.y++) {
             for (pos.x=0; pos.x<canvas.width; pos.x++) {
@@ -200,7 +209,6 @@ int main(void)
             DrawFPS(0, 0); 
         EndDrawing();
     }
-
 
     UnloadTexture(tex_canvas);
 
