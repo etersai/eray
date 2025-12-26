@@ -255,7 +255,7 @@ int main(void)
 
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 1.0f, WHITE);
+            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
             DrawFPS(0, 0); 
         EndDrawing();
     }
