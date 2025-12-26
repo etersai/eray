@@ -185,7 +185,7 @@ int main(void)
 
     // translate the cube. 
     for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
-        cube[i].z += -5.0f;
+        cube[i].z += -3.0f;
     } 
 
     for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
@@ -226,10 +226,6 @@ int main(void)
         FVEC2_PRINT(spheres[i].pos);
     }
                                             
-    // Sphere2D sphere = {((fvec2){0.0f, 0.0f}), 50};
-    
-
-    
     Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
 
     while (!WindowShouldClose())
@@ -260,11 +256,8 @@ int main(void)
         for (int i = 0; i < 8; i++) {
             spheres[i].r += growth_rate;
         }
-
-        for (int i = 0; i < 8; i++) {
-            if (spheres[i].r >= 20 || spheres[i].r <= 1) {
-                growth_rate *= -1;
-            }
+        if (spheres[0].r > 10 || spheres[0].r <= 1) {
+            growth_rate *= -1;
         }
 
         ivec2 pos = IVEC2(0, 0);
@@ -275,7 +268,7 @@ int main(void)
                     int dy = pos.y - (int)spheres[i].pos.y;
                     int dist2 = dx*dx + dy*dy;
                     if (dist2 <= spheres[i].r*spheres[i].r) {
-                        canvas_put_pixel(&canvas, pos, ERAY_COLOR_WHITE);
+                        canvas_put_pixel(&canvas, pos, get_random_bits_uint32_t());
                         break;
                     }
                     else
