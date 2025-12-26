@@ -84,6 +84,24 @@ void canvas_fill(eCanvas* canvas, uint32_t color)
     }
 }
 
+void canvas_put_pixel(eCanvas* canvas, ivec2 pos, uint32_t color) 
+{
+#if 0
+    assert(posX >= 0 && posX < canvas->width && 
+           posY >= 0 && posY < canvas->height);
+#endif
+    if (pos.x < 0 || pos.x >= canvas->width || pos.y < 0 || pos.y >= canvas->height) {
+        fprintf(stderr, "[ERAY][CANVAS OUT OF BOUNDS] pos(%d,%d) exceeds image(%d,%d)\n", 
+            pos.x, pos.y, canvas->width, canvas->height);
+        fflush(stdout);
+        return;
+    } 
+    int pixel_index = (pos.y * canvas->width) + pos.x;
+    canvas->data[pixel_index] = color; 
+}
+
+
+
 void canvas_destroy(eCanvas* canvas)
 {
     if (canvas && canvas->data) {
@@ -151,6 +169,10 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
     return ETER_SQUARE(dx) + ETER_SQUARE(dy) <= ETER_SQUARE(sphere.r);
 }
 
+
+
+
+
 #define WINDOW_WIDTH 1280 
 #define WINDOW_HEIGHT 720
 // CANVAS_WIDTH  640
@@ -179,23 +201,40 @@ int main(void)
     eCamera camera = {0}; 
     camera_set_pos(&camera, (fvec3){0.0f, 0.0f, 0.0f});   
     camera_set_focal_length(&camera, 1.0f); // 1 unit distane to image plane.
-                                            
-    Sphere2D sphere = {((fvec2){0.0f, 0.0f}), 50};
+    
+
+    Sphere2D spheres[8] = {0};
 
     float aspect_ratio = CANVAS_WIDTH / (float)CANVAS_HEIGHT; // 16:9
     debug_log_float(aspect_ratio); 
-    
-    
-
-
-    Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
-
     for (size_t vertex = 0; vertex < ETER_ARRAY_SIZE(cube); vertex++) {
-          
+        float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
+        float y_proj = cube[vertex].y / -cube[vertex].z;
+        float x_proj_remap = (x_proj + 1) / 2;
+        float y_proj_remap = (y_proj + 1) / 2;
+        int x_proj_pix = (int)(x_proj_remap * CANVAS_WIDTH);
+        int y_proj_pix = (int)(y_proj_remap * CANVAS_HEIGHT);
+
+        spheres[vertex].pos.x = x_proj_pix;
+        spheres[vertex].pos.y = y_proj_pix;
+        spheres[vertex].r = 5;
+
+        printf("Projected vertex %zu: x:%d, y:%d\n", vertex, x_proj_pix, y_proj_pix);
     }
+    
+    for (int i = 0; i < ETER_ARRAY_SIZE(spheres); i++) {
+        FVEC2_PRINT(spheres[i].pos);
+    }
+                                            
+    // Sphere2D sphere = {((fvec2){0.0f, 0.0f}), 50};
+    
+
+    
+    Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
 
     while (!WindowShouldClose())
     {
+#if 0
         static int growth_rate = 1;
         sphere.r += growth_rate;
         if (sphere.r >= 100 || sphere.r <= 1) {
@@ -215,6 +254,38 @@ int main(void)
                 }
             }
         }
+#endif
+
+        static int growth_rate = 1;
+        for (int i = 0; i < 8; i++) {
+            spheres[i].r += growth_rate;
+        }
+
+        for (int i = 0; i < 8; i++) {
+            if (spheres[i].r >= 20 || spheres[i].r <= 1) {
+                growth_rate *= -1;
+            }
+        }
+
+        ivec2 pos = IVEC2(0, 0);
+        for (pos.y=0; pos.y<canvas.height; pos.y++) {
+            for (pos.x=0; pos.x<canvas.width; pos.x++) {
+                for (int i = 0; i < 8; i++) {
+                    int dx = pos.x - (int)spheres[i].pos.x;
+                    int dy = pos.y - (int)spheres[i].pos.y;
+                    int dist2 = dx*dx + dy*dy;
+                    if (dist2 <= spheres[i].r*spheres[i].r) {
+                        canvas_put_pixel(&canvas, pos, ERAY_COLOR_WHITE);
+                        break;
+                    }
+                    else
+                    {
+                        canvas_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
+                    }
+                } 
+            }
+        }
+
         UpdateTexture(tex_canvas, canvas.data);
 
         BeginDrawing();
