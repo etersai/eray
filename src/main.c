@@ -100,8 +100,6 @@ void canvas_put_pixel(eCanvas* canvas, ivec2 pos, uint32_t color)
     canvas->data[pixel_index] = color; 
 }
 
-
-
 void canvas_destroy(eCanvas* canvas)
 {
     if (canvas && canvas->data) {
@@ -109,21 +107,6 @@ void canvas_destroy(eCanvas* canvas)
     }
 }
 
-void eray_put_pixel(eCanvas* canvas, ivec2 pos, uint32_t color) 
-{
-#if 0
-    assert(posX >= 0 && posX < canvas->width && 
-           posY >= 0 && posY < canvas->height);
-#endif
-    if (pos.x < 0 || pos.x >= canvas->width || pos.y < 0 || pos.y >= canvas->height) {
-        fprintf(stderr, "[ERAY][OUT OF BOUNDS] pos(%d,%d) exceeds image(%d,%d)\n", 
-            pos.x, pos.y, canvas->width, canvas->height);
-        fflush(stdout);
-        return;
-    } 
-    int pixel_index = (pos.y * canvas->width) + pos.x;
-    canvas->data[pixel_index] = color; 
-}
 
 
 ivec2 eray_canvas_convert_2d_coordinate_system(const eCanvas* canvas, ivec2 pos)
@@ -136,14 +119,6 @@ ivec2 eray_canvas_top_left_origin_to_center(const eCanvas* canvas, ivec2 pos)
 {                            
     ivec2 result = IVEC2_SUB(pos, canvas->origin); // Vec from canvas origin to whatever point at tl origin. 
     return ((ivec2){result.x, -result.y});         // Flip y to achive mathematical Y+ points up!
-}
-
-void eray_put_pixel_relative_to_origin(eCanvas* canvas, ivec2 pos, uint32_t color)
-{
-    //ivec2 result = IVEC2_SUB(canvas->origin, ((ivec2){0, 0}));
-    //ivec2 final  = IVEC2_ADD(result, pos);
-    ivec2 converted = eray_canvas_convert_2d_coordinate_system(canvas, pos);
-    eray_put_pixel(canvas, converted, color); 
 }
 
 Texture2D eray_create_texture_from_canvas(const eCanvas* canvas)
@@ -168,10 +143,6 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
     int dy = point.y - (int)sphere.pos.y;
     return ETER_SQUARE(dx) + ETER_SQUARE(dy) <= ETER_SQUARE(sphere.r);
 }
-
-
-
-
 
 #define WINDOW_WIDTH 1280 
 #define WINDOW_HEIGHT 720
@@ -207,6 +178,7 @@ int main(void)
 
     float aspect_ratio = CANVAS_WIDTH / (float)CANVAS_HEIGHT; // 16:9
     debug_log_float(aspect_ratio); 
+
     for (size_t vertex = 0; vertex < ETER_ARRAY_SIZE(cube); vertex++) {
         float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
         float y_proj = cube[vertex].y / -cube[vertex].z;
@@ -283,7 +255,7 @@ int main(void)
 
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
+            DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 1.0f, WHITE);
             DrawFPS(0, 0); 
         EndDrawing();
     }
