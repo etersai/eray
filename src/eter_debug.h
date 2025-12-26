@@ -25,6 +25,9 @@
 #define DEBUG_LOG_HEADER_PLUS "[DEBUG][" __FILE__ ":" TOSTRING(__LINE__) "] "
 
 // LOGS
+#define debug_log_float(f) do { fprintf(DEBUG_LOG_OUT, DEBUG_LOG_HEADER); fprintf(DEBUG_LOG_OUT, "[%f]\n", (f)); } while (0)
+#define debug_log_int(i) do { fprintf(DEBUG_LOG_OUT, DEBUG_LOG_HEADER); fprintf(DEBUG_LOG_OUT, "[%d]\n", (i)); } while (0)
+
 #define debug_log_token(var) do { fprintf(DEBUG_LOG_OUT, DEBUG_LOG_HEADER STRINGIFY(var) DEBUG_LOG_NEW_LINE); } while (0)
 #define debug_log_simple(msg) do { fprintf(DEBUG_LOG_OUT, DEBUG_LOG_HEADER msg DEBUG_LOG_NEW_LINE); } while (0)
 #define debug_log_simple_file_n_line(msg) do { fprintf(DEBUG_LOG_OUT, DEBUG_LOG_HEADER_PLUS msg DEBUG_LOG_NEW_LINE); } while (0)

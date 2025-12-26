@@ -5,6 +5,7 @@
 #include "eter_math.h"
 #define ETER_DEBUG_LOG_ADD_NEW_LINE
 #include "eter_debug.h"
+#include "eter_utils.h"
 
 #include "eray_camera.h"
 
@@ -49,6 +50,17 @@ typedef struct {
     fvec2 pos;
     int r;
 } Sphere2D;
+
+fvec3 cube[8] = {
+    {.x = 1.0f, .y = 1.0f, .z = 1.0f},
+    {.x = -1.0f, .y = 1.0f, .z = 1.0f},
+    {.x = -1.0f, .y = -1.0f, .z = 1.0f},
+    {.x = 1.0f, .y = -1.0f, .z = 1.0f},
+    {.x = 1.0f, .y = 1.0f, .z = -1.0f},
+    {.x = -1.0f, .y = 1.0f, .z = -1.0f},
+    {.x = -1.0f, .y = -1.0f, .z = -1.0f},
+    {.x = 1.0f, .y = -1.0f, .z = -1.0f},
+};
 
 int canvas_initialize(eCanvas* canvas, int width, int height)
 {
@@ -149,6 +161,15 @@ int main(void)
     SetTargetFPS(60);
     srand(time(NULL)); 
 
+    // translate the cube. 
+    for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
+        cube[i].z += -5.0f;
+    } 
+
+    for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
+        FVEC3_PRINT(cube[i]);
+    } 
+
     eCanvas canvas = {0};  
     canvas_initialize(&canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
     canvas.origin.x = CANVAS_WIDTH / 2;  // [320]
@@ -157,14 +178,21 @@ int main(void)
          
     eCamera camera = {0}; 
     camera_set_pos(&camera, (fvec3){0.0f, 0.0f, 0.0f});   
-    camera_set_aspect_ratio(&camera, (float)canvas.width/(float)canvas.height);
-    
-    camera_calulcate_pixel_ndc(&camera, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    debug_log_format("%f", camera.aspect_ratio);
-    
+    camera_set_focal_length(&camera, 1.0f); // 1 unit distane to image plane.
+                                            
     Sphere2D sphere = {((fvec2){0.0f, 0.0f}), 50};
 
+    float aspect_ratio = CANVAS_WIDTH / (float)CANVAS_HEIGHT; // 16:9
+    debug_log_float(aspect_ratio); 
+    
+    
+
+
     Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
+
+    for (size_t vertex = 0; vertex < ETER_ARRAY_SIZE(cube); vertex++) {
+          
+    }
 
     while (!WindowShouldClose())
     {
