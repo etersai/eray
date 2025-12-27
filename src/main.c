@@ -1,11 +1,10 @@
 #include "../include/raylib.h"
-#include <sys/types.h>
+
+#include "eray_camera.h"
 
 #include "eter_math.h"
 #define ETER_DEBUG_LOG_ADD_NEW_LINE // TODO rewrite eter_debug.h
 #include "eter_debug.h"
-
-#include "eray_camera.h"
 
 #include <stdlib.h>
 #include <stdint.h>
