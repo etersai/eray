@@ -230,6 +230,27 @@ int main(void)
             growth_rate *= -1;
         }
 
+    // FLYING CUBE
+    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
+        cube[i].z += -.1f;
+    } 
+
+    for (size_t vertex = 0; vertex < ETER_ARRLEN(cube); vertex++) {
+        float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
+        float y_proj = cube[vertex].y / -cube[vertex].z;
+        float x_proj_remap = (x_proj + 1) / 2;
+        float y_proj_remap = (y_proj + 1) / 2;
+        int x_proj_pix = (int)(x_proj_remap * CANVAS_WIDTH);
+        int y_proj_pix = (int)(y_proj_remap * CANVAS_HEIGHT);
+
+        spheres[vertex].pos.x = x_proj_pix;
+        spheres[vertex].pos.y = y_proj_pix;
+        spheres[vertex].r = 5;
+
+        printf("Projected vertex %zu: x:%d, y:%d\n", vertex, x_proj_pix, y_proj_pix);
+    }
+ 
+
         ivec2 pos = IVEC2(0, 0);
         for (pos.y=0; pos.y<canvas.height; pos.y++) {
             for (pos.x=0; pos.x<canvas.width; pos.x++) {
