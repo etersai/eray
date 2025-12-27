@@ -2,7 +2,8 @@
 #ifndef ETER_MATH_H_
 #define ETER_MATH_H_
 
-#include <math.h>
+#include <math.h> // sqrt
+#include <stdio.h> // debug prints.
 
 // TODO
 // -Add array based vectors.
