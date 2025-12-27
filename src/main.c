@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <inttypes.h>
 
+#define IVEC2_LEN(v) sqrt((v).x * (v).x + (v).y * (v).y) 
+
 // NOTE: Color format assumes little-endian architecture (x86, ARM) (see NOTES.txt for more info)
 #define ERAY_COLOR_RED       0xff0000ff 
 #define ERAY_COLOR_GREEN     0xff00ff00 
@@ -162,6 +164,9 @@ int main(void)
     for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
         FVEC3_PRINT(cube[i]);
     } 
+
+    ivec2 x = IVEC2(0, 1);
+    printf("%f", IVEC2_LEN(x));
 
     eCanvas canvas = {0};  
     canvas_initialize(&canvas, CANVAS_WIDTH, CANVAS_HEIGHT);

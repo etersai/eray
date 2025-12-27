@@ -5,6 +5,8 @@
 #ifndef ETER_MATH_H_
 #define ETER_MATH_H_
 
+#include <math.h>
+
 // Basic operations.
 #define ETER_SQUARE(x) ((x)*(x))
 
