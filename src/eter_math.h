@@ -1,24 +1,28 @@
-/* Public Domain.
-** #define ETER_VEC_STRUCT or ETER_VEC_ARRAY  
-**  before including this header. 
-*/
+// Public Domain
 #ifndef ETER_MATH_H_
 #define ETER_MATH_H_
 
-#include <math.h>
-
-// Basic operations.
+/***************************/
+/* Basic macros/operations */
+/***************************/
+#define ETER_MAX(a,b) ((a)>(b)?(a):(b))
+#define ETER_ARRLEN(arr) (sizeof((arr)) / sizeof((arr)[0]))
 #define ETER_SQUARE(x) ((x)*(x))
 
 /************************/
 /* Struct Based Vectors */
 /************************/
-#if (defined(ETER_VEC_STRUCT) && !defined(ETER_VEC_ARRAY))
-
+/* Types */
 typedef struct {
     int x;
     int y;
 } ivec2;
+
+typedef struct {
+    int x;
+    int y;
+    int z;
+} ivec3;
 
 typedef struct {
     float x;
@@ -31,150 +35,52 @@ typedef struct {
     float z;
 } fvec3;
 
-
+/* Constructors */
 #define IVEC2(x,y) ((ivec2){(x),(y)})
-#define IVEC2_ADD(v1,v2) ((ivec2){((v1).x+(v2).x), ((v1).y+(v2).y)})
-#define IVEC2_SUB(v1,v2) ((ivec2){((v1).x-(v2).x), ((v1).y-(v2).y)})
-#define IVEC2_MUL(v1,v2) ((ivec2){((v1).x*(v2).x), ((v1).y*(v2).y)})
-#define IVEC2_DIV(v1,v2) ((ivec2){((v1).x/(v2).x), ((v1).y/(v2).y)})
-#define IVEC2_SCALE(v, s) ((ivec2){(v).x*(s), (v).y*(s)})
+#define IVEC3(x,y,z) ((ivec3){(x),(y),(z)})
+#define FVEC2(x,y) ((fvec2){(x),(y)})
+#define FVEC3(x,y,z) ((fvec3){(x),(y),(z)}) 
 
+/* Operations */
+static inline ivec2 ivec2_add(ivec2 v1, ivec2 v2) { return (ivec2){v1.x + v2.x, v1.y + v2.y}; }
+static inline ivec2 ivec2_sub(ivec2 v1, ivec2 v2) { return (ivec2){v1.x - v2.x, v1.y - v2.y}; }
+static inline ivec2 ivec2_mul(ivec2 v1, ivec2 v2) { return (ivec2){v1.x * v2.x, v1.y * v2.y}; }
+static inline ivec2 ivec2_div(ivec2 v1, ivec2 v2) { return (ivec2){v1.x / v2.x, v1.y / v2.y}; }
+static inline ivec2 ivec2_scale(ivec2 v, int s) { return (ivec2){v.x * s, v.y * s}; }
+
+static inline ivec3 ivec3_add(ivec3 v1, ivec3 v2) { return (ivec3){v1.x + v2.x, v1.y + v2.y, v1.z + v2.z}; }
+static inline ivec3 ivec3_sub(ivec3 v1, ivec3 v2) { return (ivec3){v1.x - v2.x, v1.y - v2.y, v1.z - v2.z}; }
+static inline ivec3 ivec3_mul(ivec3 v1, ivec3 v2) { return (ivec3){v1.x * v2.x, v1.y * v2.y, v1.z * v2.z}; }
+static inline ivec3 ivec3_div(ivec3 v1, ivec3 v2) { return (ivec3){v1.x / v2.x, v1.y / v2.y, v1.z / v2.z}; }
+static inline ivec3 ivec3_scale(ivec3 v, int s) { return (ivec3){v.x * s, v.y * s, v.z * s}; }
+
+static inline fvec2 fvec2_add(fvec2 v1, fvec2 v2) { return (fvec2){v1.x + v2.x, v1.y + v2.y}; }
+static inline fvec2 fvec2_sub(fvec2 v1, fvec2 v2) { return (fvec2){v1.x - v2.x, v1.y - v2.y}; }
+static inline fvec2 fvec2_mul(fvec2 v1, fvec2 v2) { return (fvec2){v1.x * v2.x, v1.y * v2.y}; }
+static inline fvec2 fvec2_div(fvec2 v1, fvec2 v2) { return (fvec2){v1.x / v2.x, v1.y / v2.y}; }
+static inline fvec2 fvec2_scale(fvec2 v, float s) { return (fvec2){v.x * s, v.y * s}; }
+
+static inline fvec3 fvec3_add(fvec3 v1, fvec3 v2) { return (fvec3){v1.x + v2.x, v1.y + v2.y, v1.z + v2.z}; }
+static inline fvec3 fvec3_sub(fvec3 v1, fvec3 v2) { return (fvec3){v1.x - v2.x, v1.y - v2.y, v1.z - v2.z}; }
+static inline fvec3 fvec3_mul(fvec3 v1, fvec3 v2) { return (fvec3){v1.x * v2.x, v1.y * v2.y, v1.z * v2.z}; }
+static inline fvec3 fvec3_div(fvec3 v1, fvec3 v2) { return (fvec3){v1.x / v2.x, v1.y / v2.y, v1.z / v2.z}; }
+static inline fvec3 fvec3_scale(fvec3 v, float s) { return (fvec3){v.x * s, v.y * s, v.z * s}; }
+
+/* Debug */
 #define IVEC2_PRINT(v) do {                    \
     printf("[IVEC2: %d, %d]\n", (v).x, (v).y); \
 } while (0)
 
-
-#define FVEC2(x,y) ((fvec2){(x),(y)})
-#define FVEC2_ADD(v1,v2) ((fvec2){((v1).x+(v2).x), ((v1).y+(v2).y)})
-#define FVEC2_SUB(v1,v2) ((fvec2){((v1).x-(v2).x), ((v1).y-(v2).y)})
-#define FVEC2_MUL(v1,v2) ((fvec2){((v1).x*(v2).x), ((v1).y*(v2).y)})
-#define FVEC2_DIV(v1,v2) ((fvec2){((v1).x/(v2).x), ((v1).y/(v2).y)})
-#define FVEC2_SCALE(v, s) ((fvec2){(v).x*(s), (v).y*(s)})
+#define IVEC3_PRINT(v) do {                    \
+    printf("[IVEC3: %d, %d, %d]\n", (v).x, (v).y, (v).z); \
+} while (0)
 
 #define FVEC2_PRINT(v) do {                    \
     printf("[FVEC2: %f, %f]\n", (v).x, (v).y); \
 } while (0)
 
-
-#define FVEC3(x,y,z) ((fvec3){(x), (y), (z)})
-#define FVEC3_ADD(v1,v2) ((fvec3){((v1).x+(v2).x), ((v1).y+(v2).y), ((v1).z+(v2).z)})
-#define FVEC3_SUB(v1,v2) ((fvec3){((v1).x-(v2).x), ((v1).y-(v2).y), ((v1).z-(v2).z)})
-#define FVEC3_MUL(v1,v2) ((fvec3){((v1).x*(v2).x), ((v1).y*(v2).y), ((v1).z*(v2).z)})
-#define FVEC3_DIV(v1,v2) ((fvec3){((v1).x/(v2).x), ((v1).y/(v2).y), ((v1).z/(v2).z)})
-#define FVEC3_SCALE(v, s) ((fvec3){(v).x*(s), (v).y*(s), (v).z*(s)})
-
 #define FVEC3_PRINT(v) do {                    \
     printf("[FVEC3: %f, %f, %f]\n", (v).x, (v).y, (v).z); \
 } while (0)
 
-
-/***********************/
-/* Array based vectors */
-/***********************/
-#elif defined(ETER_VEC_ARRAY) && !defined(ETER_VEC_STRUCT)
-
-typedef int ivec2[2];                         
-typedef float fvec2[2];
-typedef float fvec3[3];
-
-#define IVEC2_ADD(v1, v2, result) do { \
-    (result)[0] = (v1)[0] + (v2)[0];   \
-    (result)[1] = (v1)[1] + (v2)[1];   \
-} while (0)
-
-#define IVEC2_SUB(v1, v2, result) do { \
-    (result)[0] = (v1)[0] - (v2)[0];   \
-    (result)[1] = (v1)[1] - (v2)[1];   \
-} while (0)
-
-#define IVEC2_MUL(v1, v2, result) do { \
-    (result)[0] = (v1)[0] * (v2)[0];   \
-    (result)[1] = (v1)[1] * (v2)[1];   \
-} while (0)
-
-#define IVEC2_DIV(v1, v2, result) do { \
-    (result)[0] = (v1)[0] / (v2)[0];   \
-    (result)[1] = (v1)[1] / (v2)[1];   \
-} while (0)
-
-#define IVEC2_SCALE(v, s, result) do { \
-    (result)[0] = ((v)[0] * (s)); \
-    (result)[1] = ((v)[1] * (s)); \
-} while (0)
-
-#define IVEC2_PRINT(v) do { \
-    printf("[IVEC2: %d, %d]\n", (v)[0], (v)[1]); \
-} while (0)
-
-
-#define FVEC2_ADD(v1, v2, result) do { \
-    (result)[0] = (v1)[0] + (v2)[0];   \
-    (result)[1] = (v1)[1] + (v2)[1];   \
-} while (0)
-
-#define FVEC2_SUB(v1, v2, result) do { \
-    (result)[0] = (v1)[0] - (v2)[0];   \
-    (result)[1] = (v1)[1] - (v2)[1];   \
-} while (0)
-
-#define FVEC2_MUL(v1, v2, result) do { \
-    (result)[0] = (v1)[0] * (v2)[0];   \
-    (result)[1] = (v1)[1] * (v2)[1];   \
-} while (0)
-
-#define FVEC2_DIV(v1, v2, result) do { \
-    (result)[0] = (v1)[0] / (v2)[0];   \
-    (result)[1] = (v1)[1] / (v2)[1];   \
-} while (0)
-
-#define FVEC2_SCALE(v, s, result) do { \
-    (result)[0] = ((v)[0] * (s)); \
-    (result)[1] = ((v)[1] * (s)); \
-} while (0)
-
-#define FVEC2_PRINT(v) do { \
-    printf("[FVEC2: %f, %f]\n", (v)[0], (v)[1]); \
-} while (0)
-
-
-#define FVEC3_ADD(v1, v2, result) do { \
-    (result)[0] = (v1)[0] + (v2)[0];   \
-    (result)[1] = (v1)[1] + (v2)[1];   \
-    (result)[2] = (v1)[2] + (v2)[2];   \
-} while (0)
-
-#define FVEC3_SUB(v1, v2, result) do { \
-    (result)[0] = (v1)[0] - (v2)[0];   \
-    (result)[1] = (v1)[1] - (v2)[1];   \
-    (result)[2] = (v1)[2] - (v2)[2];   \
-} while (0)
-
-#define FVEC3_MUL(v1, v2, result) do { \
-    (result)[0] = (v1)[0] * (v2)[0];   \
-    (result)[1] = (v1)[1] * (v2)[1];   \
-    (result)[2] = (v1)[2] * (v2)[2];   \
-} while (0)
-
-#define FVEC3_DIV(v1, v2, result) do { \
-    (result)[0] = (v1)[0] / (v2)[0];   \
-    (result)[1] = (v1)[1] / (v2)[1];   \
-    (result)[2] = (v1)[2] / (v2)[2];   \
-} while (0)
-
-#define FVEC3_SCALE(v, s, result) do { \
-    (result)[0] = ((v)[0] * (s)); \
-    (result)[1] = ((v)[1] * (s)); \
-    (result)[2] = ((v)[2] * (s)); \
-} while (0)
-
-#define FVEC3_PRINT(v) do { \
-    printf("[FVEC3: %f, %f, %f]\n", (v)[0], (v)[1], (v)[2]); \
-} while (0)
-
-
-
-#else
-    #error "Define either ETER_VEC_STRUCT or ETER_VEC_ARRAY!"
-#endif /* ETER_VEC_STRUCT/ETER_VEC_ARRAY */ 
-
-#endif /* ETER_VEC_H_ [etersai 2025]*/
+#endif /* ETER_MATH_H_ */
