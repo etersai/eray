@@ -1,6 +1,11 @@
-// Public Domain
+// Public Domain.
 #ifndef ETER_MATH_H_
 #define ETER_MATH_H_
+
+// TODO
+// -Add array based vectors.
+// -Make vec impl stb style lib.
+// -Add strip prefix thingy.
 
 /***************************/
 /* Basic macros/operations */
@@ -83,4 +88,4 @@ static inline fvec3 fvec3_scale(fvec3 v, float s) { return (fvec3){v.x * s, v.y 
     printf("[FVEC3: %f, %f, %f]\n", (v).x, (v).y, (v).z); \
 } while (0)
 
-#endif /* ETER_MATH_H_ */
+#endif /* ETER_MATH_H_ [etesai 2025]*/

@@ -1,11 +1,9 @@
 #include "../include/raylib.h"
 #include <sys/types.h>
 
-#define ETER_VEC_STRUCT
 #include "eter_math.h"
-#define ETER_DEBUG_LOG_ADD_NEW_LINE
+#define ETER_DEBUG_LOG_ADD_NEW_LINE // TODO rewrite eter_debug.h
 #include "eter_debug.h"
-#include "eter_utils.h"
 
 #include "eray_camera.h"
 
@@ -15,8 +13,6 @@
 #include <time.h>
 #include <assert.h>
 #include <inttypes.h>
-
-#define IVEC2_LEN(v) sqrt((v).x * (v).x + (v).y * (v).y) 
 
 // NOTE: Color format assumes little-endian architecture (x86, ARM) (see NOTES.txt for more info)
 #define ERAY_COLOR_RED       0xff0000ff 
@@ -113,14 +109,14 @@ void canvas_destroy(eCanvas* canvas)
 
 ivec2 eray_canvas_convert_2d_coordinate_system(const eCanvas* canvas, ivec2 pos)
 {
-    ivec2 result = IVEC2_SUB(canvas->origin, ((ivec2){0, 0}));
-    return IVEC2_ADD(result, pos);
+    ivec2 result = ivec2_sub(canvas->origin, ((ivec2){0, 0}));
+    return ivec2_add(result, pos);
 }    
 
 ivec2 eray_canvas_top_left_origin_to_center(const eCanvas* canvas, ivec2 pos)
 {                            
-    ivec2 result = IVEC2_SUB(pos, canvas->origin); // Vec from canvas origin to whatever point at tl origin. 
-    return ((ivec2){result.x, -result.y});         // Flip y to achive mathematical Y+ points up!
+    ivec2 result = ivec2_sub(pos, canvas->origin);
+    return IVEC2(result.x, -result.y);
 }
 
 Texture2D eray_create_texture_from_canvas(const eCanvas* canvas)
@@ -157,16 +153,14 @@ int main(void)
     srand(time(NULL)); 
 
     // translate the cube. 
-    for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
+    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
         cube[i].z += -3.0f;
     } 
 
-    for (size_t i = 0; i < ETER_ARRAY_SIZE(cube); i++) {
+    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
         FVEC3_PRINT(cube[i]);
     } 
 
-    ivec2 x = IVEC2(0, 1);
-    printf("%f", IVEC2_LEN(x));
 
     eCanvas canvas = {0};  
     canvas_initialize(&canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -184,7 +178,7 @@ int main(void)
     float aspect_ratio = CANVAS_WIDTH / (float)CANVAS_HEIGHT; // 16:9
     debug_log_float(aspect_ratio); 
 
-    for (size_t vertex = 0; vertex < ETER_ARRAY_SIZE(cube); vertex++) {
+    for (size_t vertex = 0; vertex < ETER_ARRLEN(cube); vertex++) {
         float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
         float y_proj = cube[vertex].y / -cube[vertex].z;
         float x_proj_remap = (x_proj + 1) / 2;
@@ -199,7 +193,7 @@ int main(void)
         printf("Projected vertex %zu: x:%d, y:%d\n", vertex, x_proj_pix, y_proj_pix);
     }
     
-    for (int i = 0; i < ETER_ARRAY_SIZE(spheres); i++) {
+    for (int i = 0; i < ETER_ARRLEN(spheres); i++) {
         FVEC2_PRINT(spheres[i].pos);
     }
                                             
