@@ -99,6 +99,12 @@ static inline float fvec3_dist(fvec3 a, fvec3 b) { return fvec3_len(fvec3_sub(a,
 static inline float fvec3_dist2(fvec3 a, fvec3 b) { return fvec3_len2(fvec3_sub(a, b)); }
 static inline void fvec3_norm(fvec3* v) { float len = fvec3_len(*v); if (len > 0) { len = 1 / len; v->x *= len; v->y *= len; v->z *= len;}}
 static inline fvec3 fvec3_normalized(fvec3 v) { float len = fvec3_len(v); if (len > 0) { len = 1 / len; return FVEC3(v.x*len, v.y*len, v.z*len);} return FVEC3(0.0f, 0.0f, 0.0f);}
+static inline fvec3 fvec3_cross(fvec3 a, fvec3 b) {
+    float cx = a.y*b.z - a.z*b.y;
+    float cy = a.z*b.x - a.x*b.z;
+    float cz = a.x*b.y - a.y*b.x;
+    return FVEC3(cx,cy,cz);
+}
 
 /* Debug */
 #define IVEC2_PRINT(v) do {                    \
