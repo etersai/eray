@@ -187,7 +187,7 @@ int main(void)
 
         spheres[vertex].pos.x = x_proj_pix;
         spheres[vertex].pos.y = y_proj_pix;
-        spheres[vertex].r = 5;
+        spheres[vertex].r = 2;
 
         printf("Projected vertex %zu: x:%d, y:%d\n", vertex, x_proj_pix, y_proj_pix);
     }
@@ -232,8 +232,9 @@ int main(void)
 
     // FLYING CUBE
     for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
-        cube[i].z += -.1f;
+        cube[i].z += -0.1f;
     } 
+
 
     for (size_t vertex = 0; vertex < ETER_ARRLEN(cube); vertex++) {
         float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
@@ -245,9 +246,7 @@ int main(void)
 
         spheres[vertex].pos.x = x_proj_pix;
         spheres[vertex].pos.y = y_proj_pix;
-        spheres[vertex].r = 5;
-
-        printf("Projected vertex %zu: x:%d, y:%d\n", vertex, x_proj_pix, y_proj_pix);
+        spheres[vertex].r = 2;
     }
  
 
