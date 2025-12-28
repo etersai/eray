@@ -1,5 +1,7 @@
 #include "../include/raylib.h"
+#include "../include/microui.h"
 
+#include "eray_canvas.h"
 #include "eray_camera.h"
 
 #include "eter_math.h"
@@ -24,6 +26,8 @@
 #define ERAY_COLOR_LIGHTGRAY 0xffc0c0c0
 #define ERAY_COLOR_RANDO     0xfffa6b3c
 
+#define unused(var) ((void) (var))
+
 uint32_t get_random_bits_uint32_t(void)
 { // 0x00007fff masks first 15 bits;
    uint32_t r = 0;                // it looks like a slot machine :D.
@@ -32,16 +36,6 @@ uint32_t get_random_bits_uint32_t(void)
     r |= ((uint32_t)(rand() & 0x00000003));
     return r;
 }
-
-#define CANVAS_WIDTH  640
-#define CANVAS_HEIGHT 360
-
-typedef struct {
-    uint32_t* data; 
-    ivec2 origin;    // {CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2} => [320, 180]
-    int width;
-    int height;
-} eCanvas;
 
 typedef struct {
     fvec2 pos;
@@ -58,65 +52,6 @@ fvec3 cube[8] = {
     {.x = -1.0f, .y = -1.0f, .z = -1.0f},
     {.x = 1.0f, .y = -1.0f, .z = -1.0f},
 };
-
-int canvas_initialize(eCanvas* canvas, int width, int height)
-{
-    assert(canvas && "[TODO]");
-    uint32_t* data;
-    data = malloc(width*height*sizeof(*data));
-    if (!data) return 1;
-
-    canvas->data   = data;
-    canvas->width  = width;
-    canvas->height = height;
-
-    return 0;
-}
-
-void canvas_fill(eCanvas* canvas, uint32_t color)
-{
-    size_t pixel_count = canvas->width*canvas->height;
-    for (size_t i = 0; i < pixel_count; i++) {
-        canvas->data[i] = color;
-    }
-}
-
-void canvas_put_pixel(eCanvas* canvas, ivec2 pos, uint32_t color) 
-{
-#if 0
-    assert(posX >= 0 && posX < canvas->width && 
-           posY >= 0 && posY < canvas->height);
-#endif
-    if (pos.x < 0 || pos.x >= canvas->width || pos.y < 0 || pos.y >= canvas->height) {
-        fprintf(stderr, "[ERAY][CANVAS OUT OF BOUNDS] pos(%d,%d) exceeds image(%d,%d)\n", 
-            pos.x, pos.y, canvas->width, canvas->height);
-        fflush(stdout);
-        return;
-    } 
-    int pixel_index = (pos.y * canvas->width) + pos.x;
-    canvas->data[pixel_index] = color; 
-}
-
-void canvas_destroy(eCanvas* canvas)
-{
-    if (canvas && canvas->data) {
-        free(canvas->data);
-    }
-}
-
-
-
-ivec2 eray_canvas_convert_2d_coordinate_system(const eCanvas* canvas, ivec2 pos)
-{
-    ivec2 result = ivec2_sub(canvas->origin, ((ivec2){0, 0}));
-    return ivec2_add(result, pos);
-}    
-
-ivec2 eray_canvas_top_left_origin_to_center(const eCanvas* canvas, ivec2 pos)
-{                            
-    ivec2 result = ivec2_sub(pos, canvas->origin);
-    return IVEC2(result.x, -result.y);
-}
 
 Texture2D eray_create_texture_from_canvas(const eCanvas* canvas)
 {
@@ -141,15 +76,41 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
     return ETER_SQUARE(dx) + ETER_SQUARE(dy) <= ETER_SQUARE(sphere.r);
 }
 
+#define CANVAS_WIDTH  640
+#define CANVAS_HEIGHT 360
 #define WINDOW_WIDTH 1280 
 #define WINDOW_HEIGHT 720
-// CANVAS_WIDTH  640
-// CANVAS_HEIGHT 360
+
+Font eui_default_font;
+float eui_font_size = 20.0f;
+
+int eui_text_width(mu_Font font, const char *text, int len)
+{
+    Font* f = (Font*)font;
+    Vector2 size = MeasureTextEx(*f, text, eui_font_size, 1.0f);
+    return (int)size.x;
+}
+
+int eui_text_height(mu_Font font)
+{
+    Font* f = (Font*)font; 
+    Vector2 size = MeasureTextEx(*f, "dummy", eui_font_size, 1.0f);
+    return (int)size.y;
+}
+
 int main(void)
 {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "eray");
     SetTargetFPS(60);
     srand(time(NULL)); 
+
+    // micro ui fun
+    eui_default_font = GetFontDefault();
+
+    mu_Context *ctx = malloc(sizeof(mu_Context));  
+    mu_init(ctx);
+    ctx->text_width = eui_text_width;
+    ctx->text_height = eui_text_height;
 
     // translate the cube. 
     for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
@@ -200,28 +161,6 @@ int main(void)
 
     while (!WindowShouldClose())
     {
-#if 0
-        static int growth_rate = 1;
-        sphere.r += growth_rate;
-        if (sphere.r >= 100 || sphere.r <= 1) {
-            growth_rate *= -1;
-        }
-
-        ivec2 pos = IVEC2(0, 0);
-        for (pos.y=0; pos.y<canvas.height; pos.y++) {
-            for (pos.x=0; pos.x<canvas.width; pos.x++) {
-                ivec2 relative = eray_canvas_top_left_origin_to_center(&canvas, pos); 
-                if (eray_is_point_on_2d_sphere(relative, sphere)) {
-                    eray_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
-                }
-                else 
-                {
-                    eray_put_pixel(&canvas, pos, get_random_bits_uint32_t());
-                }
-            }
-        }
-#endif
-
         static int growth_rate = 1;
         for (int i = 0; i < 8; i++) {
             spheres[i].r += growth_rate;
@@ -274,6 +213,7 @@ int main(void)
         BeginDrawing();
             ClearBackground(WHITE);
             DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
+            DrawTextEx(eui_default_font, "Hello world", (Vector2){20.0f, 20.0f}, eui_font_size, 1.0f, RAYWHITE);
             DrawFPS(0, 0); 
         EndDrawing();
     }
@@ -283,3 +223,26 @@ int main(void)
     CloseWindow();
     return 0;
 }
+#if 0
+        static int growth_rate = 1;
+        sphere.r += growth_rate;
+        if (sphere.r >= 100 || sphere.r <= 1) {
+            growth_rate *= -1;
+        }
+
+        ivec2 pos = IVEC2(0, 0);
+        for (pos.y=0; pos.y<canvas.height; pos.y++) {
+            for (pos.x=0; pos.x<canvas.width; pos.x++) {
+                ivec2 relative = eray_canvas_top_left_origin_to_center(&canvas, pos); 
+                if (eray_is_point_on_2d_sphere(relative, sphere)) {
+                    eray_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
+                }
+                else 
+                {
+                    eray_put_pixel(&canvas, pos, get_random_bits_uint32_t());
+                }
+            }
+        }
+#endif
+
+

@@ -13,6 +13,7 @@
 /***************************/
 /* Basic macros/operations */
 /***************************/
+#define ETER_MIN(a,b) ((a) < (b) ? (a) : (b))
 #define ETER_MAX(a,b) ((a) > (b) ? (a) : (b))
 #define ETER_ARRLEN(arr) (sizeof((arr)) / sizeof((arr)[0]))
 #define ETER_SQUARE(x) ((x)*(x))
