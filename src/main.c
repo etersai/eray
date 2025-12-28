@@ -229,9 +229,13 @@ int main(void)
             if (mu_begin_window_ex(&ctx, "Erey options", mu_rect(10, 10, 280, 100), MU_OPT_NOCLOSE)) {
                 mu_layout_row(&ctx, 2, (int[]) { 120, -1 }, 0);
 
-                mu_label(&ctx, "First:");
-                if (mu_button(&ctx, "Button1")) {
+                mu_label(&ctx, "Reset cube:");
+                if (mu_button(&ctx, "Click!")) {
                     memcpy(cube, cube_blank, sizeof(cube));
+                    // translate the cube. 
+                    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
+                        cube[i].z += -3.0f;
+                    } 
                 }
         
                 mu_label(&ctx, "Point size:");
