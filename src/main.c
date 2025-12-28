@@ -169,8 +169,8 @@ int main(void)
     }
                                             
     Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
-
-    #define MAX_INPUT_CHARS 255
+    
+    int toggleUI = 1;
     while (!WindowShouldClose())
     {
         /* INPUT */
@@ -182,6 +182,7 @@ int main(void)
             if (IsMouseButtonPressed(btn)) { mu_input_mousedown(&ctx, mouse_pos.x, mouse_pos.y, mouse_map[btn]); }
             if (IsMouseButtonReleased(btn)) { mu_input_mouseup(&ctx, mouse_pos.x, mouse_pos.y, mouse_map[btn]); }
         }
+        if (IsKeyPressed(KEY_F11)) { toggleUI = !toggleUI; }
     
         /* UPDATE */
         // move cube
@@ -222,48 +223,55 @@ int main(void)
         }
 
         UpdateTexture(tex_canvas, canvas.data);
-
-        mu_begin(&ctx);
-        if (mu_begin_window(&ctx, "Erey options", mu_rect(10, 10, 280, 100))) {
-            mu_layout_row(&ctx, 2, (int[]) { 120, -1 }, 0);
-
-            mu_label(&ctx, "First:");
-            if (mu_button(&ctx, "Button1")) {
-                memcpy(cube, cube_blank, sizeof(cube));
-            }
-
-            mu_slider(&ctx, &slider_value, 0, 25);
-            mu_end_window(&ctx);
-        }
-        mu_end(&ctx);
         
+        if (toggleUI) {
+            mu_begin(&ctx);
+            if (mu_begin_window_ex(&ctx, "Erey options", mu_rect(10, 10, 280, 100), MU_OPT_NOCLOSE)) {
+                mu_layout_row(&ctx, 2, (int[]) { 120, -1 }, 0);
+
+                mu_label(&ctx, "First:");
+                if (mu_button(&ctx, "Button1")) {
+                    memcpy(cube, cube_blank, sizeof(cube));
+                }
+        
+                mu_label(&ctx, "Point size:");
+                mu_slider(&ctx, &slider_value, 0, 25);
+                mu_end_window(&ctx);
+            }
+            mu_end(&ctx);
+        } 
+
         /* RENDER */
         BeginDrawing();
 
             ClearBackground(WHITE);
+    
+            // Draw canvas.
             DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
-
-            mu_Command *cmd = NULL;
-            while (mu_next_command(&ctx, &cmd)) {
-                switch (cmd->type) {
-                case MU_COMMAND_TEXT: {
-                    DrawText(cmd->text.str, cmd->text.pos.x, cmd->text.pos.y,
+            
+            if (toggleUI) {
+                mu_Command *cmd = NULL;
+                while (mu_next_command(&ctx, &cmd)) {
+                    switch (cmd->type) {
+                    case MU_COMMAND_TEXT: {
+                        DrawText(cmd->text.str, cmd->text.pos.x, cmd->text.pos.y,
                             UI_FONT_SIZE, *(Color*)(&cmd->rect.color));
-                } break;
-                case MU_COMMAND_RECT: {
-                    DrawRectangle(cmd->rect.rect.x, cmd->rect.rect.y, 
-                            cmd->rect.rect.w, cmd->rect.rect.h, *(Color*)(&cmd->rect.color));                          
-                } break;
-                case MU_COMMAND_ICON:  break; // icon drawing missing!
-                case MU_COMMAND_CLIP: {
-                    if (cmd->clip.rect.w == 0x1000000 || cmd->clip.rect.h == 0x1000000) {
-                        EndScissorMode();
+                    } break;
+                    case MU_COMMAND_RECT: {
+                        DrawRectangle(cmd->rect.rect.x, cmd->rect.rect.y, 
+                                cmd->rect.rect.w, cmd->rect.rect.h, *(Color*)(&cmd->rect.color));                          
+                    } break;
+                    case MU_COMMAND_ICON:  break; // icon drawing missing!
+                    case MU_COMMAND_CLIP: {
+                        if (cmd->clip.rect.w == 0x1000000 || cmd->clip.rect.h == 0x1000000) {
+                            EndScissorMode();
+                        }
+                        else
+                        {
+                            BeginScissorMode(cmd->clip.rect.x, cmd->clip.rect.y, cmd->clip.rect.w, cmd->clip.rect.h);
+                        }
+                    } break;
                     }
-                    else
-                    {
-                        BeginScissorMode(cmd->clip.rect.x, cmd->clip.rect.y, cmd->clip.rect.w, cmd->clip.rect.h);
-                    }
-                } break;
                 }
             }
 
