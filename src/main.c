@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
 #include <inttypes.h>
 
 // NOTE: Color format assumes little-endian architecture (x86, ARM) (see NOTES.txt for more info)
@@ -41,6 +42,17 @@ typedef struct {
     fvec2 pos;
     int r;
 } Sphere2D;
+
+fvec3 cube_blank[8] = {
+    {.x = 1.0f, .y = 1.0f, .z = 1.0f},
+    {.x = -1.0f, .y = 1.0f, .z = 1.0f},
+    {.x = -1.0f, .y = -1.0f, .z = 1.0f},
+    {.x = 1.0f, .y = -1.0f, .z = 1.0f},
+    {.x = 1.0f, .y = 1.0f, .z = -1.0f},
+    {.x = -1.0f, .y = 1.0f, .z = -1.0f},
+    {.x = -1.0f, .y = -1.0f, .z = -1.0f},
+    {.x = 1.0f, .y = -1.0f, .z = -1.0f},
+};
 
 fvec3 cube[8] = {
     {.x = 1.0f, .y = 1.0f, .z = 1.0f},
@@ -76,20 +88,17 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
     return ETER_SQUARE(dx) + ETER_SQUARE(dy) <= ETER_SQUARE(sphere.r);
 }
 
-#define CANVAS_WIDTH  640
-#define CANVAS_HEIGHT 360
-#define WINDOW_WIDTH 1280 
-#define WINDOW_HEIGHT 720
+/* UI */
+mu_Context ctx = {0};
+#define UI_FONT_SIZE 18
+int text_width(mu_Font font, const char *str, int len) { unused(font); unused(len); return MeasureText(str, UI_FONT_SIZE); }
+int text_height(mu_Font font) { unused(font); return UI_FONT_SIZE; }
 
 static const char mouse_map[3] = {
     [MOUSE_BUTTON_LEFT  ] = MU_MOUSE_LEFT,
     [MOUSE_BUTTON_RIGHT ] = MU_MOUSE_RIGHT,
     [MOUSE_BUTTON_MIDDLE] = MU_MOUSE_MIDDLE,
 };
-
-const int keys[] = {KEY_ENTER, KEY_BACKSPACE, KEY_LEFT_SHIFT, 
-                    KEY_LEFT_CONTROL, KEY_LEFT_ALT, KEY_RIGHT_SHIFT,
-                    KEY_RIGHT_CONTROL, KEY_RIGHT_ALT};
 
 static const char key_map[16] = {
     [KEY_ENTER         & 0x0f] = MU_KEY_RETURN,
@@ -102,19 +111,10 @@ static const char key_map[16] = {
     [KEY_RIGHT_ALT     & 0x0f] = MU_KEY_ALT,
 };
 
-mu_Context ctx = {0};
-#define UI_FONT_SIZE 69
-
-int text_width(mu_Font font, const char *str, int len)
-{
-    return MeasureText(str, UI_FONT_SIZE);
-}
-
-int text_height(mu_Font font)
-{
-    return UI_FONT_SIZE;
-}
-
+#define CANVAS_WIDTH  640
+#define CANVAS_HEIGHT 360
+#define WINDOW_WIDTH 1280 
+#define WINDOW_HEIGHT 720
 int main(void)
 {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "eray");
@@ -136,6 +136,7 @@ int main(void)
     camera_set_focal_length(&camera, 1.0f); // 1 unit distane to image plane.
 
     Sphere2D spheres[8] = {0};
+    float slider_value = 10.0f;
 
     // translate the cube. 
     for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
@@ -169,23 +170,24 @@ int main(void)
                                             
     Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
 
+    #define MAX_INPUT_CHARS 255
     while (!WindowShouldClose())
     {
-                
-
-        static int growth_rate = 1;
-        for (int i = 0; i < 8; i++) {
-            spheres[i].r += growth_rate;
+        /* INPUT */
+        Vector2 mouse_pos = GetMousePosition();
+        Vector2 mouse_wheel = GetMouseWheelMoveV();
+        mu_input_mousemove(&ctx, mouse_pos.x, mouse_pos.y);
+        mu_input_scroll(&ctx, 0, -mouse_wheel.y * 10);            
+        for (int btn = MOUSE_BUTTON_LEFT; btn <= MOUSE_BUTTON_MIDDLE; btn++) {
+            if (IsMouseButtonPressed(btn)) { mu_input_mousedown(&ctx, mouse_pos.x, mouse_pos.y, mouse_map[btn]); }
+            if (IsMouseButtonReleased(btn)) { mu_input_mouseup(&ctx, mouse_pos.x, mouse_pos.y, mouse_map[btn]); }
         }
-        if (spheres[0].r > 10 || spheres[0].r <= 1) {
-            growth_rate *= -1;
-        }
-
-        // FLYING CUBE
+    
+        /* UPDATE */
+        // move cube
         for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
             cube[i].z += -0.01f;
         } 
-
 
         for (size_t vertex = 0; vertex < ETER_ARRLEN(cube); vertex++) {
             float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
@@ -197,9 +199,8 @@ int main(void)
 
             spheres[vertex].pos.x = x_proj_pix;
             spheres[vertex].pos.y = y_proj_pix;
-            spheres[vertex].r = 2;
+            spheres[vertex].r = (int)slider_value;
         }
- 
 
         ivec2 pos = IVEC2(0, 0);
         for (pos.y=0; pos.y<canvas.height; pos.y++) {
@@ -221,30 +222,22 @@ int main(void)
         }
 
         UpdateTexture(tex_canvas, canvas.data);
-        
+
         mu_begin(&ctx);
-        if (mu_begin_window(&ctx, "My Window", mu_rect(10, 10, 140, 86))) {
-            mu_layout_row(&ctx, 2, (int[]) { 60, -1 }, 0);
+        if (mu_begin_window(&ctx, "Erey options", mu_rect(10, 10, 280, 100))) {
+            mu_layout_row(&ctx, 2, (int[]) { 120, -1 }, 0);
 
             mu_label(&ctx, "First:");
             if (mu_button(&ctx, "Button1")) {
-                printf("Button1 pressed\n");
+                memcpy(cube, cube_blank, sizeof(cube));
             }
 
-            mu_label(&ctx, "Second:");
-            if (mu_button(&ctx, "Button2")) {
-                mu_open_popup(&ctx, "My Popup");
-            }
-
-            if (mu_begin_popup(&ctx, "My Popup")) {
-                mu_label(&ctx, "Hello world!");
-                mu_end_popup(&ctx);
-            }
-
+            mu_slider(&ctx, &slider_value, 0, 25);
             mu_end_window(&ctx);
         }
         mu_end(&ctx);
-
+        
+        /* RENDER */
         BeginDrawing();
 
             ClearBackground(WHITE);
@@ -253,14 +246,26 @@ int main(void)
             mu_Command *cmd = NULL;
             while (mu_next_command(&ctx, &cmd)) {
                 switch (cmd->type) {
-                case MU_COMMAND_TEXT: printf("Hello text!\n");  break;
-                case MU_COMMAND_RECT: printf("Hello rect!\n");  break;
-                case MU_COMMAND_ICON: printf("Hello icon!\n");  break;
-                case MU_COMMAND_CLIP: printf("Hello clip!\n");  break;
+                case MU_COMMAND_TEXT: {
+                    DrawText(cmd->text.str, cmd->text.pos.x, cmd->text.pos.y,
+                            UI_FONT_SIZE, *(Color*)(&cmd->rect.color));
+                } break;
+                case MU_COMMAND_RECT: {
+                    DrawRectangle(cmd->rect.rect.x, cmd->rect.rect.y, 
+                            cmd->rect.rect.w, cmd->rect.rect.h, *(Color*)(&cmd->rect.color));                          
+                } break;
+                case MU_COMMAND_ICON:  break; // icon drawing missing!
+                case MU_COMMAND_CLIP: {
+                    if (cmd->clip.rect.w == 0x1000000 || cmd->clip.rect.h == 0x1000000) {
+                        EndScissorMode();
+                    }
+                    else
+                    {
+                        BeginScissorMode(cmd->clip.rect.x, cmd->clip.rect.y, cmd->clip.rect.w, cmd->clip.rect.h);
+                    }
+                } break;
                 }
             }
-
-            abort();
 
             DrawFPS(0, 0); 
         EndDrawing();
