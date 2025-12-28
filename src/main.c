@@ -81,21 +81,38 @@ int eray_is_point_on_2d_sphere(ivec2 point, Sphere2D sphere)
 #define WINDOW_WIDTH 1280 
 #define WINDOW_HEIGHT 720
 
-Font eui_default_font;
-float eui_font_size = 20.0f;
+static const char mouse_map[3] = {
+    [MOUSE_BUTTON_LEFT  ] = MU_MOUSE_LEFT,
+    [MOUSE_BUTTON_RIGHT ] = MU_MOUSE_RIGHT,
+    [MOUSE_BUTTON_MIDDLE] = MU_MOUSE_MIDDLE,
+};
 
-int eui_text_width(mu_Font font, const char *text, int len)
+const int keys[] = {KEY_ENTER, KEY_BACKSPACE, KEY_LEFT_SHIFT, 
+                    KEY_LEFT_CONTROL, KEY_LEFT_ALT, KEY_RIGHT_SHIFT,
+                    KEY_RIGHT_CONTROL, KEY_RIGHT_ALT};
+
+static const char key_map[16] = {
+    [KEY_ENTER         & 0x0f] = MU_KEY_RETURN,
+    [KEY_BACKSPACE     & 0x0f] = MU_KEY_BACKSPACE,
+    [KEY_LEFT_SHIFT    & 0x0f] = MU_KEY_SHIFT,
+    [KEY_LEFT_CONTROL  & 0x0f] = MU_KEY_CTRL,
+    [KEY_LEFT_ALT      & 0x0f] = MU_KEY_ALT,
+    [KEY_RIGHT_SHIFT   & 0x0f] = MU_KEY_SHIFT,
+    [KEY_RIGHT_CONTROL & 0x0f] = MU_KEY_CTRL,
+    [KEY_RIGHT_ALT     & 0x0f] = MU_KEY_ALT,
+};
+
+mu_Context ctx = {0};
+#define UI_FONT_SIZE 69
+
+int text_width(mu_Font font, const char *str, int len)
 {
-    Font* f = (Font*)font;
-    Vector2 size = MeasureTextEx(*f, text, eui_font_size, 1.0f);
-    return (int)size.x;
+    return MeasureText(str, UI_FONT_SIZE);
 }
 
-int eui_text_height(mu_Font font)
+int text_height(mu_Font font)
 {
-    Font* f = (Font*)font; 
-    Vector2 size = MeasureTextEx(*f, "dummy", eui_font_size, 1.0f);
-    return (int)size.y;
+    return UI_FONT_SIZE;
 }
 
 int main(void)
@@ -104,23 +121,9 @@ int main(void)
     SetTargetFPS(60);
     srand(time(NULL)); 
 
-    // micro ui fun
-    eui_default_font = GetFontDefault();
-
-    mu_Context *ctx = malloc(sizeof(mu_Context));  
-    mu_init(ctx);
-    ctx->text_width = eui_text_width;
-    ctx->text_height = eui_text_height;
-
-    // translate the cube. 
-    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
-        cube[i].z += -3.0f;
-    } 
-
-    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
-        FVEC3_PRINT(cube[i]);
-    } 
-
+    mu_init(&ctx);
+    ctx.text_width = text_width;
+    ctx.text_height = text_height;
 
     eCanvas canvas = {0};  
     canvas_initialize(&canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -131,9 +134,16 @@ int main(void)
     eCamera camera = {0}; 
     camera_set_pos(&camera, (fvec3){0.0f, 0.0f, 0.0f});   
     camera_set_focal_length(&camera, 1.0f); // 1 unit distane to image plane.
-    
 
     Sphere2D spheres[8] = {0};
+
+    // translate the cube. 
+    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
+        cube[i].z += -3.0f;
+    } 
+    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
+        FVEC3_PRINT(cube[i]);
+    } 
 
     float aspect_ratio = CANVAS_WIDTH / (float)CANVAS_HEIGHT; // 16:9
     debug_log_float(aspect_ratio); 
@@ -161,6 +171,8 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+                
+
         static int growth_rate = 1;
         for (int i = 0; i < 8; i++) {
             spheres[i].r += growth_rate;
@@ -169,24 +181,24 @@ int main(void)
             growth_rate *= -1;
         }
 
-    // FLYING CUBE
-    for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
-        cube[i].z += -0.1f;
-    } 
+        // FLYING CUBE
+        for (size_t i = 0; i < ETER_ARRLEN(cube); i++) {
+            cube[i].z += -0.01f;
+        } 
 
 
-    for (size_t vertex = 0; vertex < ETER_ARRLEN(cube); vertex++) {
-        float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
-        float y_proj = cube[vertex].y / -cube[vertex].z;
-        float x_proj_remap = (x_proj + 1) / 2;
-        float y_proj_remap = (y_proj + 1) / 2;
-        int x_proj_pix = (int)(x_proj_remap * CANVAS_WIDTH);
-        int y_proj_pix = (int)(y_proj_remap * CANVAS_HEIGHT);
+        for (size_t vertex = 0; vertex < ETER_ARRLEN(cube); vertex++) {
+            float x_proj = (cube[vertex].x / -cube[vertex].z) / aspect_ratio;
+            float y_proj = cube[vertex].y / -cube[vertex].z;
+            float x_proj_remap = (x_proj + 1) / 2;
+            float y_proj_remap = (y_proj + 1) / 2;
+            int x_proj_pix = (int)(x_proj_remap * CANVAS_WIDTH);
+            int y_proj_pix = (int)(y_proj_remap * CANVAS_HEIGHT);
 
-        spheres[vertex].pos.x = x_proj_pix;
-        spheres[vertex].pos.y = y_proj_pix;
-        spheres[vertex].r = 2;
-    }
+            spheres[vertex].pos.x = x_proj_pix;
+            spheres[vertex].pos.y = y_proj_pix;
+            spheres[vertex].r = 2;
+        }
  
 
         ivec2 pos = IVEC2(0, 0);
@@ -209,11 +221,47 @@ int main(void)
         }
 
         UpdateTexture(tex_canvas, canvas.data);
+        
+        mu_begin(&ctx);
+        if (mu_begin_window(&ctx, "My Window", mu_rect(10, 10, 140, 86))) {
+            mu_layout_row(&ctx, 2, (int[]) { 60, -1 }, 0);
+
+            mu_label(&ctx, "First:");
+            if (mu_button(&ctx, "Button1")) {
+                printf("Button1 pressed\n");
+            }
+
+            mu_label(&ctx, "Second:");
+            if (mu_button(&ctx, "Button2")) {
+                mu_open_popup(&ctx, "My Popup");
+            }
+
+            if (mu_begin_popup(&ctx, "My Popup")) {
+                mu_label(&ctx, "Hello world!");
+                mu_end_popup(&ctx);
+            }
+
+            mu_end_window(&ctx);
+        }
+        mu_end(&ctx);
 
         BeginDrawing();
+
             ClearBackground(WHITE);
             DrawTextureEx(tex_canvas, (Vector2){0,0}, 0.0f, 2.0f, WHITE);
-            DrawTextEx(eui_default_font, "Hello world", (Vector2){20.0f, 20.0f}, eui_font_size, 1.0f, RAYWHITE);
+
+            mu_Command *cmd = NULL;
+            while (mu_next_command(&ctx, &cmd)) {
+                switch (cmd->type) {
+                case MU_COMMAND_TEXT: printf("Hello text!\n");  break;
+                case MU_COMMAND_RECT: printf("Hello rect!\n");  break;
+                case MU_COMMAND_ICON: printf("Hello icon!\n");  break;
+                case MU_COMMAND_CLIP: printf("Hello clip!\n");  break;
+                }
+            }
+
+            abort();
+
             DrawFPS(0, 0); 
         EndDrawing();
     }
