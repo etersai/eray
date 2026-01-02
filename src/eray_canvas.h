@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 typedef struct {
-    uint32_t* data; 
+    uint32_t *data; 
     ivec2 origin;    // {CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2} => [320, 180]
     int width;
     int height;

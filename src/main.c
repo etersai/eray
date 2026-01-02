@@ -169,6 +169,7 @@ int main(void)
     }
                                             
     Texture2D tex_canvas = eray_create_texture_from_canvas(&canvas);
+
     
     int toggleUI = 1;
     while (!WindowShouldClose())
