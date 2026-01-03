@@ -207,7 +207,7 @@ e_UI_FRAME FRAMES[EUI_FRAMES_MAX];
 int main(void)
 {
     // Platform setup
-    const char* title = "Rets";
+    const char* title = "Frames";
     int width = 1280;
     int height = 720;
     int target_fps = 60;
@@ -223,19 +223,22 @@ int main(void)
     frame.color = ORANGE;
     frame.id = frame_count;
 
-    enum { ELEMENT_BORDER_SIZE = 1 };
-    e_UI_FRAME_ELEMENT border;
-    border.owner = &frame;
+    enum { ELEMENT_BORDER_SIZE = 4 };
+    e_UI_FRAME_ELEMENT element_border;
+    element_border.owner = &frame;
 
     Piece piece;
-    piece.color = BLUE;
-    piece.rect.x = border.owner->rect.x + ELEMENT_BORDER_SIZE;
-    piece.rect.y = border.owner->rect.y + ELEMENT_BORDER_SIZE;
-    piece.rect.width = border.owner->rect.width - ELEMENT_BORDER_SIZE;
-    piece.rect.height = border.owner->rect.height - ELEMENT_BORDER_SIZE;
+    piece.color = GRAY;
+    piece.rect.x = element_border.owner->rect.x + ELEMENT_BORDER_SIZE;
+    piece.rect.y = element_border.owner->rect.y + ELEMENT_BORDER_SIZE;
+    piece.rect.width = element_border.owner->rect.width - (2*ELEMENT_BORDER_SIZE); // it looks like it's working somehow XD
+    piece.rect.height = element_border.owner->rect.height - (2*ELEMENT_BORDER_SIZE);
 
-    border.pieces = &piece; 
-    border.pieces_count = 1;
+    element_border.pieces = &piece; 
+    element_border.pieces_count = 1;
+
+    frame.elements = &element_border;
+    frame.element_count++;      
 
     FRAMES[frame_count] = frame;
     frame_count++;
@@ -284,8 +287,12 @@ int main(void)
                 // thing about whats the way to access elements to be both readable and fast.
                 FRAMES[i].rect.x += mouse_delta_x;
                 FRAMES[i].rect.y += mouse_delta_y;
-            }
 
+                FRAMES[i].elements->pieces->rect.x = FRAMES[i].rect.x + ELEMENT_BORDER_SIZE;
+                FRAMES[i].elements->pieces->rect.y = FRAMES[i].rect.y + ELEMENT_BORDER_SIZE;            
+                //FRAMES[i].elements->pieces->rect.width = FRAMES[i].rect.width -ELEMENT_BORDER_SIZE; 
+                //FRAMES[i].elements->pieces->rect.height = FRAMES[i].rect.height -ELEMENT_BORDER_SIZE; 
+            }
         } 
    
         enum { BUFFER_MAX = 64 };
@@ -308,25 +315,39 @@ int main(void)
 
         BeginDrawing();
             {
-                ClearBackground(DARKGRAY);
+                ClearBackground(BLACK);
                 
                 // Draw Frames
-                for (int i = 0; i < frame_count; i++) {
-                    Rect rect = FRAMES[i].rect;
-                    Color final;
-                    float fade_level = 0.9f;
-                    if (FRAMES[i].hovered) {
-                        final = Fade(FRAMES[i].color, fade_level);
-                    }
-                    else
-                    {
-                        final = FRAMES[i].color;
-                    }
-                    
-                    
+                for (int curr_frame = 0; curr_frame < frame_count; curr_frame++) {
+                    // Rect rect = FRAMES[i].rect;
+                    // Color final;
+                    // float fade_level = 0.9f;
+                    // if (FRAMES[i].hovered) {
+                    //     final = Fade(FRAMES[i].color, fade_level);
+                    // }
+                    // else
+                    // {
+                    //     final = FRAMES[i].color;
+                    // }
+                    e_UI_FRAME frame = FRAMES[curr_frame];
+                    DrawRectangle(frame.rect.x, frame.rect.y, frame.rect.width, frame.rect.height, frame.color);
+                    for (int i = 0; i < frame.element_count; i++) {
 
+                        if (frame.elements == NULL) { // hackyyy
+                            log_print_n_flush("NULL!");
+                            abort();
+                        }
 
-                    DrawRectangle(rect.x, rect.y, rect.width, rect.height,final);
+                        for (int j = 0; j < frame.elements->pieces_count; j++) {
+                            DrawRectangle(frame.elements->pieces[i].rect.x,
+                                            frame.elements->pieces[i].rect.y,
+                                            frame.elements->pieces[i].rect.width,
+                                            frame.elements->pieces[i].rect.height,
+                                            frame.elements->pieces[i].color);
+                        }
+                    }
+
+                    
                 }
 
                 // UI

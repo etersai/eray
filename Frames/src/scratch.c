@@ -50,6 +50,9 @@ int main(void)
 {
 
     printf("%s\n", stringify_bool(false));
+     for (int i = 0; i < 0; i++) {
+        printf("%s\n", stringify_bool(true));
+    }
     
   
 
