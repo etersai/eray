@@ -2,9 +2,43 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <sys/types.h>
+
+// XOR           OR       
+// 0 | 0 = 0  |  0 | 0 = 0
+// 1 | 0 = 1  |  1 | 0 = 1
+// 0 | 1 = 1  |  0 | 1 = 1
+// 1 | 1 = 0  |  1 | 1 = 1
+
+//
+// MACROS
+//
+#define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
+#define perma_assert(var) do {                                          \
+    if (!(var)) {                                                       \
+        fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n", \
+        __FILE__, __LINE__, #var);                                      \
+        abort();                                                        \
+    }                                                                   \
+} while (0)
+
+// stack
+#define stack(T, n) struct { int idx; T items[n]; }
+#define stack_push(stack, val) do {            \
+    if ((stack).idx < arrlen((stack).items)) { \
+        (stack).items[(stack).idx++] = (val);  \
+    }                                          \
+} while(0)
+
+#define stack_pop(stack, val) do {          \
+    if ((stack).idx > 0) {                  \
+        (stack).idx--;                      \
+        (val) = (stack).items[(stack).idx]; \
+    }                                       \
+} while (0)
 
 //
 // LOG 
@@ -12,20 +46,29 @@
 #define LOG_BUFFER_BEAUTIFY_MAX 64
 void log_print_beautify(const char* prefix, const char* format, ...)
 {
+    perma_assert(prefix);
+    perma_assert(format);
+
     int idx = 0;
     char buffer[LOG_BUFFER_BEAUTIFY_MAX] = {0};
     while (*prefix) {
         if (idx >= LOG_BUFFER_BEAUTIFY_MAX) {
             break; 
         }
-        buffer[idx] = *prefix;
+        if (*prefix >= 'a' && *prefix <= 'z') {
+            buffer[idx] = *prefix^(1 << 5); // toggle case bit with xor voodoo.
+        } 
+        else
+        {
+            buffer[idx] = *prefix;
+        }
         prefix++; idx++;
-    } // TODO: right now it does nothing. but expand.
-    
+    } 
+     
     fprintf(stderr, "[%s]: ", buffer);
     va_list args;
     va_start(args, format);
-    vprintf(format, args);  // Use vprintf for va_list
+    vfprintf(stderr, format, args);
     va_end(args);
 }
 
@@ -84,10 +127,7 @@ static inline void rect_update_pos(Rect* r, int x, int y)
 {
     r->x = x;
     r->y = y;
-}    bool IsMouseButtonPressed(int button);                  // Check if a mouse button has been pressed once
-    bool IsMouseButtonDown(int button);                     // Check if a mouse button is being pressed
-    bool IsMouseButtonReleased(int button);                 // Check if a mouse button has been released once
-    bool IsMouseButtonUp(int button);                       // Check if a mouse button is NOT being pressed
+}                         
 
 static inline void rect_update_dims(Rect* r, int width, int height)
 {
@@ -175,45 +215,43 @@ void eui_input_mouseup(e_UI* eui, int mpos_x, int mpos_y, eui_mouse_button btn)
 
 int main(void)
 {
-    int width = 1280;
-    int height = 720;
-    InitWindow(width, height, "Rets");
-    SetTargetFPS(60);
-    int mouse_delta_x = 0;
-    int mouse_delta_y = 0;
-
     // passing by value for now.
-    size_t frames_count = 0;
+    int frame_count = 0;
     e_UI_FRAME frame = {0};
     frame.rect = rect_create(600, 300, 300, 100);
     frame.color = ORANGE;
-    FRAMES[frames_count] = frame;
-    frames_count++;
-    log_print_beautify("FRAME_COUNT", "%d\n", frames_count);
+    FRAMES[frame_count] = frame;
+    frame_count++;
+    log_print_beautify("frame_count", "%d\n", frame_count);
 
+    const char* title = "Rets";
+    int width = 1280;
+    int height = 720;
+    int target_fps = 60;
+    int mouse_delta_x = 0;
+    int mouse_delta_y = 0;
+    InitWindow(width, height, title);
+    SetTargetFPS(target_fps);
     while (!WindowShouldClose()) {
 
         Vector2 mouse_pos = GetMousePosition();
-        char buffer[64];
-        snprintf(buffer, sizeof(buffer), "[%.2f, %.2f]", mouse_pos.x, mouse_pos.y);
         
-        // Reset user input.
-        // bool IsMouseButtonPressed(int button);                  // Check if a mouse button has been pressed once
-        // bool IsMouseButtonDown(int button);                     // Check if a mouse button is being pressed
-        // bool IsMouseButtonReleased(int button);                 // Check if a mouse button has been released once
-        // bool IsMouseButtonUp(int button);                       // Check if a mouse button is NOT being pressed
-        for (int i = 0; i < frames_count; i++) {
+        // bool IsMouseButtonPressed(int button);  // Check if a mouse button has been pressed once
+        // bool IsMouseButtonDown(int button);     // Check if a mouse button is being pressed
+        // bool IsMouseButtonReleased(int button); // Check if a mouse button has been released once
+        // bool IsMouseButtonUp(int button);       // Check if a mouse button is NOT being pressed
+        
+        for (int i = 0; i < frame_count; i++) {
 
             if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
                 FRAMES[i].in_air = false;
             }
         
-
             FRAMES[i].hovered = false;
         }
                
         // Update state.
-        for (int i = 0; i < frames_count; i++) {
+        for (int i = 0; i < frame_count; i++) {
             
             if (rect_point_collision(FRAMES[i].rect, mouse_pos.x, mouse_pos.y)) {
                 FRAMES[i].hovered = true;
@@ -226,43 +264,49 @@ int main(void)
             if (FRAMES[i].in_air) {
                 Rect rect = FRAMES[i].rect;
                 // PEN AND PAPER HERE.
-                rect.x;
 
             }
 
         } 
+    
+        char mouse_pos_buffer[64];
+        char mouse_delta_buffer[64];
+        snprintf(mouse_pos_buffer, sizeof(mouse_pos_buffer), "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
+        snprintf(mouse_delta_buffer, sizeof(mouse_delta_buffer), "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
 
         BeginDrawing();
             {
                 ClearBackground(DARKGRAY);
-               
-                for (int i = 0; i < frames_count; i++) {
-                    // Draw frame.
+                
+
+                // Draw Frames
+                for (int i = 0; i < frame_count; i++) {
                     Rect rect = FRAMES[i].rect;
                     Color final;
                     float fade_level = 0.9f;
                     if (FRAMES[i].hovered) {
                         final = Fade(FRAMES[i].color, fade_level);
-                    } else {
+                    }
+                    else if (FRAMES[i].in_air) {
+                        final = Fade(FRAMES[i].color, 0.1f);
+                    }
+                    else
+                    {
                         final = FRAMES[i].color;
                     }
                     DrawRectangle(rect.x, rect.y, rect.width, rect.height,final);
                 }
 
                 // UI
-                DrawText(buffer, 0, 15, 20, BLACK);
                 DrawFPS(0, 0);
+                DrawText(mouse_pos_buffer, 0, 17, 20, LIME);
+                DrawText(mouse_delta_buffer, 0, 36, 20, LIME);
             }
         EndDrawing();
 
         Vector2 mouse_pos_last = GetMousePosition();
-
-        int mouse_delta_x = mouse_pos_last.x - mouse_pos.x;
-        int mouse_delta_y = mouse_pos_last.y - mouse_pos.y;
-        // raylib opt (Raysan GOAT).
-        Vector2 md= GetMouseDelta(); 
-        printf("MY:[%d, %d] RAY:[%f, %f]\n", mouse_delta_x, mouse_delta_y, md.x, md.y);
-        fflush(stdout);
+        mouse_delta_x = mouse_pos_last.x - mouse_pos.x;
+        mouse_delta_y = mouse_pos_last.y - mouse_pos.y;
     }
 
     CloseWindow();
