@@ -117,7 +117,7 @@ typedef struct {
     int height;
 } Rect;
 
-Rect rect_create(int x, int y, int width, int height);
+Rect               rect_create(int x, int y, int width, int height);
 static inline void rect_update_pos(Rect* r, int x, int y);
 static inline void rect_update_pos(Rect* r, int x, int y);
 static inline void rect_update_dims(Rect* r, int width, int height);
@@ -161,12 +161,12 @@ static inline void rect_update_height(Rect* r, int height)
     rect_update_dims(r, r->width, height);
 }
 
-static inline bool rect_point_collision(Rect r, int x, int y)
+static inline bool rect_point_collision(const Rect r, int x, int y)
 {
     return rect_aabb_collision(r, (Rect){x, y, 1, 1});
 }
 
-static inline bool rect_aabb_collision(Rect r1, Rect r2)
+static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 {
     return (r1.x + r1.width >= r2.x && r1.x <= r2.x + r2.width        // X_AXIS
             && r1.y + r1.height >= r2.y && r1.y <= r2.y + r2.height); // Y_AXIS
@@ -223,15 +223,14 @@ int main(void)
     frame.color = ORANGE;
     frame.id = frame_count;
 
-    enum { ELEMENT_BORDER_SIZE = 4 };
     e_UI_FRAME_ELEMENT element_border;
     element_border.owner = &frame;
-
     Piece piece;
     piece.color = GRAY;
+    enum { ELEMENT_BORDER_SIZE = 4 };
     piece.rect.x = element_border.owner->rect.x + ELEMENT_BORDER_SIZE;
     piece.rect.y = element_border.owner->rect.y + ELEMENT_BORDER_SIZE;
-    piece.rect.width = element_border.owner->rect.width - (2*ELEMENT_BORDER_SIZE); // it looks like it's working somehow XD
+    piece.rect.width = element_border.owner->rect.width - (2*ELEMENT_BORDER_SIZE); 
     piece.rect.height = element_border.owner->rect.height - (2*ELEMENT_BORDER_SIZE);
 
     element_border.pieces = &piece; 
@@ -287,11 +286,8 @@ int main(void)
                 // thing about whats the way to access elements to be both readable and fast.
                 FRAMES[i].rect.x += mouse_delta_x;
                 FRAMES[i].rect.y += mouse_delta_y;
-
                 FRAMES[i].elements->pieces->rect.x = FRAMES[i].rect.x + ELEMENT_BORDER_SIZE;
                 FRAMES[i].elements->pieces->rect.y = FRAMES[i].rect.y + ELEMENT_BORDER_SIZE;            
-                //FRAMES[i].elements->pieces->rect.width = FRAMES[i].rect.width -ELEMENT_BORDER_SIZE; 
-                //FRAMES[i].elements->pieces->rect.height = FRAMES[i].rect.height -ELEMENT_BORDER_SIZE; 
             }
         } 
    
