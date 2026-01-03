@@ -64,12 +64,23 @@ void log_print_beautify(const char* prefix, const char* format, ...)
         }
         prefix++; idx++;
     } 
-     
-    fprintf(stderr, "[%s]: ", buffer);
+
+    FILE* out_target = stderr; 
+    fprintf(out_target, "[%s]: ", buffer);
     va_list args;
     va_start(args, format);
-    vfprintf(stderr, format, args);
+    vfprintf(out_target, format, args);
     va_end(args);
+}
+
+void log_print_n_flush(const char* format, ...)
+{
+    FILE* out_target = stdout; 
+    va_list args;
+    va_start(args, format);
+    vfprintf(out_target, format, args);
+    va_end(args);
+    fflush(out_target);
 }
 
 //
@@ -92,7 +103,12 @@ void log_print_beautify(const char* prefix, const char* format, ...)
 } while (0)
 
 //
-// UI RECT
+// HELPERS
+//
+const char* stringify_bool(bool var) { return var ? "TRUE" : "FALSE"; }
+
+//
+// RECT
 //
 typedef struct {
     int x;
@@ -109,7 +125,6 @@ static inline void rect_update_width(Rect* r, int width);
 static inline void rect_update_height(Rect* r, int height);
 static inline bool rect_aabb_collision(Rect r1, Rect r2);
 static inline bool rect_point_collision(Rect r, int x, int y);
-void rect_printf(Rect rect);
 
 Rect rect_create(int x, int y, int width, int height)
 {
@@ -157,73 +172,41 @@ static inline bool rect_aabb_collision(Rect r1, Rect r2)
             && r1.y + r1.height >= r2.y && r1.y <= r2.y + r2.height); // Y_AXIS
 }
 
-void rect_printf(Rect rect)
-{
-    printf("[x:%d, y:%d, w:%d, h:%d]\n", rect.x, rect.y, rect.width, rect.height);
-}
-
 //
 // UI MEAT
 //
-typedef enum {
-    EUI_MOUSE_LEFT  = (1 << 0),
-    EUI_MOUSE_RIGHT = (1 << 1),
-} eui_mouse_button;
-
-typedef enum {
-    EUI_WINDOW_NAILED = (1 << 0),
-} eui_window_option; 
-
-
 #define EUI_FRAMES_MAX 64
+typedef struct e_UI_FRAME_ELEMENT e_UI_FRAME_ELEMENT;
+typedef struct e_UI_FRAME e_UI_FRAME;
+
 typedef struct {
-    Rect  rect;
-    Color color;
-    bool in_air;
-    bool hovered;
-} e_UI_FRAME;
+     Color color;
+     Rect  rect;   
+} Piece;
+
+struct e_UI_FRAME {
+    Rect         rect;
+    Color        color;
+    unsigned int id;
+    bool         in_air;
+    bool         hovered;
+    
+    e_UI_FRAME_ELEMENT *elements;
+    size_t              element_count;
+    size_t              element_capacity;
+}; /* e_UI_FRAME */
+
+struct e_UI_FRAME_ELEMENT {
+    Piece      *pieces; 
+    size_t      pieces_count;
+    e_UI_FRAME *owner;
+}; /* e_UI_FRAME_ELEMENT */
 
 e_UI_FRAME FRAMES[EUI_FRAMES_MAX];
 
-typedef struct {
-    int mpos_x;
-    int mpos_y;
-} e_UI;
-
-void eui_input_mousepos(e_UI* eui, int mpos_x, int mpos_y);
-void eui_input_mousedown(e_UI* eui, int mpos_x, int mpos_y, eui_mouse_button btn);
-void eui_input_mouseup(e_UI* eui, int mpos_x, int mpos_y, eui_mouse_button btn);
-
-bool eui_window_make(e_UI* eui, Rect r, const char* label, uint32_t opt);
-bool eui_button(e_UI* eui, const char* label);
-
-void eui_input_mousepos(e_UI* eui, int mpos_x, int mpos_y)
-{
-    eui->mpos_x = mpos_x;
-    eui->mpos_y = mpos_y;
-}
-
-void eui_input_mousedown(e_UI* eui, int mpos_x, int mpos_y, eui_mouse_button btn)
-{
-     
-}
-
-void eui_input_mouseup(e_UI* eui, int mpos_x, int mpos_y, eui_mouse_button btn)
-{
-
-}
-
 int main(void)
 {
-    // passing by value for now.
-    int frame_count = 0;
-    e_UI_FRAME frame = {0};
-    frame.rect = rect_create(600, 300, 300, 100);
-    frame.color = ORANGE;
-    FRAMES[frame_count] = frame;
-    frame_count++;
-    log_print_beautify("frame_count", "%d\n", frame_count);
-
+    // Platform setup
     const char* title = "Rets";
     int width = 1280;
     int height = 720;
@@ -232,22 +215,58 @@ int main(void)
     int mouse_delta_y = 0;
     InitWindow(width, height, title);
     SetTargetFPS(target_fps);
+
+    // Create frame (passing by value for now.)
+    int frame_count = 0;
+    e_UI_FRAME frame = {0};
+    frame.rect = rect_create(600, 300, 300, 100);
+    frame.color = ORANGE;
+    frame.id = frame_count;
+
+    enum { ELEMENT_BORDER_SIZE = 1 };
+    e_UI_FRAME_ELEMENT border;
+    border.owner = &frame;
+
+    Piece piece;
+    piece.color = BLUE;
+    piece.rect.x = border.owner->rect.x + ELEMENT_BORDER_SIZE;
+    piece.rect.y = border.owner->rect.y + ELEMENT_BORDER_SIZE;
+    piece.rect.width = border.owner->rect.width - ELEMENT_BORDER_SIZE;
+    piece.rect.height = border.owner->rect.height - ELEMENT_BORDER_SIZE;
+
+    border.pieces = &piece; 
+    border.pieces_count = 1;
+
+    FRAMES[frame_count] = frame;
+    frame_count++;
+
+    log_print_beautify("frame_count", "%d\n", frame_count);
+    
+    Vector2 mouse_pos_prev = {0};  
+    bool input_is_left_released = false;
     while (!WindowShouldClose()) {
 
         Vector2 mouse_pos = GetMousePosition();
-        
+        input_is_left_released = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+        mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
+        mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
+
+        // Cheatsheet //     
         // bool IsMouseButtonPressed(int button);  // Check if a mouse button has been pressed once
         // bool IsMouseButtonDown(int button);     // Check if a mouse button is being pressed
         // bool IsMouseButtonReleased(int button); // Check if a mouse button has been released once
         // bool IsMouseButtonUp(int button);       // Check if a mouse button is NOT being pressed
         
+        // Reset state.
         for (int i = 0; i < frame_count; i++) {
-
-            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-                FRAMES[i].in_air = false;
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !input_is_left_released) {
+                FRAMES[i].hovered = false;
             }
-        
-            FRAMES[i].hovered = false;
+            else
+            {
+                FRAMES[i].in_air = false;
+                FRAMES[i].hovered = false;
+            }
         }
                
         // Update state.
@@ -256,29 +275,41 @@ int main(void)
             if (rect_point_collision(FRAMES[i].rect, mouse_pos.x, mouse_pos.y)) {
                 FRAMES[i].hovered = true;
 
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    FRAMES[i].in_air = true;
-                }
             }
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && FRAMES[i].hovered) {
+                 FRAMES[i].in_air = true;
+            }   
 
             if (FRAMES[i].in_air) {
-                Rect rect = FRAMES[i].rect;
-                // PEN AND PAPER HERE.
-
+                // thing about whats the way to access elements to be both readable and fast.
+                FRAMES[i].rect.x += mouse_delta_x;
+                FRAMES[i].rect.y += mouse_delta_y;
             }
 
         } 
+   
+        enum { BUFFER_MAX = 64 };
+        char mouse_pos_buffer[BUFFER_MAX];
+        char mouse_delta_buffer[BUFFER_MAX];
+        char frame_title_buffer[BUFFER_MAX];
+        char frame_rect_buffer[BUFFER_MAX];
+        char frame_hovered_buffer[BUFFER_MAX];
+        char frame_in_air_buffer[BUFFER_MAX];
+
+        snprintf(mouse_pos_buffer, BUFFER_MAX, "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
+        snprintf(mouse_delta_buffer, BUFFER_MAX, "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
     
-        char mouse_pos_buffer[64];
-        char mouse_delta_buffer[64];
-        snprintf(mouse_pos_buffer, sizeof(mouse_pos_buffer), "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
-        snprintf(mouse_delta_buffer, sizeof(mouse_delta_buffer), "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
+        e_UI_FRAME frame = FRAMES[0];
+        snprintf(frame_title_buffer, BUFFER_MAX, "[FRAME ID: %d]", frame.id);
+        snprintf(frame_rect_buffer, BUFFER_MAX, "[RECT: x:%d y:%d w:%d h:%d]", 
+                frame.rect.x, frame.rect.y, frame.rect.width, frame.rect.height);
+        snprintf(frame_hovered_buffer, BUFFER_MAX, "[HOVERED: %s]", stringify_bool(frame.hovered));
+        snprintf(frame_in_air_buffer, BUFFER_MAX, "[AIRED: %s]", stringify_bool(frame.in_air));
 
         BeginDrawing();
             {
                 ClearBackground(DARKGRAY);
                 
-
                 // Draw Frames
                 for (int i = 0; i < frame_count; i++) {
                     Rect rect = FRAMES[i].rect;
@@ -287,81 +318,36 @@ int main(void)
                     if (FRAMES[i].hovered) {
                         final = Fade(FRAMES[i].color, fade_level);
                     }
-                    else if (FRAMES[i].in_air) {
-                        final = Fade(FRAMES[i].color, 0.1f);
-                    }
                     else
                     {
                         final = FRAMES[i].color;
                     }
+                    
+                    
+
+
                     DrawRectangle(rect.x, rect.y, rect.width, rect.height,final);
                 }
 
                 // UI
+                enum { FONT_SIZE = 20 };
                 DrawFPS(0, 0);
-                DrawText(mouse_pos_buffer, 0, 17, 20, LIME);
-                DrawText(mouse_delta_buffer, 0, 36, 20, LIME);
+                DrawText(mouse_pos_buffer, 0, 17, FONT_SIZE, LIME);
+                DrawText(mouse_delta_buffer, 0, 36, FONT_SIZE, LIME);
+                DrawText(frame_title_buffer, 0, 55+10, FONT_SIZE, LIME);
+                DrawText(frame_rect_buffer, 0, 74+10, FONT_SIZE, LIME);
+                DrawText(frame_hovered_buffer, 0, 93+10, FONT_SIZE, LIME);
+                DrawText(frame_in_air_buffer, 0, 112+10, FONT_SIZE, LIME);
+
             }
         EndDrawing();
-
-        Vector2 mouse_pos_last = GetMousePosition();
-        mouse_delta_x = mouse_pos_last.x - mouse_pos.x;
-        mouse_delta_y = mouse_pos_last.y - mouse_pos.y;
+        mouse_pos_prev = mouse_pos;
     }
 
     CloseWindow();
     return 0;
 }
 
-// OLD SHAISE
-// int canvas_width   = 1280;
-// int canvas_height  = 720;
-//
-// void screen_to_center_origin(int pos_x, int pos_y, int* out_x, int* out_y)
-// {
-//     int rx = pos_x - canvas_width/2;
-//     int ry = (pos_y - canvas_height/2) * -1;
-//
-//     *out_x = rx;
-//     *out_y = ry;
-// }
-//
-// void center_origin_to_screen(int pos_x, int pos_y, int* out_x, int* out_y)
-// {
-//     int result_x = 0;
-//     int result_y = 0;
-//
-//     // from a [top left 0|0] to b [origin 640|360] = [B - A]
-//     int atobx = canvas_width/2;  // 640
-//     int atoby = canvas_height/2; // 360
-//
-//     result_x = atobx + pos_x;
-//     result_y = atoby - pos_y;
-//
-//     *out_x = result_x;
-//     *out_y = result_y;
-// }
-//
-// void PutPixelCenterOrigin(int pos_x, int pos_y, const Color color)
-// {
-//     int rx, ry;
-//     center_origin_to_screen(pos_x, pos_y, &rx, &ry);
-//     DrawPixel(rx, ry, color);
-// }
-//
-// void CanvasToViewport(int cx, int cy, vec3 vp)
-// {
-//     vp[0] = cx * (1.0f/canvas_width);
-//     vp[1] = cy * (1.0f/canvas_height);
-//     vp[2] = 1.0f;
-// }
-//
-// void calculate_ray(vec2 P, const vec2 Origin, const vec2 dir, float t)
-// { // P = O + t(V-O) 
-//     P[0] = Origin[0] + dir[0] * t;
-//     P[1] = Origin[1] + dir[1] * t;
-// }
-//
 //// PRETTY CLEVER //
 // typedef struct { int type, size; } mu_BaseCommand;
 // typedef struct { mu_BaseCommand base; void *dst; } mu_JumpCommand;

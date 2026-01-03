@@ -43,32 +43,15 @@ void log_print_beautify(const char* prefix, const char* format, ...)
     va_end(args);
 }
 
-
-
+#include <stdbool.h>
+const char* stringify_bool(bool var) { return var ? "TRUE" : "FALSE"; }
 
 int main(void)
 {
+
+    printf("%s\n", stringify_bool(false));
     
-    int i = 4;
-    log_print_beautify("DELTA TIME", "%d\n", i);
-    //
-    // for (int i = 0; i < 128; i++) {
-    //     stack_push(e.x, i);
-    // }
-    // printf("[IDX: %d]\n", e.x.idx);
-    //
-    // for (int i = 0; i < 128; i++) {
-    //     int res = 0;
-    //     stack_pop(e.x, res);
-    //     printf("[POPPED: %d]\n", res);
-    // }
-    //
-    // printf("[IDX: %d]\n", e.x.idx);
-    //
-    // for (int i = 0; i < arrlen(e.x.items); i++) {
-    //     printf ("%d\n", i);
-    // }
-   
+  
 
     return 0;
 }
