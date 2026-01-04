@@ -197,7 +197,7 @@ struct e_UI_FRAME {
     unsigned int id;
     bool         in_air;
     bool         in_resize;
-    bool         hovered;
+    bool         active; // active
 }; /* e_UI_FRAME */
 
 typedef struct {
@@ -234,11 +234,19 @@ int main(void)
     // UI setup
     e_UI_CTX ctx = {0};
     ctx.theme = theme_default;
-    // frame creation WILL be immediate.
+
+    // Frame 1.
     ctx.frames[ctx.frames_count].rect = rect_create(600, 300, 300, 100);
     ctx.frames[ctx.frames_count].id   = ctx.frames_count;
     ctx.frames_count++;
     log_print_beautify("frame_count", "%d\n", ctx.frames_count);
+
+    // Frame 2.
+    ctx.frames[ctx.frames_count].rect = rect_create(300, 200, 300, 100);
+    ctx.frames[ctx.frames_count].id   = ctx.frames_count;
+    ctx.frames_count++;
+    log_print_beautify("frame_count", "%d\n", ctx.frames_count);
+    // frame creation WILL be immediate.
     
     Vector2 mouse_pos_prev = {0};  
     bool input_is_left_released = false;
@@ -248,55 +256,62 @@ int main(void)
         input_is_left_released = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
+        // if mouse button click.
+        // get frame that is beenng clicked on.
+        // determine location on that frame that is beeing clicked on.
+        // proceed acrodigly.
 
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            
+            for (int i = 0; i < ctx.frames_count; i++) {
+                
+                rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y) 
+                
+
+            }
+        
+
+
+
+        }
+
+
+        // OLD WAY
         // Update UI.
         for (int i = 0; i < ctx.frames_count; i++) {
             
             // reset
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !input_is_left_released) {
-                ctx.frames[i].hovered = false;
+                ctx.frames[i].active = false;
             }
             else
             {
                 ctx.frames[i].in_air = false;
-                ctx.frames[i].hovered = false;
+                ctx.frames[i].active = false;
             }
-
 
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 
-                if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
-
-// HMMMM
-
-
-
-
-                }
-                
-
-
+                    Rect resize_rect;
+                    resize_rect.x = ctx.frames[i].rect.x + ctx.frames[i].rect.width - RESIZE_AREA_SIZE;
+                    resize_rect.y = ctx.frames[i].rect.y + ctx.frames[i].rect.height - RESIZE_AREA_SIZE;
+                    resize_rect.width  = RESIZE_AREA_SIZE;
+                    resize_rect.height = RESIZE_AREA_SIZE;
+                    
+                    if (rect_point_collision(resize_rect, mouse_pos.x, mouse_pos.y)) {
+                        
+                    }
+                    else if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
+                    
+                        
+                    }
 
             }
             
             // update
-            if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
-                ctx.frames[i].hovered = true;
+          
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && ctx.frames[i].active) {
 
-                Rect resize_rect;
-                resize_rect.x = ctx.frames[i].rect.x + ctx.frames[i].rect.width - RESIZE_AREA_SIZE;
-                resize_rect.y = ctx.frames[i].rect.y + ctx.frames[i].rect.height - RESIZE_AREA_SIZE;
-                resize_rect.width = RESIZE_AREA_SIZE;
-                resize_rect.height = RESIZE_AREA_SIZE;
-                
-
-
-            }
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && ctx.frames[i].hovered) {
-                // if mouse button click.
-                // get frame that is beenng clicked on.
-                // determine location on that frame that is beeing clicked on.
-                // proceed acrodigly.
                  ctx.frames[i].in_air = true;
             }   
 
