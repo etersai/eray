@@ -283,7 +283,7 @@ int main(void)
             }   
 
             if (FRAMES[i].in_air) {
-                // thing about whats the way to access elements to be both readable and fast.
+                // think about whats the way to access elements to be both readable and fast.
                 FRAMES[i].rect.x += mouse_delta_x;
                 FRAMES[i].rect.y += mouse_delta_y;
                 FRAMES[i].elements->pieces->rect.x = FRAMES[i].rect.x + ELEMENT_BORDER_SIZE;
