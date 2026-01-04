@@ -176,33 +176,40 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 // UI MEAT
 //
 #define EUI_FRAMES_MAX 64
-typedef struct e_UI_FRAME_ELEMENT e_UI_FRAME_ELEMENT;
+//typedef struct e_UI_FRAME_ELEMENT e_UI_FRAME_ELEMENT;
 typedef struct e_UI_FRAME e_UI_FRAME;
 
 typedef struct {
-     Color color;
-     Rect  rect;   
-} Piece;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
+} e_UI_COLOR;
+
+typedef struct {
+    unsigned int size_border;
+    e_UI_COLOR color_main;
+    e_UI_COLOR color_border;
+} e_UI_THEME;
 
 struct e_UI_FRAME {
     Rect         rect;
-    Color        color;
     unsigned int id;
     bool         in_air;
     bool         hovered;
-    
-    e_UI_FRAME_ELEMENT *elements;
-    size_t              element_count;
-    size_t              element_capacity;
 }; /* e_UI_FRAME */
 
-struct e_UI_FRAME_ELEMENT {
-    Piece      *pieces; 
-    size_t      pieces_count;
-    e_UI_FRAME *owner;
-}; /* e_UI_FRAME_ELEMENT */
+typedef struct {
+    e_UI_THEME theme;
+    e_UI_FRAME frames[EUI_FRAMES_MAX]; // TODO DYNAMIC ARRAY.
+    size_t     frames_count;
+} e_UI_CTX;
 
-e_UI_FRAME FRAMES[EUI_FRAMES_MAX];
+static e_UI_THEME theme_default = {
+    .size_border  = 1,
+    .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
+    .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
+};
 
 int main(void)
 {
@@ -215,34 +222,13 @@ int main(void)
     int mouse_delta_y = 0;
     InitWindow(width, height, title);
     SetTargetFPS(target_fps);
-
-    // Create frame (passing by value for now.)
-    int frame_count = 0;
-    e_UI_FRAME frame = {0};
-    frame.rect = rect_create(600, 300, 300, 100);
-    frame.color = ORANGE;
-    frame.id = frame_count;
-
-    e_UI_FRAME_ELEMENT element_border;
-    element_border.owner = &frame;
-    Piece piece;
-    piece.color = GRAY;
-    enum { ELEMENT_BORDER_SIZE = 4 };
-    piece.rect.x = element_border.owner->rect.x + ELEMENT_BORDER_SIZE;
-    piece.rect.y = element_border.owner->rect.y + ELEMENT_BORDER_SIZE;
-    piece.rect.width = element_border.owner->rect.width - (2*ELEMENT_BORDER_SIZE); 
-    piece.rect.height = element_border.owner->rect.height - (2*ELEMENT_BORDER_SIZE);
-
-    element_border.pieces = &piece; 
-    element_border.pieces_count = 1;
-
-    frame.elements = &element_border;
-    frame.element_count++;      
-
-    FRAMES[frame_count] = frame;
-    frame_count++;
-
-    log_print_beautify("frame_count", "%d\n", frame_count);
+       
+    e_UI_CTX ctx = {0};
+    ctx.theme = theme_default;
+    ctx.frames[ctx.frames_count].rect = rect_create(600, 300, 300, 100);
+    ctx.frames[ctx.frames_count].id   = ctx.frames_count;
+    ctx.frames_count++;
+    log_print_beautify("frame_count", "%d\n", ctx.frames_count);
     
     Vector2 mouse_pos_prev = {0};  
     bool input_is_left_released = false;
@@ -260,34 +246,31 @@ int main(void)
         // bool IsMouseButtonUp(int button);       // Check if a mouse button is NOT being pressed
         
         // Reset state.
-        for (int i = 0; i < frame_count; i++) {
+        for (int i = 0; i < ctx.frames_count; i++) {
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !input_is_left_released) {
-                FRAMES[i].hovered = false;
+                ctx.frames[i].hovered = false;
             }
             else
             {
-                FRAMES[i].in_air = false;
-                FRAMES[i].hovered = false;
+                ctx.frames[i].in_air = false;
+                ctx.frames[i].hovered = false;
             }
         }
                
         // Update state.
-        for (int i = 0; i < frame_count; i++) {
+        for (int i = 0; i < ctx.frames_count; i++) {
             
-            if (rect_point_collision(FRAMES[i].rect, mouse_pos.x, mouse_pos.y)) {
-                FRAMES[i].hovered = true;
+            if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
+                ctx.frames[i].hovered = true;
 
             }
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && FRAMES[i].hovered) {
-                 FRAMES[i].in_air = true;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && ctx.frames[i].hovered) {
+                 ctx.frames[i].in_air = true;
             }   
 
-            if (FRAMES[i].in_air) {
-                // think about whats the way to access elements to be both readable and fast.
-                FRAMES[i].rect.x += mouse_delta_x;
-                FRAMES[i].rect.y += mouse_delta_y;
-                FRAMES[i].elements->pieces->rect.x = FRAMES[i].rect.x + ELEMENT_BORDER_SIZE;
-                FRAMES[i].elements->pieces->rect.y = FRAMES[i].rect.y + ELEMENT_BORDER_SIZE;            
+            if (ctx.frames[i].in_air) {
+                ctx.frames[i].rect.x += mouse_delta_x;
+                ctx.frames[i].rect.y += mouse_delta_y;
             }
         } 
    
@@ -302,7 +285,7 @@ int main(void)
         snprintf(mouse_pos_buffer, BUFFER_MAX, "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
         snprintf(mouse_delta_buffer, BUFFER_MAX, "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
     
-        e_UI_FRAME frame = FRAMES[0];
+        e_UI_FRAME frame = ctx.frames[0];
         snprintf(frame_title_buffer, BUFFER_MAX, "[FRAME ID: %d]", frame.id);
         snprintf(frame_rect_buffer, BUFFER_MAX, "[RECT: x:%d y:%d w:%d h:%d]", 
                 frame.rect.x, frame.rect.y, frame.rect.width, frame.rect.height);
@@ -311,39 +294,21 @@ int main(void)
 
         BeginDrawing();
             {
-                ClearBackground(BLACK);
+                ClearBackground(RAYWHITE);
                 
                 // Draw Frames
-                for (int curr_frame = 0; curr_frame < frame_count; curr_frame++) {
-                    // Rect rect = FRAMES[i].rect;
-                    // Color final;
-                    // float fade_level = 0.9f;
-                    // if (FRAMES[i].hovered) {
-                    //     final = Fade(FRAMES[i].color, fade_level);
-                    // }
-                    // else
-                    // {
-                    //     final = FRAMES[i].color;
-                    // }
-                    e_UI_FRAME frame = FRAMES[curr_frame];
-                    DrawRectangle(frame.rect.x, frame.rect.y, frame.rect.width, frame.rect.height, frame.color);
-                    for (int i = 0; i < frame.element_count; i++) {
+                for (int curr_frame = 0; curr_frame < ctx.frames_count; curr_frame++) {
+                    DrawRectangle(ctx.frames[curr_frame].rect.x,
+                                  ctx.frames[curr_frame].rect.y,
+                                  ctx.frames[curr_frame].rect.width,
+                                  ctx.frames[curr_frame].rect.height,
+                                  *(Color*)&ctx.theme.color_border); // border just bigger rect underneath.
 
-                        if (frame.elements == NULL) { // hackyyy
-                            log_print_n_flush("NULL!");
-                            abort();
-                        }
-
-                        for (int j = 0; j < frame.elements->pieces_count; j++) {
-                            DrawRectangle(frame.elements->pieces[i].rect.x,
-                                            frame.elements->pieces[i].rect.y,
-                                            frame.elements->pieces[i].rect.width,
-                                            frame.elements->pieces[i].rect.height,
-                                            frame.elements->pieces[i].color);
-                        }
-                    }
-
-                    
+                    DrawRectangle(ctx.frames[curr_frame].rect.x + ctx.theme.size_border,
+                                  ctx.frames[curr_frame].rect.y + ctx.theme.size_border,
+                                  ctx.frames[curr_frame].rect.width  - 2*ctx.theme.size_border,
+                                  ctx.frames[curr_frame].rect.height - 2*ctx.theme.size_border,
+                                  *(Color*)&ctx.theme.color_main);
                 }
 
                 // UI

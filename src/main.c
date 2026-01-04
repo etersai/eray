@@ -217,7 +217,7 @@ int main(void)
                     }
                     else
                     {
-                        canvas_put_pixel(&canvas, pos, ERAY_COLOR_BLACK);
+                        canvas_put_pixel(&canvas, pos, ERAY_COLOR_WHITE);
                     }
                 } 
             }
