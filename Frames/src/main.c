@@ -176,7 +176,7 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 // UI MEAT
 //
 #define EUI_FRAMES_MAX 64
-//typedef struct e_UI_FRAME_ELEMENT e_UI_FRAME_ELEMENT;
+#define RESIZE_AREA_SIZE 16
 typedef struct e_UI_FRAME e_UI_FRAME;
 
 typedef struct {
@@ -196,6 +196,7 @@ struct e_UI_FRAME {
     Rect         rect;
     unsigned int id;
     bool         in_air;
+    bool         in_resize;
     bool         hovered;
 }; /* e_UI_FRAME */
 
@@ -211,6 +212,13 @@ static e_UI_THEME theme_default = {
     .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
 };
 
+// magnifiey
+//Display *dpy = XOpenDisplay(NULL);
+//Window root = DefaultRootWindow(dpy);
+//XImage *img = XGetImage(dpy, root, x, y, width, height,  
+//                       AllPlanes, ZPixmap);
+// Scale img->data and draw to a window
+
 int main(void)
 {
     // Platform setup
@@ -222,9 +230,11 @@ int main(void)
     int mouse_delta_y = 0;
     InitWindow(width, height, title);
     SetTargetFPS(target_fps);
-       
+      
+    // UI setup
     e_UI_CTX ctx = {0};
     ctx.theme = theme_default;
+    // frame creation WILL be immediate.
     ctx.frames[ctx.frames_count].rect = rect_create(600, 300, 300, 100);
     ctx.frames[ctx.frames_count].id   = ctx.frames_count;
     ctx.frames_count++;
@@ -239,14 +249,10 @@ int main(void)
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
 
-        // Cheatsheet //     
-        // bool IsMouseButtonPressed(int button);  // Check if a mouse button has been pressed once
-        // bool IsMouseButtonDown(int button);     // Check if a mouse button is being pressed
-        // bool IsMouseButtonReleased(int button); // Check if a mouse button has been released once
-        // bool IsMouseButtonUp(int button);       // Check if a mouse button is NOT being pressed
-        
-        // Reset state.
+        // Update UI.
         for (int i = 0; i < ctx.frames_count; i++) {
+            
+            // reset
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !input_is_left_released) {
                 ctx.frames[i].hovered = false;
             }
@@ -255,16 +261,42 @@ int main(void)
                 ctx.frames[i].in_air = false;
                 ctx.frames[i].hovered = false;
             }
-        }
-               
-        // Update state.
-        for (int i = 0; i < ctx.frames_count; i++) {
+
+
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                
+                if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
+
+// HMMMM
+
+
+
+
+                }
+                
+
+
+
+            }
             
+            // update
             if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
                 ctx.frames[i].hovered = true;
 
+                Rect resize_rect;
+                resize_rect.x = ctx.frames[i].rect.x + ctx.frames[i].rect.width - RESIZE_AREA_SIZE;
+                resize_rect.y = ctx.frames[i].rect.y + ctx.frames[i].rect.height - RESIZE_AREA_SIZE;
+                resize_rect.width = RESIZE_AREA_SIZE;
+                resize_rect.height = RESIZE_AREA_SIZE;
+                
+
+
             }
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && ctx.frames[i].hovered) {
+                // if mouse button click.
+                // get frame that is beenng clicked on.
+                // determine location on that frame that is beeing clicked on.
+                // proceed acrodigly.
                  ctx.frames[i].in_air = true;
             }   
 
@@ -281,16 +313,18 @@ int main(void)
         char frame_rect_buffer[BUFFER_MAX];
         char frame_hovered_buffer[BUFFER_MAX];
         char frame_in_air_buffer[BUFFER_MAX];
+        char frame_in_resize_buffer[BUFFER_MAX];
 
         snprintf(mouse_pos_buffer, BUFFER_MAX, "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
         snprintf(mouse_delta_buffer, BUFFER_MAX, "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
     
-        e_UI_FRAME frame = ctx.frames[0];
+        e_UI_FRAME frame = ctx.frames[0]; // hackyyy
         snprintf(frame_title_buffer, BUFFER_MAX, "[FRAME ID: %d]", frame.id);
         snprintf(frame_rect_buffer, BUFFER_MAX, "[RECT: x:%d y:%d w:%d h:%d]", 
                 frame.rect.x, frame.rect.y, frame.rect.width, frame.rect.height);
         snprintf(frame_hovered_buffer, BUFFER_MAX, "[HOVERED: %s]", stringify_bool(frame.hovered));
         snprintf(frame_in_air_buffer, BUFFER_MAX, "[AIRED: %s]", stringify_bool(frame.in_air));
+        snprintf(frame_in_resize_buffer, BUFFER_MAX, "[RESIZED: %s]", stringify_bool(frame.in_resize));
 
         BeginDrawing();
             {
@@ -309,7 +343,14 @@ int main(void)
                                   ctx.frames[curr_frame].rect.width  - 2*ctx.theme.size_border,
                                   ctx.frames[curr_frame].rect.height - 2*ctx.theme.size_border,
                                   *(Color*)&ctx.theme.color_main);
-                }
+                    
+                    DrawRectangle(ctx.frames[curr_frame].rect.x + ctx.frames[curr_frame].rect.width - RESIZE_AREA_SIZE,
+                                  ctx.frames[curr_frame].rect.y + ctx.frames[curr_frame].rect.height - RESIZE_AREA_SIZE,
+                                  RESIZE_AREA_SIZE,
+                                  RESIZE_AREA_SIZE,
+                                  RED);
+                    //DrawRectangle(200, 200, RESIZE_AREA_SIZE, RESIZE_AREA_SIZE, RED);
+                }                 
 
                 // UI
                 enum { FONT_SIZE = 20 };
@@ -320,7 +361,8 @@ int main(void)
                 DrawText(frame_rect_buffer, 0, 74+10, FONT_SIZE, LIME);
                 DrawText(frame_hovered_buffer, 0, 93+10, FONT_SIZE, LIME);
                 DrawText(frame_in_air_buffer, 0, 112+10, FONT_SIZE, LIME);
-
+                DrawText(frame_in_resize_buffer, 0, 131+10, FONT_SIZE, LIME);
+                    
             }
         EndDrawing();
         mouse_pos_prev = mouse_pos;
@@ -329,7 +371,12 @@ int main(void)
     CloseWindow();
     return 0;
 }
-
+// Cheatsheet //     
+// bool IsMouseButtonPressed(int button);  // Check if a mouse button has been pressed once
+// bool IsMouseButtonDown(int button);     // Check if a mouse button is being pressed
+// bool IsMouseButtonReleased(int button); // Check if a mouse button has been released once
+// bool IsMouseButtonUp(int button);       // Check if a mouse button is NOT being pressed
+ 
 //// PRETTY CLEVER //
 // typedef struct { int type, size; } mu_BaseCommand;
 // typedef struct { mu_BaseCommand base; void *dst; } mu_JumpCommand;
