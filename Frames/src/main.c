@@ -176,8 +176,8 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 // UI MEAT
 //
 #define EUI_FRAMES_MAX 64
-#define EUI_FRAME_MAX_WIDTH 120
-#define EUI_FRAME_MAX_HEIGHT 60 
+#define EUI_FRAME_MIN_WIDTH 120
+#define EUI_FRAME_MIN_HEIGHT 60 
 #define RESIZE_AREA_SIZE 16
 typedef struct e_UI_FRAME e_UI_FRAME;
 
@@ -306,8 +306,8 @@ int main(void)
             else if (ctx.frames[i].in_resize) {
                 ctx.frames[i].rect.width  += mouse_delta_x;                
                 ctx.frames[i].rect.height += mouse_delta_y;                
-                if (ctx.frames[i].rect.width < EUI_FRAME_MAX_WIDTH) ctx.frames[i].rect.width = EUI_FRAME_MAX_WIDTH;
-                if (ctx.frames[i].rect.height < EUI_FRAME_MAX_HEIGHT) ctx.frames[i].rect.height = EUI_FRAME_MAX_HEIGHT;
+                if (ctx.frames[i].rect.width < EUI_FRAME_MIN_WIDTH) ctx.frames[i].rect.width = EUI_FRAME_MIN_WIDTH;
+                if (ctx.frames[i].rect.height < EUI_FRAME_MIN_HEIGHT) ctx.frames[i].rect.height = EUI_FRAME_MIN_HEIGHT;
             }
 
         } /* end for frame */
@@ -363,10 +363,10 @@ int main(void)
                 DrawText(mouse_pos_buffer, 0, 17, FONT_SIZE, LIME);
                 DrawText(mouse_delta_buffer, 0, 36, FONT_SIZE, LIME);
                 if (ctx.active_frame) {
-                DrawText(frame_title_buffer, 0, 55+10, FONT_SIZE, LIME);
-                DrawText(frame_rect_buffer, 0, 74+10, FONT_SIZE, LIME);
-                DrawText(frame_in_air_buffer, 0, 93+10, FONT_SIZE, LIME);
-                DrawText(frame_in_resize_buffer, 0, 112+10, FONT_SIZE, LIME);
+                DrawText(frame_title_buffer, 0, 65, FONT_SIZE, LIME); 
+                DrawText(frame_rect_buffer, 0, 84, FONT_SIZE, LIME);
+                DrawText(frame_in_air_buffer, 0, 103, FONT_SIZE, LIME);
+                DrawText(frame_in_resize_buffer, 0, 122, FONT_SIZE, LIME);
                 }
             }
         EndDrawing();
