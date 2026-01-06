@@ -259,6 +259,12 @@ int main(void)
     ctx.count++;
     log_print_beautify("frame_count", "%d\n", ctx.count);
 
+    // Frame 3.
+    ctx.frame_buffer[ctx.count].rect = rect_create(200, 400, 300, 100);
+    ctx.frame_buffer[ctx.count].id   = ctx.count;
+    ctx.count++;
+    log_print_beautify("frame_count", "%d\n", ctx.count);
+
     Vector2 mouse_pos_prev = {0};  
     bool input_is_left_released = false;
     bool input_is_left_pressed = false;
@@ -408,6 +414,9 @@ int main(void)
     return 0;
 }
 
+///////////////////////////
+// Scratchpad and ideas. //
+///////////////////////////
 // int num_categories = 4;
 // int category_height = ypad + 1.2 * body_font->character_height;
 // float x0 = x;
@@ -457,5 +466,3 @@ int main(void)
 //   mu_TextCommand text;
 //   mu_IconCommand icon;
 // } mu_Command;
-//
-//
