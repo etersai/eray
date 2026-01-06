@@ -210,6 +210,11 @@ typedef struct {
     unsigned int z_highest;
     e_UI_FRAME  frames[EUI_FRAMES_MAX]; // TODO DYNAMIC ARRAY.
     size_t      frames_count;
+
+    e_UI_FRAME *da_frames;
+    size_t      count;
+    size_t      capacity;
+    
 } e_UI_CTX;
 
 static e_UI_THEME theme_default = {
@@ -234,6 +239,17 @@ int eui_z_compare(const void* a, const void* b)
 //                       AllPlanes, ZPixmap);
 // Scale img->data and draw to a window
 
+
+e_UI_CTX* eui_init(e_UI_CTX* ctx)
+{
+ return NULL;
+}
+
+void eui_pop_to_top(e_UI_CTX ctx, int frame_index)
+{
+
+}
+
 int main(void)
 {
     // Platform setup
@@ -251,6 +267,8 @@ int main(void)
     ctx.theme = theme_default;
     ctx.z_order_dirty = true;
     ctx.z_highest = 1;
+
+
 
     // Frame 1.
     ctx.frames[ctx.frames_count].rect      = rect_create(600, 300, 300, 100);
@@ -284,6 +302,12 @@ int main(void)
         input_is_left_pressed  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
+
+
+        // there are 2 frames.
+        // sorted in order of creation.
+        // every time when mouse move or click happens it becomes the active one
+        //
 
         // if mouse button click.
         // get frame that is beenng clicked on.
@@ -352,63 +376,7 @@ int main(void)
                 ctx.z_order_dirty = false;
             }
         }
-        
 
-#if 0  
-        ctx.active_frame = NULL;
-
-        for (int i = 0; i < ctx.frames_count; i++) {
-
-            // reset
-            if (input_is_left_released) {
-                ctx.frames[i].in_air    = false;
-                ctx.frames[i].in_resize = false;
-            } 
-            
-            // checks
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-
-                Rect resize_rect;
-                resize_rect.x = ctx.frames[i].rect.x + ctx.frames[i].rect.width - EUI_RESIZE_AREA_SIZE;
-                resize_rect.y = ctx.frames[i].rect.y + ctx.frames[i].rect.height - EUI_RESIZE_AREA_SIZE;
-                resize_rect.width  = EUI_RESIZE_AREA_SIZE;
-                resize_rect.height = EUI_RESIZE_AREA_SIZE;
-                    
-                if (rect_point_collision(resize_rect, mouse_pos.x, mouse_pos.y)) {
-                    ctx.frames[i].in_resize = true;
-                }
-                else if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y))
-                {
-                    ctx.frames[i].in_air = true;
-                }
-
-            }
-
-            if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y) || ctx.frames[i].in_resize
-                    || ctx.frames[i].in_air) {
-                ctx.active_frame = &ctx.frames[i];
-            }
-
-            
-            // update
-            if (ctx.frames[i].in_air) {
-                ctx.frames[i].rect.x += mouse_delta_x;
-                ctx.frames[i].rect.y += mouse_delta_y;
-            }
-            else if (ctx.frames[i].in_resize) {
-                ctx.frames[i].rect.width  += mouse_delta_x;                
-                ctx.frames[i].rect.height += mouse_delta_y;                
-                if (ctx.frames[i].rect.width < EUI_FRAME_MIN_WIDTH) ctx.frames[i].rect.width = EUI_FRAME_MIN_WIDTH;
-                if (ctx.frames[i].rect.height < EUI_FRAME_MIN_HEIGHT) ctx.frames[i].rect.height = EUI_FRAME_MIN_HEIGHT;
-            }
-
-        } /* end for frame */
-        
-        if (ctx.z_order_dirty) {
-            qsort(ctx.frames, ctx.frames_count, sizeof(e_UI_FRAME), eui_z_compare); 
-            ctx.z_order_dirty = false;
-        }
-#endif
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
         char mouse_delta_buffer[BUFFER_MAX];
@@ -445,7 +413,7 @@ int main(void)
                                   ctx.frames[curr_frame].rect.width  - 2*ctx.theme.size_border,
                                   ctx.frames[curr_frame].rect.height - 2*ctx.theme.size_border,
                                   *(Color*)&ctx.theme.color_main);
-#if 0 
+#if 1 
                     DrawRectangle(ctx.frames[curr_frame].rect.x + ctx.frames[curr_frame].rect.width - EUI_RESIZE_AREA_SIZE,
                                   ctx.frames[curr_frame].rect.y + ctx.frames[curr_frame].rect.height - EUI_RESIZE_AREA_SIZE,
                                   EUI_RESIZE_AREA_SIZE,
