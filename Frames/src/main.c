@@ -157,6 +157,8 @@ enum
     EUI_INTERACTION_SCROLL,
 };
 
+typedef unsigned int e_ID;
+
 typedef struct {
     unsigned char r;
     unsigned char g;
@@ -170,14 +172,12 @@ typedef struct {
     e_UI_COLOR color_border;
 } e_UI_THEME;
 
-typedef unsigned int e_ID;
 typedef struct e_UI_FRAME {
     Rect         rect;
     e_ID         id;
 } e_UI_FRAME; 
 
 typedef struct {
-
     e_UI_FRAME   frame_buffer[EUI_FRAMES_MAX];
     e_UI_THEME   theme;
     e_UI_FRAME  *active_frame;
@@ -195,7 +195,7 @@ void eui_spawn_frame(e_UI_CTX* ctx, Rect rect)
 
 // Globals.
 static e_UI_THEME theme_default = {
-    .size_border  = 5,
+    .size_border  = 1,
     .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
     .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
 };
