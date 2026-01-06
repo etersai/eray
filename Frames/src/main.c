@@ -219,7 +219,7 @@ int main(void)
     ctx.capacity = EUI_FRAMES_MAX;
     
     // Spawn frames
-    for (int i = 0; i < EUI_FRAMES_MAX; i++) {  
+    for (int i = 0; i < 100; i++) {  
         Rect rect;
         
         rect.x = rand() % window_width; 
