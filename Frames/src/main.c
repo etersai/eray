@@ -24,6 +24,10 @@
         abort();                                                        \
     }                                                                   \
 } while (0)
+#define unreachable() do {                                                  \
+    fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__); \
+    abort();                                                                \
+} while (0)
 
 //
 // LOG 
@@ -271,7 +275,7 @@ int main(void)
                             break;
                         }
                     }
-                    if (found_index == -1) { abort(); } // if not on list. (abort for now.)
+                    if (found_index == -1) { unreachable(); } // if not on list. (abort for now.)
                     
                     e_UI_FRAME temp;
                     temp.id   = ctx.frame_buffer[found_index].id;
