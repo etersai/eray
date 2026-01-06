@@ -178,7 +178,7 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 #define EUI_FRAMES_MAX 64
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
-#define RESIZE_AREA_SIZE 16
+#define EUI_RESIZE_AREA_SIZE 16
 typedef struct e_UI_FRAME e_UI_FRAME;
 
 typedef struct {
@@ -194,25 +194,38 @@ typedef struct {
     e_UI_COLOR color_border;
 } e_UI_THEME;
 
+typedef unsigned int e_UI_ID;
 struct e_UI_FRAME {
     Rect         rect;
-    unsigned int id;
+    e_UI_ID      id;
+    unsigned int z_index;
     bool         in_air;
     bool         in_resize;
 }; /* e_UI_FRAME */
 
 typedef struct {
-    e_UI_THEME theme;
+    e_UI_THEME  theme;
     e_UI_FRAME *active_frame;
-    e_UI_FRAME frames[EUI_FRAMES_MAX]; // TODO DYNAMIC ARRAY.
-    size_t     frames_count;
+    bool        z_order_dirty;    
+    unsigned int z_highest;
+    e_UI_FRAME  frames[EUI_FRAMES_MAX]; // TODO DYNAMIC ARRAY.
+    size_t      frames_count;
 } e_UI_CTX;
 
 static e_UI_THEME theme_default = {
-    .size_border  = 1,
+    .size_border  = 5,
     .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
     .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
 };
+
+int eui_z_compare(const void* a, const void* b)
+{
+    e_UI_FRAME *frame_a = (e_UI_FRAME*)a;
+    e_UI_FRAME *frame_b = (e_UI_FRAME*)b;
+    if (frame_a->z_index <  frame_b->z_index) return -1;
+    if (frame_a->z_index == frame_b->z_index) return 0;
+    else return 1;
+}
 
 // magnifiey
 //Display *dpy = XOpenDisplay(NULL);
@@ -236,19 +249,28 @@ int main(void)
     // UI setup
     e_UI_CTX ctx = {0};
     ctx.theme = theme_default;
+    ctx.z_order_dirty = true;
+    ctx.z_highest = 1;
 
     // Frame 1.
-    ctx.frames[ctx.frames_count].rect = rect_create(600, 300, 300, 100);
-    ctx.frames[ctx.frames_count].id   = ctx.frames_count;
+    ctx.frames[ctx.frames_count].rect      = rect_create(600, 300, 300, 100);
+    ctx.frames[ctx.frames_count].id        = ctx.frames_count;
+    ctx.frames[ctx.frames_count].z_index   = 0;
     ctx.frames_count++;
     log_print_beautify("frame_count", "%d\n", ctx.frames_count);
 
     // Frame 2.
-    ctx.frames[ctx.frames_count].rect = rect_create(300, 200, 300, 100);
-    ctx.frames[ctx.frames_count].id   = ctx.frames_count;
+    ctx.frames[ctx.frames_count].rect      = rect_create(300, 200, 300, 100);
+    ctx.frames[ctx.frames_count].id        = ctx.frames_count;
+    ctx.frames[ctx.frames_count].z_index   = 1;
     ctx.frames_count++;
     log_print_beautify("frame_count", "%d\n", ctx.frames_count);
     // frame creation WILL be immediate.
+    
+    if (ctx.z_order_dirty) { // hmm?
+        qsort(ctx.frames, ctx.frames_count, sizeof(e_UI_FRAME), eui_z_compare); 
+        ctx.z_order_dirty = false;
+    }
     
     Vector2 mouse_pos_prev = {0};  
     bool input_is_left_released = false;
@@ -263,7 +285,77 @@ int main(void)
         // get frame that is beenng clicked on.
         // determine location on that frame that is beeing clicked on.
         // proceed acrodigly.
+       
+        if (input_is_left_released) {
+            for (int i = 0; i < ctx.frames_count; i++) {
+                ctx.frames[i].in_air = false;
+                ctx.frames[i].in_resize = false;
+            }
+        }
         
+        e_UI_FRAME *active = NULL;
+        
+        for (int i = ctx.frames_count; i >= 0; i--) { // hoover.
+            if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
+                active = &ctx.frames[i];
+                break;
+            }
+        }
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            for (int i = ctx.frames_count; i >= 0; i--) {
+                
+            if (rect_point_collision(ctx.frames[i].rect, mouse_pos.x, mouse_pos.y)) {
+                active = &ctx.frames[i];
+
+                if (i != ctx.z_highest) { // if not the higest z.
+                    ctx.z_highest++;
+                    ctx.frames[i].z_index = ctx.z_highest; // make it the highest.
+                    ctx.z_order_dirty = true;
+                }
+                break;
+                }
+            }
+        }
+
+        if (active != NULL) {
+            ctx.active_frame = active;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                Rect resize_rect;
+                resize_rect.x = active->rect.x + active->rect.width - EUI_RESIZE_AREA_SIZE;
+                resize_rect.y = active->rect.y + active->rect.height - EUI_RESIZE_AREA_SIZE;
+                resize_rect.width  = EUI_RESIZE_AREA_SIZE;
+                resize_rect.height = EUI_RESIZE_AREA_SIZE;
+                    
+                if (rect_point_collision(resize_rect, mouse_pos.x, mouse_pos.y)) {
+                    active->in_resize = true;
+                }
+                else if (rect_point_collision(active->rect, mouse_pos.x, mouse_pos.y))
+                {
+                    active->in_air = true;
+                }
+            }
+
+            if (active->in_air) {
+                active->rect.x += mouse_delta_x;
+                active->rect.y += mouse_delta_y;
+            }
+            else if (active->in_resize) {
+                active->rect.width  += mouse_delta_x;                
+                active->rect.height += mouse_delta_y;                
+                if (active->rect.width < EUI_FRAME_MIN_WIDTH) active->rect.width = EUI_FRAME_MIN_WIDTH;
+                if (active->rect.height < EUI_FRAME_MIN_HEIGHT) active->rect.height = EUI_FRAME_MIN_HEIGHT;
+            }
+
+            if (ctx.z_order_dirty) {
+                qsort(ctx.frames, ctx.frames_count, sizeof(e_UI_FRAME), eui_z_compare); 
+                ctx.z_order_dirty = false;
+            }
+
+        }
+        
+
+#if 0  
         ctx.active_frame = NULL;
 
         for (int i = 0; i < ctx.frames_count; i++) {
@@ -278,10 +370,10 @@ int main(void)
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 
                 Rect resize_rect;
-                resize_rect.x = ctx.frames[i].rect.x + ctx.frames[i].rect.width - RESIZE_AREA_SIZE;
-                resize_rect.y = ctx.frames[i].rect.y + ctx.frames[i].rect.height - RESIZE_AREA_SIZE;
-                resize_rect.width  = RESIZE_AREA_SIZE;
-                resize_rect.height = RESIZE_AREA_SIZE;
+                resize_rect.x = ctx.frames[i].rect.x + ctx.frames[i].rect.width - EUI_RESIZE_AREA_SIZE;
+                resize_rect.y = ctx.frames[i].rect.y + ctx.frames[i].rect.height - EUI_RESIZE_AREA_SIZE;
+                resize_rect.width  = EUI_RESIZE_AREA_SIZE;
+                resize_rect.height = EUI_RESIZE_AREA_SIZE;
                     
                 if (rect_point_collision(resize_rect, mouse_pos.x, mouse_pos.y)) {
                     ctx.frames[i].in_resize = true;
@@ -297,6 +389,7 @@ int main(void)
                     || ctx.frames[i].in_air) {
                 ctx.active_frame = &ctx.frames[i];
             }
+
             
             // update
             if (ctx.frames[i].in_air) {
@@ -311,7 +404,12 @@ int main(void)
             }
 
         } /* end for frame */
-
+        
+        if (ctx.z_order_dirty) {
+            qsort(ctx.frames, ctx.frames_count, sizeof(e_UI_FRAME), eui_z_compare); 
+            ctx.z_order_dirty = false;
+        }
+#endif
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
         char mouse_delta_buffer[BUFFER_MAX];
@@ -349,12 +447,13 @@ int main(void)
                                   ctx.frames[curr_frame].rect.width  - 2*ctx.theme.size_border,
                                   ctx.frames[curr_frame].rect.height - 2*ctx.theme.size_border,
                                   *(Color*)&ctx.theme.color_main);
-                    
-                    DrawRectangle(ctx.frames[curr_frame].rect.x + ctx.frames[curr_frame].rect.width - RESIZE_AREA_SIZE,
-                                  ctx.frames[curr_frame].rect.y + ctx.frames[curr_frame].rect.height - RESIZE_AREA_SIZE,
-                                  RESIZE_AREA_SIZE,
-                                  RESIZE_AREA_SIZE,
+#if 0 
+                    DrawRectangle(ctx.frames[curr_frame].rect.x + ctx.frames[curr_frame].rect.width - EUI_RESIZE_AREA_SIZE,
+                                  ctx.frames[curr_frame].rect.y + ctx.frames[curr_frame].rect.height - EUI_RESIZE_AREA_SIZE,
+                                  EUI_RESIZE_AREA_SIZE,
+                                  EUI_RESIZE_AREA_SIZE,
                                   RED);
+#endif
                 }                 
 
                 // UI
@@ -376,6 +475,34 @@ int main(void)
     CloseWindow();
     return 0;
 }
+
+
+// int num_categories = 4;
+// int category_height = ypad + 1.2 * body_font->character_height;
+// float x0 = x;
+// float y0 = y;
+// float title_height = draw_title(x0, y0, title);
+// float height = title_height + num_categories * category_height + ypad;
+// my_height = height;
+// y0 -= title_height;
+//
+// {
+// y0 -= category_height;
+// char *string = "Auto Snap";
+// bool pressed = draw_big_text_button(x0, y0, my_width, category_height, string);
+// if (pressed) do_auto_snap(this);
+// }
+//
+// {
+// y0 -= category_height;
+// char *string = "Reset Orientation";
+// bool pressed = draw_big_text_button(x0, y0, my_width, category_height, string);
+// if (pressed) {
+// // ...
+// }
+// }
+// ...
+
 // Cheatsheet //     
 // bool IsMouseButtonPressed(int button);  // Check if a mouse button has been pressed once
 // bool IsMouseButtonDown(int button);     // Check if a mouse button is being pressed

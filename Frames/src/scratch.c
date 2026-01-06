@@ -47,13 +47,12 @@ void log_print_beautify(const char* prefix, const char* format, ...)
 const char* stringify_bool(bool var) { return var ? "TRUE" : "FALSE"; }
 
 int main(void)
-{
+{  
+    int xd = 10;
+    for (int i = xd; i >= 0; i--) {
 
-    printf("%s\n", stringify_bool(false));
-     for (int i = 0; i < 0; i++) {
-        printf("%s\n", stringify_bool(true));
+        printf("HEHE %d\n", i);
     }
-    
   
 
     return 0;
