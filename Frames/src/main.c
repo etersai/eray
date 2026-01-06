@@ -1,12 +1,11 @@
 #include "../include/raylib.h"
 
-#include <stdio.h>
 #include <time.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <sys/types.h>
 
 // XOR           OR       
 // 0 | 0 = 0  |  0 | 0 = 0
@@ -183,12 +182,6 @@ typedef struct {
     size_t       count;
 } e_UI_CTX;
 
-static e_UI_THEME theme_default = {
-    .size_border  = 5,
-    .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
-    .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
-};
-
 void eui_spawn_frame(e_UI_CTX* ctx, Rect rect)
 {
     ctx->frame_buffer[ctx->count].rect = rect;
@@ -196,61 +189,52 @@ void eui_spawn_frame(e_UI_CTX* ctx, Rect rect)
     ctx->count++;
 }
 
-// magnifiey
-//Display *dpy = XOpenDisplay(NULL);
-//Window root = DefaultRootWindow(dpy);
-//XImage *img = XGetImage(dpy, root, x, y, width, height,  
-//                       AllPlanes, ZPixmap);
-// Scale img->data and draw to a window
-
-// Algo in my head XD.
-// if mouse button click.
-// get frame that is beenng clicked on.
-// determine location on that frame that is beeing clicked on.
-// proceed acrodigly.
+// Globals.
+static e_UI_THEME theme_default = {
+    .size_border  = 5,
+    .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
+    .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
+};
 
 int main(void)
 {
     // Platform setup
     const char* title = "Frames";
-    int width = 1280;
-    int height = 720;
+    int window_width = 1280;
+    int window_height = 720;
     int target_fps = 60;
     int mouse_delta_x = 0;
     int mouse_delta_y = 0;
-    InitWindow(width, height, title);
+    InitWindow(window_width, window_height, title);
     SetTargetFPS(target_fps);
     srand(time(NULL));
       
     // UI setup
     e_UI_CTX ctx = {0};
     ctx.theme = theme_default;
-    ctx.interaction_type = EUI_INTERACTION_FREE;
     ctx.capacity = EUI_FRAMES_MAX;
     
     // Spawn frames
     for (int i = 0; i < EUI_FRAMES_MAX; i++) {  
         Rect rect;
         
-        rect.x = rand() % width; 
-        rect.y = rand() % height;
-
+        rect.x = rand() % window_width; 
+        rect.y = rand() % window_height;
         int w = rand() % 300;
         int h = rand() % 300;
         if (w < EUI_FRAME_MIN_WIDTH) w = EUI_FRAME_MIN_WIDTH;
         if (h < EUI_FRAME_MIN_HEIGHT) h = EUI_FRAME_MIN_HEIGHT;
-
         rect.width = w;
         rect.height = h;
-        
+
         eui_spawn_frame(&ctx, rect);
         log_print_beautify("frame_count", "%d\n", ctx.count);
     }
     
 
     Vector2 mouse_pos_prev = {0};  
-    bool input_is_left_released = false;
-    bool input_is_left_pressed = false;
+    bool    input_is_left_released = false;
+    bool    input_is_left_pressed = false;
     while (!WindowShouldClose()) {
 
         Vector2 mouse_pos      = GetMousePosition();
@@ -279,29 +263,29 @@ int main(void)
 
             if (input_is_left_pressed) {
 
-                // search for id; // IF NOT ALREADY ON TOP!.
-                int found_index = -1;
-                for (int i = 0; i < ctx.count; i++) {
-                    if (ctx.frame_buffer[i].id == ctx.active_frame->id) {
-                        found_index = i;
-                        break;
+                { // search for id; // TODO?: IF NOT ALREADY ON TOP!
+                    int found_index = -1;
+                    for (int i = 0; i < ctx.count; i++) {
+                        if (ctx.frame_buffer[i].id == ctx.active_frame->id) {
+                            found_index = i;
+                            break;
+                        }
                     }
+                    if (found_index == -1) { abort(); } // if not on list. (abort for now.)
+                    
+                    e_UI_FRAME temp;
+                    temp.id   = ctx.frame_buffer[found_index].id;
+                    temp.rect = ctx.frame_buffer[found_index].rect;
+
+                    for (int i = found_index+1; i < ctx.count; i++) {
+                        ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
+                        ctx.frame_buffer[i-1].id   = ctx.frame_buffer[i].id;
+                    }
+
+                    ctx.frame_buffer[ctx.count-1].rect = temp.rect;
+                    ctx.frame_buffer[ctx.count-1].id   = temp.id;
+                    ctx.active_frame = &ctx.frame_buffer[ctx.count-1]; // top one becomes new active.
                 }
-                if (found_index == -1) { abort(); } // if not on list.
-                
-                e_UI_FRAME temp;
-                temp.id   = ctx.frame_buffer[found_index].id;
-                temp.rect = ctx.frame_buffer[found_index].rect;
-
-                for (int i = found_index+1; i < ctx.count; i++) {
-                    ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
-                    ctx.frame_buffer[i-1].id   = ctx.frame_buffer[i].id;
-                }
-
-                ctx.frame_buffer[ctx.count-1].rect = temp.rect;
-                ctx.frame_buffer[ctx.count-1].id   = temp.id;
-                ctx.active_frame = &ctx.frame_buffer[ctx.count-1]; // moved on top is the new active frame.
-
  
                 Rect resize_rect;
                 resize_rect.x = ctx.active_frame->rect.x + ctx.active_frame->rect.width - EUI_RESIZE_AREA_SIZE;
@@ -340,11 +324,10 @@ int main(void)
 
         snprintf(mouse_pos_buffer, BUFFER_MAX, "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
         snprintf(mouse_delta_buffer, BUFFER_MAX, "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
-    
         if (ctx.active_frame) {
             snprintf(frame_title_buffer, BUFFER_MAX, "[FRAME ID: %d]", ctx.active_frame->id);
             snprintf(frame_rect_buffer, BUFFER_MAX, "[RECT: x:%d y:%d w:%d h:%d]", 
-                    ctx.active_frame->rect.x, ctx.active_frame->rect.y, ctx.active_frame->rect.width, ctx.active_frame->rect.height);
+            ctx.active_frame->rect.x, ctx.active_frame->rect.y, ctx.active_frame->rect.width, ctx.active_frame->rect.height);
         }
 
         BeginDrawing();
@@ -393,6 +376,20 @@ int main(void)
 ///////////////////////////
 // Scratchpad and ideas. //
 ///////////////////////////
+
+// magnifiey
+//Display *dpy = XOpenDisplay(NULL);
+//Window root = DefaultRootWindow(dpy);
+//XImage *img = XGetImage(dpy, root, x, y, width, height,  
+//                       AllPlanes, ZPixmap);
+// Scale img->data and draw to a window
+
+// Algo in my head XD.
+// if mouse button click.
+// get frame that is beenng clicked on.
+// determine location on that frame that is beeing clicked on.
+// proceed acrodigly.
+
 // int num_categories = 4;
 // int category_height = ypad + 1.2 * body_font->character_height;
 // float x0 = x;
