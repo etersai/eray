@@ -179,8 +179,6 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
 #define EUI_RESIZE_AREA_SIZE 16
-typedef struct e_UI_FRAME e_UI_FRAME;
-
 enum
 {
     EUI_INTERACTION_FREE = 0,
@@ -203,18 +201,14 @@ typedef struct {
 } e_UI_THEME;
 
 typedef unsigned int e_ID;
-struct e_UI_FRAME {
+typedef struct e_UI_FRAME {
     Rect         rect;
     e_ID         id;
-    //bool         in_air;
-    //bool         in_resize;
-}; /* e_UI_FRAME */
+} e_UI_FRAME; 
 
 typedef struct {
-    e_UI_THEME  theme;
-    e_UI_FRAME *active_frame;
-    bool        interacting;
-
+    e_UI_THEME   theme;
+    e_UI_FRAME  *active_frame;
     unsigned int interaction_type;
     
     e_UI_FRAME frame_buffer[EUI_FRAMES_MAX];
@@ -228,25 +222,12 @@ static e_UI_THEME theme_default = {
     .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
 };
 
-
-
 // magnifiey
 //Display *dpy = XOpenDisplay(NULL);
 //Window root = DefaultRootWindow(dpy);
 //XImage *img = XGetImage(dpy, root, x, y, width, height,  
 //                       AllPlanes, ZPixmap);
 // Scale img->data and draw to a window
-
-
-e_UI_CTX* eui_init(e_UI_CTX* ctx)
-{
- return NULL;
-}
-
-
-
-
-
 
 int main(void)
 {
@@ -295,18 +276,44 @@ int main(void)
 
         if (ctx.interaction_type == EUI_INTERACTION_FREE) {
 
-        for (int i = ctx.count - 1; i >= 0; i--) {
-            if (rect_point_collision(ctx.frame_buffer[i].rect, mouse_pos.x, mouse_pos.y)) {
-                ctx.active_frame = &ctx.frame_buffer[i];
-                break;
+            ctx.active_frame = NULL;
+            for (int i = ctx.count - 1; i >= 0; i--) {
+                if (rect_point_collision(ctx.frame_buffer[i].rect, mouse_pos.x, mouse_pos.y)) {
+                    ctx.active_frame = &ctx.frame_buffer[i];
+                    break;
+                }
             }
-            if (i == 0) { ctx.active_frame = NULL; }
-        }
+
         }
 
         if (ctx.active_frame != NULL) {
 
             if (input_is_left_pressed) {
+
+                // search for id; // IF NOT ALREADY ON TOP!.
+                int found_index = -1;
+                for (int i = 0; i < ctx.count; i++) {
+                    if (ctx.frame_buffer[i].id == ctx.active_frame->id) {
+                        found_index = i;
+                        break;
+                    }
+                }
+                if (found_index == -1) { abort(); } // if not on list.
+                
+                e_UI_FRAME temp;
+                temp.id   = ctx.frame_buffer[found_index].id;
+                temp.rect = ctx.frame_buffer[found_index].rect;
+
+                for (int i = found_index+1; i < ctx.count; i++) {
+                    ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
+                    ctx.frame_buffer[i-1].id   = ctx.frame_buffer[i].id;
+                }
+
+                ctx.frame_buffer[ctx.count-1].rect = temp.rect;
+                ctx.frame_buffer[ctx.count-1].id   = temp.id;
+                ctx.active_frame = &ctx.frame_buffer[ctx.count-1]; // moved on top is the new active frame.
+
+ 
                 Rect resize_rect;
                 resize_rect.x = ctx.active_frame->rect.x + ctx.active_frame->rect.width - EUI_RESIZE_AREA_SIZE;
                 resize_rect.y = ctx.active_frame->rect.y + ctx.active_frame->rect.height - EUI_RESIZE_AREA_SIZE;
@@ -320,6 +327,8 @@ int main(void)
                 {
                     ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
                 }
+
+               
             }
 
             if (ctx.interaction_type == EUI_INTERACTION_TRANSPORT) {
@@ -332,7 +341,6 @@ int main(void)
                 if (ctx.active_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_frame->rect.width = EUI_FRAME_MIN_WIDTH;
                 if (ctx.active_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
             }
-
 
         }
 
