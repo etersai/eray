@@ -25,21 +25,6 @@
     }                                                                   \
 } while (0)
 
-// stack
-#define stack(T, n) struct { int idx; T items[n]; }
-#define stack_push(stack, val) do {            \
-    if ((stack).idx < arrlen((stack).items)) { \
-        (stack).items[(stack).idx++] = (val);  \
-    }                                          \
-} while(0)
-
-#define stack_pop(stack, val) do {          \
-    if ((stack).idx > 0) {                  \
-        (stack).idx--;                      \
-        (val) = (stack).items[(stack).idx]; \
-    }                                       \
-} while (0)
-
 //
 // LOG 
 //
@@ -82,25 +67,6 @@ void log_print_n_flush(const char* format, ...)
     va_end(args);
     fflush(out_target);
 }
-
-//
-// MACROS
-//
-#define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
-#define stack(T, n) struct { int idx; T items[n]; }
-
-#define stack_push(stack, val) do {            \
-    if ((stack).idx < arrlen((stack).items)) { \
-        (stack).items[(stack).idx++] = (val);  \
-    }                                          \
-} while(0)
-
-#define stack_pop(stack, val) do {          \
-    if ((stack).idx > 0) {                  \
-        (stack).idx--;                      \
-        (val) = (stack).items[(stack).idx]; \
-    }                                       \
-} while (0)
 
 //
 // HELPERS
@@ -211,9 +177,9 @@ typedef struct {
     e_UI_FRAME  *active_frame;
     unsigned int interaction_type;
     
-    e_UI_FRAME frame_buffer[EUI_FRAMES_MAX];
-    size_t     capacity;
-    size_t     count;
+    e_UI_FRAME   frame_buffer[EUI_FRAMES_MAX];
+    size_t       capacity;
+    size_t       count;
 } e_UI_CTX;
 
 static e_UI_THEME theme_default = {
@@ -228,6 +194,12 @@ static e_UI_THEME theme_default = {
 //XImage *img = XGetImage(dpy, root, x, y, width, height,  
 //                       AllPlanes, ZPixmap);
 // Scale img->data and draw to a window
+
+// Algo in my head XD.
+// if mouse button click.
+// get frame that is beenng clicked on.
+// determine location on that frame that is beeing clicked on.
+// proceed acrodigly.
 
 int main(void)
 {
@@ -247,6 +219,7 @@ int main(void)
     ctx.interaction_type = EUI_INTERACTION_FREE;
     ctx.capacity = EUI_FRAMES_MAX;
 
+    // Spawn Frames.
     // Frame 1.
     ctx.frame_buffer[ctx.count].rect = rect_create(600, 300, 300, 100);
     ctx.frame_buffer[ctx.count].id   = ctx.count;
@@ -350,10 +323,6 @@ int main(void)
 
         }
 
-        // if mouse button click.
-        // get frame that is beenng clicked on.
-        // determine location on that frame that is beeing clicked on.
-        // proceed acrodigly.
                
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
@@ -395,7 +364,6 @@ int main(void)
                                   RED);
 #endif
                 }                 
-
                 // UI
                 enum { FONT_SIZE = 20 };
                 DrawFPS(0, 0);
