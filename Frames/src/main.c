@@ -1,6 +1,7 @@
 #include "../include/raylib.h"
 
 #include <stdio.h>
+#include <time.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -141,7 +142,7 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 //
 // UI MEAT
 //
-#define EUI_FRAMES_MAX 64
+#define EUI_FRAMES_MAX 1024
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
 #define EUI_RESIZE_AREA_SIZE 16
@@ -173,11 +174,11 @@ typedef struct e_UI_FRAME {
 } e_UI_FRAME; 
 
 typedef struct {
+
+    e_UI_FRAME   frame_buffer[EUI_FRAMES_MAX];
     e_UI_THEME   theme;
     e_UI_FRAME  *active_frame;
     unsigned int interaction_type;
-    
-    e_UI_FRAME   frame_buffer[EUI_FRAMES_MAX];
     size_t       capacity;
     size_t       count;
 } e_UI_CTX;
@@ -187,6 +188,13 @@ static e_UI_THEME theme_default = {
     .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
     .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
 };
+
+void eui_spawn_frame(e_UI_CTX* ctx, Rect rect)
+{
+    ctx->frame_buffer[ctx->count].rect = rect;
+    ctx->frame_buffer[ctx->count].id   = ctx->count;
+    ctx->count++;
+}
 
 // magnifiey
 //Display *dpy = XOpenDisplay(NULL);
@@ -212,31 +220,33 @@ int main(void)
     int mouse_delta_y = 0;
     InitWindow(width, height, title);
     SetTargetFPS(target_fps);
+    srand(time(NULL));
       
     // UI setup
     e_UI_CTX ctx = {0};
     ctx.theme = theme_default;
     ctx.interaction_type = EUI_INTERACTION_FREE;
     ctx.capacity = EUI_FRAMES_MAX;
+    
+    // Spawn frames
+    for (int i = 0; i < EUI_FRAMES_MAX; i++) {  
+        Rect rect;
+        
+        rect.x = rand() % width; 
+        rect.y = rand() % height;
 
-    // Spawn Frames.
-    // Frame 1.
-    ctx.frame_buffer[ctx.count].rect = rect_create(600, 300, 300, 100);
-    ctx.frame_buffer[ctx.count].id   = ctx.count;
-    ctx.count++;
-    log_print_beautify("frame_count", "%d\n", ctx.count);
+        int w = rand() % 300;
+        int h = rand() % 300;
+        if (w < EUI_FRAME_MIN_WIDTH) w = EUI_FRAME_MIN_WIDTH;
+        if (h < EUI_FRAME_MIN_HEIGHT) h = EUI_FRAME_MIN_HEIGHT;
 
-    // Frame 2.
-    ctx.frame_buffer[ctx.count].rect = rect_create(200, 300, 300, 100);
-    ctx.frame_buffer[ctx.count].id   = ctx.count;
-    ctx.count++;
-    log_print_beautify("frame_count", "%d\n", ctx.count);
-
-    // Frame 3.
-    ctx.frame_buffer[ctx.count].rect = rect_create(200, 400, 300, 100);
-    ctx.frame_buffer[ctx.count].id   = ctx.count;
-    ctx.count++;
-    log_print_beautify("frame_count", "%d\n", ctx.count);
+        rect.width = w;
+        rect.height = h;
+        
+        eui_spawn_frame(&ctx, rect);
+        log_print_beautify("frame_count", "%d\n", ctx.count);
+    }
+    
 
     Vector2 mouse_pos_prev = {0};  
     bool input_is_left_released = false;
@@ -307,7 +317,6 @@ int main(void)
                     ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
                 }
 
-               
             }
 
             if (ctx.interaction_type == EUI_INTERACTION_TRANSPORT) {
@@ -322,8 +331,7 @@ int main(void)
             }
 
         }
-
-               
+   
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
         char mouse_delta_buffer[BUFFER_MAX];
@@ -356,7 +364,7 @@ int main(void)
                                   ctx.frame_buffer[curr_frame].rect.width  - 2*ctx.theme.size_border,
                                   ctx.frame_buffer[curr_frame].rect.height - 2*ctx.theme.size_border,
                                   *(Color*)&ctx.theme.color_main);
-#if 1 
+#if 0 
                     DrawRectangle(ctx.frame_buffer[curr_frame].rect.x + ctx.frame_buffer[curr_frame].rect.width - EUI_RESIZE_AREA_SIZE,
                                   ctx.frame_buffer[curr_frame].rect.y + ctx.frame_buffer[curr_frame].rect.height - EUI_RESIZE_AREA_SIZE,
                                   EUI_RESIZE_AREA_SIZE,
