@@ -148,13 +148,19 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 #define EUI_FRAMES_MAX 1024
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
-#define EUI_RESIZE_AREA_SIZE 16
+#define EUI_RESIZE_AREA_SIZE 16 // hitbox.
+                                
 enum
 {
     EUI_INTERACTION_FREE = 0,
     EUI_INTERACTION_TRANSPORT,
     EUI_INTERACTION_RESIZE,
     EUI_INTERACTION_SCROLL,
+};
+
+enum
+{
+    EUI_DRAW_COMMAND_RECT = 0,
 };
 
 typedef unsigned int e_ID;
@@ -177,31 +183,66 @@ typedef struct {
 typedef struct e_UI_FRAME {
     Rect         rect;
     const char*  name;
+    bool         opened;
     e_ID         id;
 } e_UI_FRAME; 
+
+typedef struct e_UI_FRAME {
+    Rect         rect;
+    const char*  name;
+    bool         opened;
+    e_ID         id;
+} e_UI_FRAME; 
+
+
 
 typedef struct {
     e_UI_FRAME   frame_buffer[EUI_FRAMES_MAX];
     e_UI_THEME   theme;
     e_UI_FRAME  *active_frame;
+    unsigned int next_id;
     unsigned int interaction_type;
     size_t       capacity;
     size_t       count;
 } e_UI_CTX;
 
+// bool eui_open_frame(e_UI_CTX* ctx, const char* name, Rect rect)
+// {
+//     assert(ctx);
+//     ctx->frame_buffer[ctx->count].rect   = rect;
+//     ctx->frame_buffer[ctx->count].id     = ctx->next_id++;
+//     ctx->frame_buffer[ctx->count].name   = name;
+//     ctx->frame_buffer[ctx->count].opened = true;
+//     ctx->count++;
+//     return true;
+// }
+
 void eui_spawn_frame(e_UI_CTX* ctx, Rect rect)
 {
-    ctx->frame_buffer[ctx->count].rect = rect;
-    ctx->frame_buffer[ctx->count].id   = ctx->count;
+    ctx->frame_buffer[ctx->count].rect   = rect;
+    ctx->frame_buffer[ctx->count].id     = ctx->next_id++;
+    ctx->frame_buffer[ctx->count].name   = "Frame";
+    ctx->frame_buffer[ctx->count].opened = true;
     ctx->count++;
 }
+
+
+bool eui_open_frame(e_UI_CTX* ctx, const char* name, Rect rect)
+{
+
+
+
+
+}
+
+
 
 // Globals.
 static e_UI_THEME theme_default = {
     .size_border     = 2,
     .size_title_bar  = 20,
     .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
-    .color_border    = (e_UI_COLOR){ 0, 0, 0, 255},
+    .color_border    = (e_UI_COLOR){ 255, 0, 0, 255},
     .color_title_bar = (e_UI_COLOR){ 20, 20, 20, 255},
 };
 
@@ -220,26 +261,29 @@ int main(void)
       
     // UI setup
     e_UI_CTX ctx = {0};
-    ctx.theme = theme_default;
+    ctx.theme    = theme_default;
     ctx.capacity = EUI_FRAMES_MAX;
     
-    // Spawn frames
-    for (int i = 0; i < 1; i++) {  
-        Rect rect;
-        
-        rect.x = rand() % window_width; 
-        rect.y = rand() % window_height;
-        int w = rand() % 300;
-        int h = rand() % 300;
-        if (w < EUI_FRAME_MIN_WIDTH) w = EUI_FRAME_MIN_WIDTH;
-        if (h < EUI_FRAME_MIN_HEIGHT) h = EUI_FRAME_MIN_HEIGHT;
-        rect.width = w;
-        rect.height = h;
 
-        eui_spawn_frame(&ctx, rect);
-        log_print_beautify("frame_count", "%d\n", ctx.count);
-    }
-    
+   
+
+   // // Spawn frames
+   //  for (int i = 0; i < 1; i++) {  
+   //      Rect rect;
+   //
+   //      rect.x = rand() % window_width; 
+   //      rect.y = rand() % window_height;
+   //      int w = rand() % 300;
+   //      int h = rand() % 300;
+   //      if (w < EUI_FRAME_MIN_WIDTH) w = EUI_FRAME_MIN_WIDTH;
+   //      if (h < EUI_FRAME_MIN_HEIGHT) h = EUI_FRAME_MIN_HEIGHT;
+   //      rect.width = w;
+   //      rect.height = h;
+   //
+   //      eui_spawn_frame(&ctx, rect);
+   //      log_print_beautify("frame_count", "%d\n", ctx.count);
+   //  }
+   //
 
     Vector2 mouse_pos_prev = {0};  
     bool    input_is_left_released = false;
@@ -252,13 +296,11 @@ int main(void)
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
 
-
-
-        
         
 
-
-
+                
+        
+#if 0
         if (ctx.active_frame != NULL && input_is_left_released) {
             ctx.interaction_type = EUI_INTERACTION_FREE;
         }
@@ -331,7 +373,7 @@ int main(void)
             }
 
         }
-   
+#endif 
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
         char mouse_delta_buffer[BUFFER_MAX];
@@ -367,8 +409,13 @@ int main(void)
                     DrawRectangle(ctx.frame_buffer[curr_frame].rect.x,
                                   ctx.frame_buffer[curr_frame].rect.y,
                                   ctx.frame_buffer[curr_frame].rect.width,
-                                  ctx.theme.size_title_bar, // hardcoded!
+                                  ctx.theme.size_title_bar, 
                                   *(Color*)&ctx.theme.color_title_bar);
+
+                    DrawText(ctx.frame_buffer[curr_frame].name,
+                            ctx.frame_buffer[curr_frame].rect.x,
+                            ctx.frame_buffer[curr_frame].rect.y,
+                            20, WHITE);
 #if 0 
                     DrawRectangle(ctx.frame_buffer[curr_frame].rect.x + ctx.frame_buffer[curr_frame].rect.width - EUI_RESIZE_AREA_SIZE,
                                   ctx.frame_buffer[curr_frame].rect.y + ctx.frame_buffer[curr_frame].rect.height - EUI_RESIZE_AREA_SIZE,
