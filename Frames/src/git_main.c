@@ -168,15 +168,12 @@ typedef struct {
 
 typedef struct {
     unsigned int size_border;
-    unsigned int size_title_bar;
     e_UI_COLOR color_main;
     e_UI_COLOR color_border;
-    e_UI_COLOR color_title_bar;
 } e_UI_THEME;
 
 typedef struct e_UI_FRAME {
     Rect         rect;
-    const char*  name;
     e_ID         id;
 } e_UI_FRAME; 
 
@@ -198,11 +195,9 @@ void eui_spawn_frame(e_UI_CTX* ctx, Rect rect)
 
 // Globals.
 static e_UI_THEME theme_default = {
-    .size_border     = 2,
-    .size_title_bar  = 20,
-    .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
-    .color_border    = (e_UI_COLOR){ 0, 0, 0, 255},
-    .color_title_bar = (e_UI_COLOR){ 20, 20, 20, 255},
+    .size_border  = 1,
+    .color_main   = (e_UI_COLOR){ 100, 100, 100, 255},
+    .color_border = (e_UI_COLOR){ 0, 0, 0, 255},
 };
 
 int main(void)
@@ -251,13 +246,6 @@ int main(void)
         input_is_left_pressed  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
-
-
-
-        
-        
-
-
 
         if (ctx.active_frame != NULL && input_is_left_released) {
             ctx.interaction_type = EUI_INTERACTION_FREE;
@@ -363,12 +351,6 @@ int main(void)
                                   ctx.frame_buffer[curr_frame].rect.width  - 2*ctx.theme.size_border,
                                   ctx.frame_buffer[curr_frame].rect.height - 2*ctx.theme.size_border,
                                   *(Color*)&ctx.theme.color_main);
-
-                    DrawRectangle(ctx.frame_buffer[curr_frame].rect.x,
-                                  ctx.frame_buffer[curr_frame].rect.y,
-                                  ctx.frame_buffer[curr_frame].rect.width,
-                                  ctx.theme.size_title_bar, // hardcoded!
-                                  *(Color*)&ctx.theme.color_title_bar);
 #if 0 
                     DrawRectangle(ctx.frame_buffer[curr_frame].rect.x + ctx.frame_buffer[curr_frame].rect.width - EUI_RESIZE_AREA_SIZE,
                                   ctx.frame_buffer[curr_frame].rect.y + ctx.frame_buffer[curr_frame].rect.height - EUI_RESIZE_AREA_SIZE,
