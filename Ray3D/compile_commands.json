@@ -1,0 +1,16 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-I./include",
+      "-Wall",
+      "-o",
+      "game",
+      "src/main.c"
+    ],
+    "directory": "/home/eter/CGFS",
+    "file": "/home/eter/CGFS/src/main.c",
+    "output": "/home/eter/CGFS/game"
+  }
+]
