@@ -89,11 +89,6 @@ typedef struct {
 } Rect;
 
 Rect               rect_create(int x, int y, int width, int height);
-static inline void rect_update_pos(Rect* r, int x, int y);
-static inline void rect_update_pos(Rect* r, int x, int y);
-static inline void rect_update_dims(Rect* r, int width, int height);
-static inline void rect_update_width(Rect* r, int width);
-static inline void rect_update_height(Rect* r, int height);
 static inline bool rect_aabb_collision(Rect r1, Rect r2);
 static inline bool rect_point_collision(Rect r, int x, int y);
 
@@ -107,29 +102,6 @@ Rect rect_create(int x, int y, int width, int height)
         .height = height,
     };
     return r;
-}
-
-static inline void rect_update_pos(Rect* r, int x, int y)
-{
-    r->x = x;
-    r->y = y;
-}                         
-
-static inline void rect_update_dims(Rect* r, int width, int height)
-{
-    assert(width > 0 && height > 0);
-    r->width = width;
-    r->height = height;
-}
-
-static inline void rect_update_width(Rect* r, int width)
-{
-    rect_update_dims(r, width, r->height);
-}
-
-static inline void rect_update_height(Rect* r, int height)
-{
-    rect_update_dims(r, r->width, height);
 }
 
 static inline bool rect_point_collision(const Rect r, int x, int y)
@@ -177,6 +149,7 @@ typedef struct {
 typedef struct {
     unsigned int size_border;
     unsigned int size_title_bar;
+    e_UI_COLOR color_text;
     e_UI_COLOR color_main;
     e_UI_COLOR color_border;
     e_UI_COLOR color_title_bar;
@@ -200,20 +173,21 @@ typedef struct {
 } eui_DrawRectInfo;
 
 typedef struct {
-    e_UI_COLOR color;
-    int x;
-    int y;
+    char text[1024]; // pls dont pass it more that that XD
+    int  x;
+    int  y;
 } eui_DrawTextInfo;
 
-#define                     EUI_MAX_DRAW_CALLS 1024
-int              draw_calls[EUI_MAX_DRAW_CALLS];
-eui_DrawRectInfo draw_info_rect[EUI_MAX_DRAW_CALLS]; 
-eui_DrawTextInfo draw_info_text[EUI_MAX_DRAW_CALLS];
+#define                          EUI_MAX_DRAW_CALLS 1024
+int              draw_calls_pile[EUI_MAX_DRAW_CALLS];
+eui_DrawRectInfo rect_pile[EUI_MAX_DRAW_CALLS]; 
+eui_DrawTextInfo text_pile[EUI_MAX_DRAW_CALLS];
 
 // Globals.
 static e_UI_THEME theme_default = {
     .size_border     = 2,
     .size_title_bar  = 20,
+    .color_text      = (e_UI_COLOR){ 255, 255, 255, 255},
     .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
     .color_border    = (e_UI_COLOR){ 255, 0, 0, 255},
     .color_title_bar = (e_UI_COLOR){ 20, 20, 20, 255},
@@ -254,9 +228,9 @@ int main(void)
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
 
 
-        int dcs_count = 0; 
-        int dsc_count_rect = 0;
-        int dsc_count_text = 0;
+        int draw_call_pile_count = 0; 
+        int rect_pile_count = 0;
+        int text_pile_count = 0;
 
         // put_window_up
         int w = 300;
@@ -289,21 +263,44 @@ int main(void)
         // prepare draw command.
         if (ctx.frame_buffer[found_idx].opened == true) {
 
-            eui_DrawRectInfo rect_info;
-            eui_DrawTextInfo text_info;
-
             if (EUI_ENABLE_BORDERS) {
-                draw_calls[dcs_count] = EUI_DRAW_COMMAND_RECT;
-                draw_info_rect[dsc_count_rect].rect = ctx.frame_buffer[found_idx].rect;
-                draw_info_rect[dsc_count_rect].color = ctx.theme.color_border;
+                // register rect draw call
+                rect_pile[rect_pile_count].rect = ctx.frame_buffer[found_idx].rect;
+                rect_pile[rect_pile_count].color = ctx.theme.color_border;
+
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
+                
+                // register rect draw call
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[found_idx].rect.x + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[found_idx].rect.y + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.width = ctx.frame_buffer[found_idx].rect.width - 2*ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.height = ctx.frame_buffer[found_idx].rect.height - 2*ctx.theme.size_border;
+                rect_pile[rect_pile_count].color = ctx.theme.color_main;
+
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
             }
+            else
+            {
+                // register rect draw call
+                rect_pile[rect_pile_count].rect = ctx.frame_buffer[found_idx].rect;
+                rect_pile[rect_pile_count].color = ctx.theme.color_main;
 
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
+            }
             
-            draw_calls[dcs_count++] = EUI_DRAW_COMMAND_RECT;
-            draw_info_rect[dsc_count_rect].rect = rect_info.rect;
-            draw_info_rect[dsc_count_rect].color = rect_info.color;
+            text_pile[text_pile_count].x = ctx.frame_buffer[found_idx].rect.x;
+            text_pile[text_pile_count].y = ctx.frame_buffer[found_idx].rect.y;
+            text_pile[text_pile_count].color = ctx.theme.color_text;
 
-
+            draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_TEXT;
+            text_pile_count++;
+            draw_call_pile_count++;
         }
         
 
@@ -316,6 +313,27 @@ int main(void)
         BeginDrawing();
             {
                  ClearBackground(RAYWHITE);
+
+                 int rect_pops = 0;
+                 int rext_pops = 0;
+
+                 for (int i = 0; i < draw_call_pile_count; i++) {
+                    int type = draw_calls_pile[i];
+                    switch (type) 
+                    {
+                    case EUI_DRAW_COMMAND_RECT:
+                    DrawRectangle(rect_pile[rect_pops].rect.x,
+                                  rect_pile[rect_pops].rect.y,
+                                  rect_pile[rect_pops].rect.width,
+                                  rect_pile[rect_pops].rect.height,
+                                  *(Color*)&rect_pile[rect_pops].color);
+                    break;
+                    case EUI_DRAW_COMMAND_TEXT:
+                    DrawText(const char *text, int posX, int posY, int fontSize, Color color)
+                    break;
+                    }    
+                 } 
+
                  // UI
                  enum { FONT_SIZE = 20 };
                  DrawFPS(0, 0);
