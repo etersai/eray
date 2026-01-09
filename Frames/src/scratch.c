@@ -149,7 +149,10 @@ int main(void)
         printf("%d, %d\n", items[i].id, items[i].data);
 
     }
-
+        
+    for (int i = 2-1; i >= 0; i--) {
+        printf("[%d]\n", i);
+    }
 
 
     return 0;
