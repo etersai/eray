@@ -32,6 +32,10 @@
     abort();                                                                \
 } while (0)
 
+
+
+
+
 //
 // LOG 
 //
@@ -117,10 +121,17 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
             && r1.y + r1.height >= r2.y && r1.y <= r2.y + r2.height); // Y_AXIS
 }
 
+// DEBUG.
+void log_rect_print_n_flush(const Rect r)
+{
+    fprintf(stdout, "[RECT X:%d, Y:%d, WIDTH:%d, HEIGHT:%d]\n", r.x, r.y, r.width, r.height);
+    fflush(stdout);
+}
+
 //
 // UI MEAT
 //
-typedef unsigned int e_ID;
+typedef unsigned int e_ID; // ?
 #define EUI_FRAMES_MAX 1024
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
@@ -132,6 +143,7 @@ enum
     EUI_INTERACTION_TRANSPORT,
     EUI_INTERACTION_RESIZE,
     EUI_INTERACTION_SCROLL,
+    EUI_INTERACTION_ROLL,
 };
 
 enum
@@ -148,6 +160,8 @@ typedef struct {
 } e_UI_COLOR;
 
 typedef struct {
+    int default_frame_width;
+    int default_frame_height;
     unsigned int size_border;
     unsigned int size_title_bar;
     unsigned int size_text;
@@ -162,6 +176,9 @@ typedef struct {
 typedef struct {
     Rect rect;
     bool opened;
+    bool rolled_up;
+    // pretoggle dimensions.
+    Rect pre_toggle_rect; 
     const char* name; // it's id for now.
 } e_UI_FRAME;
 
@@ -183,11 +200,12 @@ typedef struct {
     unsigned int    interaction_type;
     e_UI_FRAME*     hovered_over_frame;
     e_UI_FRAME*     active_use_frame;
+    e_UI_FRAME*     last_active_frame;
 } e_UI_CTX;
 
 typedef struct {
     e_UI_COLOR color;
-    Rect       rect; // preferably 4 ints but no time for that XD.
+    Rect       rect; // preferably 4 ints but no time for that XD. (NOTE: will regret it XD)
 } eui_DrawRectInfo;
 
 typedef struct {
@@ -206,6 +224,8 @@ eui_DrawTextInfo text_pile[EUI_MAX_DRAW_CALLS];
 
 // Globals.
 static e_UI_THEME theme_default = {
+    .default_frame_width = 420,
+    .default_frame_height = 360,
     .size_border     = 1,
     .size_title_bar  = 12,
     .size_text       = 10,
@@ -244,7 +264,7 @@ bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
     }
     else
     {
-#if 1
+#if 0
         log_print_n_flush("[Frame %s already exits [%s]]\n",
                 ctx->frame_buffer[found_idx].name, stringify_bool(ctx->frame_buffer[found_idx].opened));
 #endif
@@ -252,6 +272,8 @@ bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
     }
 
 }
+
+//void eui_zip_frame(e_UI_CTX* ctx, Rect rect, const char* name)
 
 int main(void)
 {
@@ -263,6 +285,9 @@ int main(void)
     int mouse_delta_x = 0;
     int mouse_delta_y = 0;
     InitWindow(window_width, window_height, title);
+#ifndef DEBUG
+    ToggleFullscreen();
+#endif
     SetTargetFPS(target_fps);
     srand(time(NULL));
       
@@ -288,8 +313,12 @@ int main(void)
         ctx.input_data.is_left_released = input_is_left_released;
         ctx.input_data.is_left_pressed = input_is_left_pressed;
 
-        if (ctx.input_data.is_left_released) { ctx.active_use_frame = NULL; }
-
+        if (ctx.input_data.is_left_released) {
+            ctx.last_active_frame = ctx.active_use_frame;
+            ctx.active_use_frame = NULL;
+        }
+        
+        //TODO pass null rect to start as deafult.
         eui_open_frame(&ctx, (Rect){300, 300, 300, 300}, "window_one");
         eui_open_frame(&ctx, (Rect){400, 300, 300, 300}, "window_two");
         eui_open_frame(&ctx, (Rect){500, 300, 300, 300}, "window_three");
@@ -330,8 +359,8 @@ int main(void)
                         e_UI_FRAME temp;                               
                         temp.name = ctx.frame_buffer[found_idx].name;
                         temp.opened = ctx.frame_buffer[found_idx].opened;
+                        temp.rolled_up = ctx.frame_buffer[found_idx].rolled_up;
                         temp.rect = ctx.frame_buffer[found_idx].rect;
-
                         for (int i = found_idx+1; i < ctx.frame_count; i++) {         
                             ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
                             ctx.frame_buffer[i-1].name = ctx.frame_buffer[i].name;  
@@ -339,28 +368,75 @@ int main(void)
                         }                                                                      
                         ctx.frame_buffer[ctx.frame_count-1].rect = temp.rect;                                  
                         ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
+                        ctx.frame_buffer[ctx.frame_count-1].rolled_up = temp.rolled_up;
                         ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
                         ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
                     }
+                    
 
-                    Rect resize_rect;
-                    resize_rect.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - EUI_HITBOX_RESIZE;
-                    resize_rect.y = ctx.active_use_frame->rect.y + ctx.active_use_frame->rect.height - EUI_HITBOX_RESIZE;
-                    resize_rect.width  = EUI_HITBOX_RESIZE;
-                    resize_rect.height = EUI_HITBOX_RESIZE;
+                    // IF ROLLED_UP => RESIZE HITBOX NULL.
+                    Rect hitbox_resize;
+                    log_print_n_flush("%s", stringify_bool(ctx.active_use_frame->rolled_up));
+                    if (ctx.active_use_frame->rolled_up) {
+                        hitbox_resize.x = 0;
+                        hitbox_resize.y = 0;
+                        hitbox_resize.width = 0;
+                        hitbox_resize.height = 0;
+                    }
+                    else
+                    {
+                        hitbox_resize.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - EUI_HITBOX_RESIZE;
+                        hitbox_resize.y = ctx.active_use_frame->rect.y + ctx.active_use_frame->rect.height - EUI_HITBOX_RESIZE;
+                        hitbox_resize.width  = EUI_HITBOX_RESIZE;
+                        hitbox_resize.height = EUI_HITBOX_RESIZE;
+                    }
+                   
+#if 0
+                    // Debug break after N iterations.
+                    static int brk = 0;
+                    log_rect_print_n_flush(hitbox_resize);
+                    brk++;
+                    if (brk >= 2) {
+                    abort();
+                    }
+#endif
 
-                    if (rect_point_collision(resize_rect,
+                    // needs to be calculated at run time.
+                    int hitbox_buttons_size = ctx.theme.size_title_bar - 2;
+                    Rect hitbox_roll_key;
+                    Rect hitbox_close_key;
+                    
+                    hitbox_roll_key.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - (2*hitbox_buttons_size+3);
+                    hitbox_roll_key.y = ctx.active_use_frame->rect.y + ctx.theme.size_border + 1;
+                    hitbox_roll_key.width = hitbox_buttons_size;
+                    hitbox_roll_key.height = hitbox_buttons_size;
+
+
+                    hitbox_close_key.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width
+                        - (hitbox_buttons_size + 2);
+                    hitbox_close_key.y =  ctx.active_use_frame->rect.y + ctx.theme.size_border + 1;
+                    hitbox_close_key.width = hitbox_buttons_size;
+                    hitbox_close_key.height = hitbox_buttons_size;        
+                        
+
+                    if (rect_point_collision(hitbox_resize,
                                              ctx.input_data.mouse_pos_x,
                                              ctx.input_data.mouse_pos_y))
                     {
                         ctx.interaction_type = EUI_INTERACTION_RESIZE;
+                    }
+                    else if (rect_point_collision(hitbox_roll_key,
+                                                  ctx.input_data.mouse_pos_x,
+                                                  ctx.input_data.mouse_pos_y)) 
+                    {
+                        ctx.interaction_type = EUI_INTERACTION_ROLL;
+                        ctx.active_use_frame->rolled_up = !ctx.active_use_frame->rolled_up;
                     }
                     else
                     {
                         ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
                     }                                                        
                 }
-                
         } /*ctx.input_data.is_left_pressed*/
         
         // update based on interaction.
@@ -375,6 +451,23 @@ int main(void)
                 if (ctx.active_use_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_use_frame->rect.width = EUI_FRAME_MIN_WIDTH;
                 if (ctx.active_use_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_use_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
             }
+
+            // Recalculate whole frame.
+            else if (ctx.interaction_type == EUI_INTERACTION_ROLL) {
+                // new height after roll.
+                if (ctx.active_use_frame->rolled_up) {
+                    ctx.active_use_frame->rect.height =2*ctx.theme.size_border + ctx.theme.size_title_bar;
+                }
+                else // open as deafult size (Smaller state version, TODO add state saving.)
+                {
+                    ctx.active_use_frame->rect.width = ctx.theme.default_frame_width;     
+                    ctx.active_use_frame->rect.height = ctx.theme.default_frame_height;     
+                }
+
+
+            }
+
+            
         }
 
         
@@ -440,8 +533,9 @@ int main(void)
                 draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
                 rect_pile_count++;
                 draw_call_pile_count++;
-#if 1 
-                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.frame_buffer[i].rect.width - (2*hitbox_clickable_size+4);
+#if 1 // DRAW ROLL BUTTON 
+                // ROLL BUTTONS
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.frame_buffer[i].rect.width - (2*hitbox_clickable_size+3);
                 rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border + 1;
                 rect_pile[rect_pile_count].rect.width = hitbox_clickable_size;
                 rect_pile[rect_pile_count].rect.height = hitbox_clickable_size; 
