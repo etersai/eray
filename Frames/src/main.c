@@ -291,8 +291,9 @@ int main(void)
 
         if (ctx.input_data.is_left_released) { ctx.active_use_frame = NULL; }
 
-        eui_open_frame(&ctx, (Rect){300, 300, 300, 300}, "window");
+        eui_open_frame(&ctx, (Rect){300, 300, 300, 300}, "window_one");
         eui_open_frame(&ctx, (Rect){400, 300, 300, 300}, "window_two");
+        eui_open_frame(&ctx, (Rect){500, 300, 300, 300}, "window_three");
 
         // assume that frame z order is always from top to bottom (Z highest to lowest)
         for (int i = ctx.frame_count-1; i >= 0; i--) {
@@ -314,7 +315,7 @@ int main(void)
                                      ctx.input_data.mouse_pos_y))
                 {
                     ctx.active_use_frame = ctx.hovered_over_frame;
-                    ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
+                    //ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
                 
 
                     int found_idx = -1;                                                                   
@@ -343,12 +344,38 @@ int main(void)
                     ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
                     ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
                 }
+                 
+                if (ctx.active_use_frame) {
+
+                Rect resize_rect;
+                resize_rect.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - EUI_HITBOX_RESIZE;
+                resize_rect.y = ctx.active_use_frame->rect.y + ctx.active_use_frame->rect.height - EUI_HITBOX_RESIZE;
+                resize_rect.width  = EUI_HITBOX_RESIZE;
+                resize_rect.height = EUI_HITBOX_RESIZE;
+
+                if (rect_point_collision(resize_rect,
+                                         ctx.input_data.mouse_pos_x,
+                                         ctx.input_data.mouse_pos_y))
+                {
+                    ctx.interaction_type = EUI_INTERACTION_RESIZE;
+                }
+                else
+                {
+                    ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
+                }
+                } // if active
         }
 
         if (ctx.active_use_frame) {
             if (ctx.interaction_type == EUI_INTERACTION_TRANSPORT) {
                 ctx.active_use_frame->rect.x += mouse_delta_x;
                 ctx.active_use_frame->rect.y += mouse_delta_y;
+            }
+            else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
+                ctx.active_use_frame->rect.width  += mouse_delta_x;                
+                ctx.active_use_frame->rect.height += mouse_delta_y;                
+                if (ctx.active_use_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_use_frame->rect.width = EUI_FRAME_MIN_WIDTH;
+                if (ctx.active_use_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_use_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
             }
         }
 
