@@ -210,6 +210,7 @@ eui_DrawTextInfo text_pile[EUI_MAX_DRAW_CALLS];
 static e_UI_THEME theme_default = {
     .size_border     = 2,
     .size_title_bar  = 20,
+    .size_text       = 10,
     .color_text      = (e_UI_COLOR){ 255, 255, 255, 255},
     .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
     .color_border    = (e_UI_COLOR){ 255, 0, 0, 255},
@@ -220,16 +221,18 @@ static e_UI_THEME theme_default = {
 bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
 {
     perma_assert(ctx);
+    perma_assert(name);
+
     // this is slow, later hash or smth.
     int found_idx = -1;
-    for (int i = 0; i < arrlen(ctx->frame_buffer); i++) {    
-        if (ctx->frame_buffer[i].name != NULL && 
-            strcmp(ctx->frame_buffer[i].name, name) == 0) {
+    for (int i = 0; i < ctx->frame_count; i++) {    
+        if (strcmp(ctx->frame_buffer[i].name, name) == 0) {
             found_idx = i;
             break;
         }
     }
-    if (found_idx != -1) { // not found. create default.
+
+    if (found_idx == -1) { // not found. create default.
         ctx->frame_buffer[ctx->frame_count].name = name;
         ctx->frame_buffer[ctx->frame_count].opened = true;
         ctx->frame_buffer[ctx->frame_count].rect.x = rect.x;
@@ -237,12 +240,15 @@ bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
         ctx->frame_buffer[ctx->frame_count].rect.width = rect.width;
         ctx->frame_buffer[ctx->frame_count].rect.height = rect.height;
         ctx->frame_count++;
+        log_print_n_flush("[HERE!]\n");
         return true; // newly created window opened by deafult.
     }
     else
     {
+#if 1
         log_print_n_flush("[Frame %s already exits [%s]]\n",
                 ctx->frame_buffer[found_idx].name, stringify_bool(ctx->frame_buffer[found_idx].opened));
+#endif
         return ctx->frame_buffer[found_idx].opened;
     }
 
@@ -283,72 +289,10 @@ int main(void)
         ctx.input_data.is_left_released = input_is_left_released;
         ctx.input_data.is_left_pressed = input_is_left_pressed;
 
-        int draw_call_pile_count = 0; 
-        int rect_pile_count = 0;
-        int text_pile_count = 0;
-
         if (ctx.input_data.is_left_released) { ctx.active_use_frame = NULL; }
 
-        // WINDOW 1
-        // put_window_up
-        int w = 300;
-        int h = 300;
-        int x = 300;
-        int y = 300;
-        const char* name = "window";
-        
-        // this slow, later hash.
-        bool found = false;
-        int found_idx = -1;
-        for (int i = 0; i < arrlen(ctx.frame_buffer); i++) {    
-            if (ctx.frame_buffer[i].name != NULL && 
-                strcmp(ctx.frame_buffer[i].name, name) == 0) {
-                found = true;
-                found_idx = i;
-                break;
-            }
-        }
-        if (!found) {
-            ctx.frame_buffer[ctx.frame_count].name = name;
-            ctx.frame_buffer[ctx.frame_count].opened = true;
-            ctx.frame_buffer[ctx.frame_count].rect = rect_create(x, y, w, h); 
-            ctx.frame_count++;
-        }
-        else
-        {
-            printf("[%s, %s]\n", ctx.frame_buffer[found_idx].name, stringify_bool(ctx.frame_buffer[found_idx].opened));
-        }
-
-        // WINDOW 1
-        // put_window_up
-        int w2 = 300;
-        int h2 = 300;
-        int x2 = 400;
-        int y2 = 300;
-        const char* name_2 = "window2";
-        
-        // this slow, later hash.
-        bool found_ = false;
-        int found_idx_ = -1;
-        for (int i = 0; i < ctx.frame_count; i++) {    
-            if (ctx.frame_buffer[i].name != NULL && 
-                strcmp(ctx.frame_buffer[i].name, name_2) == 0) {
-                found_ = true;
-                found_idx_ = i;
-                break;
-            }
-        }
-        if (!found_) {
-            ctx.frame_buffer[ctx.frame_count].name = name_2;
-            ctx.frame_buffer[ctx.frame_count].opened = true;
-            ctx.frame_buffer[ctx.frame_count].rect = rect_create(x2, y2, w2, h2); 
-            ctx.frame_count++;
-        }
-        else
-        {
-            printf("[%s, %s]\n", ctx.frame_buffer[found_idx_].name,
-                        stringify_bool(ctx.frame_buffer[found_idx_].opened));
-        }
+        eui_open_frame(&ctx, (Rect){300, 300, 300, 300}, "window");
+        eui_open_frame(&ctx, (Rect){400, 300, 300, 300}, "window_two");
 
         // assume that frame z order is always from top to bottom (Z highest to lowest)
         for (int i = ctx.frame_count-1; i >= 0; i--) {
@@ -362,8 +306,8 @@ int main(void)
 
         }
 
-
-        if (ctx.input_data.is_left_pressed) {
+        // bug probably dereferencign null ptr. hovered_over_frame or (less likely) ctx.active_use_frame;
+        if (ctx.input_data.is_left_pressed && ctx.hovered_over_frame) {
 
             if (rect_point_collision(ctx.hovered_over_frame->rect,
                                      ctx.input_data.mouse_pos_x,
@@ -371,33 +315,34 @@ int main(void)
                 {
                     ctx.active_use_frame = ctx.hovered_over_frame;
                     ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
+                
+
+                    int found_idx = -1;                                                                   
+                    for (int i = 0; i < ctx.frame_count; i++) {                                        
+                        if (strcmp(ctx.frame_buffer[i].name, ctx.active_use_frame->name) == 0) {
+                            found_idx = i;
+                            break;
+                        }
+                    }
+
+                    if (found_idx == -1) { unreachable(); } // if not on list. (abort for now.)
+                       
+                    // cache state.
+                    e_UI_FRAME temp;                               
+                    temp.name = ctx.frame_buffer[found_idx].name;
+                    temp.opened = ctx.frame_buffer[found_idx].opened;
+                    temp.rect = ctx.frame_buffer[found_idx].rect;
+
+                    for (int i = found_idx+1; i < ctx.frame_count; i++) {         
+                        ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
+                        ctx.frame_buffer[i-1].name = ctx.frame_buffer[i].name;  
+                        ctx.frame_buffer[i-1].opened = ctx.frame_buffer[i].opened;  
+                    }                                                                      
+                    ctx.frame_buffer[ctx.frame_count-1].rect = temp.rect;                                  
+                    ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
+                    ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
+                    ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
                 }
-
-            int found_idx = -1;                                                                   
-            for (int i = 0; i < ctx.frame_count; i++) {                                        
-                if (strcmp(ctx.frame_buffer[i].name, ctx.active_use_frame->name) == 0) {
-                    found_idx = i;
-                    break;
-                }
-            }
-
-            if (found_idx == -1) { unreachable(); } // if not on list. (abort for now.)
-               
-            // cache state.
-            e_UI_FRAME temp;                               
-            temp.name = ctx.frame_buffer[found_idx].name;
-            temp.opened = ctx.frame_buffer[found_idx].opened;
-            temp.rect = ctx.frame_buffer[found_idx].rect;
-
-            for (int i = found_idx+1; i < ctx.frame_count; i++) {         
-                ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
-                ctx.frame_buffer[i-1].name = ctx.frame_buffer[i].name;  
-                ctx.frame_buffer[i-1].opened = ctx.frame_buffer[i].opened;  
-            }                                                                      
-            ctx.frame_buffer[ctx.frame_count-1].rect = temp.rect;                                  
-            ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
-            ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
-            ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
         }
 
         if (ctx.active_use_frame) {
@@ -405,12 +350,13 @@ int main(void)
                 ctx.active_use_frame->rect.x += mouse_delta_x;
                 ctx.active_use_frame->rect.y += mouse_delta_y;
             }
-
-
         }
 
         
         // prepare draw command.
+        int draw_call_pile_count = 0; 
+        int rect_pile_count = 0;
+        int text_pile_count = 0;
         for (int i = 0; i < ctx.frame_count; i++) {
 
             if (ctx.frame_buffer[i].opened == true) {
@@ -459,50 +405,7 @@ int main(void)
             }
 
         }
-#if 0 
-        if (ctx.frame_buffer[found_idx].opened == true) {
 
-            if (EUI_ENABLE_BORDERS) {
-                // register rect draw call
-                rect_pile[rect_pile_count].rect = ctx.frame_buffer[found_idx].rect;
-                rect_pile[rect_pile_count].color = ctx.theme.color_border;
-
-                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
-                rect_pile_count++;
-                draw_call_pile_count++;
-                
-                // register rect draw call
-                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[found_idx].rect.x + ctx.theme.size_border;
-                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[found_idx].rect.y + ctx.theme.size_border;
-                rect_pile[rect_pile_count].rect.width = ctx.frame_buffer[found_idx].rect.width - 2*ctx.theme.size_border;
-                rect_pile[rect_pile_count].rect.height = ctx.frame_buffer[found_idx].rect.height - 2*ctx.theme.size_border;
-                rect_pile[rect_pile_count].color = ctx.theme.color_main;
-
-                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
-                rect_pile_count++;
-                draw_call_pile_count++;
-            }
-            else
-            {
-                // register rect draw call
-                rect_pile[rect_pile_count].rect = ctx.frame_buffer[found_idx].rect;
-                rect_pile[rect_pile_count].color = ctx.theme.color_main;
-
-                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
-                rect_pile_count++;
-                draw_call_pile_count++;
-            }
-            
-            text_pile[text_pile_count].x = ctx.frame_buffer[found_idx].rect.x;
-            text_pile[text_pile_count].y = ctx.frame_buffer[found_idx].rect.y;
-            text_pile[text_pile_count].color = ctx.theme.color_text;
-
-            draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_TEXT;
-            text_pile_count++;
-            draw_call_pile_count++;
-        }
-#endif
-        
 
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
@@ -513,10 +416,6 @@ int main(void)
         BeginDrawing();
             {
                  ClearBackground(BLACK);
-
-
-                 DrawCircle(600, 300, 50.0, *(Color*)&ctx.theme.color_text);
-
                  int pops_rect = 0;
                  int pops_text = 0;
                  for (int i = 0; i < draw_call_pile_count; i++) {
@@ -549,7 +448,7 @@ int main(void)
                  DrawText(mouse_delta_buffer, 0, 36, FONT_SIZE, LIME);
             }
         EndDrawing();
-
+        // here or just before drawing??
         mouse_pos_prev = mouse_pos;
     }
 
