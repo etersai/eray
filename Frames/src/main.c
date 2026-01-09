@@ -121,14 +121,12 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
 //
 // UI MEAT
 //
+typedef unsigned int e_ID;
 #define EUI_FRAMES_MAX 1024
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
 #define EUI_HITBOX_RESIZE 16
-
-typedef unsigned int e_ID;
-
-#define EUI_ENABLE_BORDERS true
+#define EUI_HITBOX_CLICKABLES 12
 
 enum
 {
@@ -208,21 +206,20 @@ eui_DrawTextInfo text_pile[EUI_MAX_DRAW_CALLS];
 
 // Globals.
 static e_UI_THEME theme_default = {
-    .size_border     = 2,
-    .size_title_bar  = 20,
+    .size_border     = 1,
+    .size_title_bar  = 12,
     .size_text       = 10,
-    .color_text      = (e_UI_COLOR){ 255, 255, 255, 255},
+    .color_text      = (e_UI_COLOR){ 255, 165, 0, 255},
     .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
-    .color_border    = (e_UI_COLOR){ 255, 0, 0, 255},
+    .color_border    = (e_UI_COLOR){ 255, 165, 0, 255},
     .color_title_bar = (e_UI_COLOR){ 20, 20, 20, 255},
 };
 
-// impl
+// impl.
 bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
 {
     perma_assert(ctx);
     perma_assert(name);
-
     // this is slow, later hash or smth.
     int found_idx = -1;
     for (int i = 0; i < ctx->frame_count; i++) {    
@@ -315,33 +312,34 @@ int main(void)
                     // no matter where clicked frame becomes the active one.
                     ctx.active_use_frame = ctx.hovered_over_frame;
                     
-                    // bring it to the top of Z order pile
-                    int found_idx = -1;                                                                   
-                    for (int i = 0; i < ctx.frame_count; i++) {                                        
-                        if (strcmp(ctx.frame_buffer[i].name, ctx.active_use_frame->name) == 0) {
-                            found_idx = i;
-                            break;
+                    {// bring it to the top of Z order pile
+                        int found_idx = -1;                                                                   
+                        for (int i = 0; i < ctx.frame_count; i++) {                                        
+                            if (strcmp(ctx.frame_buffer[i].name, ctx.active_use_frame->name) == 0) {
+                                found_idx = i;
+                                break;
+                            }
                         }
+
+                        if (found_idx == -1) { unreachable(); } // if not on list. (abort for now.)
+                           
+                        // cache state.
+                        e_UI_FRAME temp;                               
+                        temp.name = ctx.frame_buffer[found_idx].name;
+                        temp.opened = ctx.frame_buffer[found_idx].opened;
+                        temp.rect = ctx.frame_buffer[found_idx].rect;
+
+                        for (int i = found_idx+1; i < ctx.frame_count; i++) {         
+                            ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
+                            ctx.frame_buffer[i-1].name = ctx.frame_buffer[i].name;  
+                            ctx.frame_buffer[i-1].opened = ctx.frame_buffer[i].opened;  
+                        }                                                                      
+                        ctx.frame_buffer[ctx.frame_count-1].rect = temp.rect;                                  
+                        ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
+                        ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
+                        ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
                     }
 
-                    if (found_idx == -1) { unreachable(); } // if not on list. (abort for now.)
-                       
-                    // cache state.
-                    e_UI_FRAME temp;                               
-                    temp.name = ctx.frame_buffer[found_idx].name;
-                    temp.opened = ctx.frame_buffer[found_idx].opened;
-                    temp.rect = ctx.frame_buffer[found_idx].rect;
-
-                    for (int i = found_idx+1; i < ctx.frame_count; i++) {         
-                        ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
-                        ctx.frame_buffer[i-1].name = ctx.frame_buffer[i].name;  
-                        ctx.frame_buffer[i-1].opened = ctx.frame_buffer[i].opened;  
-                    }                                                                      
-                    ctx.frame_buffer[ctx.frame_count-1].rect = temp.rect;                                  
-                    ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
-                    ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
-                    ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
-                    
                     Rect resize_rect;
                     resize_rect.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - EUI_HITBOX_RESIZE;
                     resize_rect.y = ctx.active_use_frame->rect.y + ctx.active_use_frame->rect.height - EUI_HITBOX_RESIZE;
@@ -384,38 +382,50 @@ int main(void)
         for (int i = 0; i < ctx.frame_count; i++) {
 
             if (ctx.frame_buffer[i].opened == true) {
+                
+                // RECT DRAW CALLS //
+                // register rect draw call (underneath)
+                rect_pile[rect_pile_count].rect = ctx.frame_buffer[i].rect;
+                rect_pile[rect_pile_count].color = ctx.theme.color_border;
 
-                if (EUI_ENABLE_BORDERS) {
-                    // register rect draw call
-                    rect_pile[rect_pile_count].rect = ctx.frame_buffer[i].rect;
-                    rect_pile[rect_pile_count].color = ctx.theme.color_border;
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
+                
+               // register rect draw call (main)
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.width = ctx.frame_buffer[i].rect.width - 2*ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.height = ctx.frame_buffer[i].rect.height - 2*ctx.theme.size_border;
+                rect_pile[rect_pile_count].color = ctx.theme.color_main;
 
-                    draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
-                    rect_pile_count++;
-                    draw_call_pile_count++;
-                    
-                    // register rect draw call
-                    rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.theme.size_border;
-                    rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border;
-                    rect_pile[rect_pile_count].rect.width = ctx.frame_buffer[i].rect.width - 2*ctx.theme.size_border;
-                    rect_pile[rect_pile_count].rect.height = ctx.frame_buffer[i].rect.height - 2*ctx.theme.size_border;
-                    rect_pile[rect_pile_count].color = ctx.theme.color_main;
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
 
-                    draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
-                    rect_pile_count++;
-                    draw_call_pile_count++;
-                }
-                else // NO BORDER.
-                {
-                    // register rect draw call
-                    rect_pile[rect_pile_count].rect = ctx.frame_buffer[i].rect;
-                    rect_pile[rect_pile_count].color = ctx.theme.color_main;
+                // register rect deaw call (title bar)
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.width = ctx.frame_buffer[i].rect.width - 2*ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.height = ctx.theme.size_title_bar; 
+                rect_pile[rect_pile_count].color = ctx.theme.color_title_bar;
 
-                    draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
-                    rect_pile_count++;
-                    draw_call_pile_count++;
-                }
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
 
+                // register rect deaw call (seperation strip)
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border + ctx.theme.size_title_bar;
+                rect_pile[rect_pile_count].rect.width = ctx.frame_buffer[i].rect.width - 2*ctx.theme.size_border;
+                rect_pile[rect_pile_count].rect.height = ctx.theme.size_border; 
+                rect_pile[rect_pile_count].color = ctx.theme.color_border;
+
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
+           
+                // TEXT DRAW CALLS //
                 strncpy(text_pile[text_pile_count].text, ctx.frame_buffer[i].name, sizeof(text_pile[text_pile_count].text));
                 text_pile[text_pile_count].text[sizeof(text_pile[text_pile_count].text) - 1] = '\0';
 
