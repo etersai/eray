@@ -308,16 +308,14 @@ int main(void)
         }
 
         // bug probably dereferencign null ptr. hovered_over_frame or (less likely) ctx.active_use_frame;
-        if (ctx.input_data.is_left_pressed && ctx.hovered_over_frame) {
-
-            if (rect_point_collision(ctx.hovered_over_frame->rect,
-                                     ctx.input_data.mouse_pos_x,
-                                     ctx.input_data.mouse_pos_y))
+        if (ctx.input_data.is_left_pressed) {
+            if (ctx.hovered_over_frame && rect_point_collision(ctx.hovered_over_frame->rect,
+                                          ctx.input_data.mouse_pos_x, ctx.input_data.mouse_pos_y))
                 {
+                    // no matter where clicked frame becomes the active one.
                     ctx.active_use_frame = ctx.hovered_over_frame;
-                    //ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
-                
-
+                    
+                    // bring it to the top of Z order pile
                     int found_idx = -1;                                                                   
                     for (int i = 0; i < ctx.frame_count; i++) {                                        
                         if (strcmp(ctx.frame_buffer[i].name, ctx.active_use_frame->name) == 0) {
@@ -343,29 +341,28 @@ int main(void)
                     ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
                     ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
                     ctx.active_use_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
-                }
-                 
-                if (ctx.active_use_frame) {
+                    
+                    Rect resize_rect;
+                    resize_rect.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - EUI_HITBOX_RESIZE;
+                    resize_rect.y = ctx.active_use_frame->rect.y + ctx.active_use_frame->rect.height - EUI_HITBOX_RESIZE;
+                    resize_rect.width  = EUI_HITBOX_RESIZE;
+                    resize_rect.height = EUI_HITBOX_RESIZE;
 
-                Rect resize_rect;
-                resize_rect.x = ctx.active_use_frame->rect.x + ctx.active_use_frame->rect.width - EUI_HITBOX_RESIZE;
-                resize_rect.y = ctx.active_use_frame->rect.y + ctx.active_use_frame->rect.height - EUI_HITBOX_RESIZE;
-                resize_rect.width  = EUI_HITBOX_RESIZE;
-                resize_rect.height = EUI_HITBOX_RESIZE;
-
-                if (rect_point_collision(resize_rect,
-                                         ctx.input_data.mouse_pos_x,
-                                         ctx.input_data.mouse_pos_y))
-                {
-                    ctx.interaction_type = EUI_INTERACTION_RESIZE;
+                    if (rect_point_collision(resize_rect,
+                                             ctx.input_data.mouse_pos_x,
+                                             ctx.input_data.mouse_pos_y))
+                    {
+                        ctx.interaction_type = EUI_INTERACTION_RESIZE;
+                    }
+                    else
+                    {
+                        ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
+                    }                                                        
                 }
-                else
-                {
-                    ctx.interaction_type = EUI_INTERACTION_TRANSPORT;
-                }
-                } // if active
-        }
-
+                
+        } /*ctx.input_data.is_left_pressed*/
+        
+        // update based on interaction.
         if (ctx.active_use_frame) {
             if (ctx.interaction_type == EUI_INTERACTION_TRANSPORT) {
                 ctx.active_use_frame->rect.x += mouse_delta_x;
