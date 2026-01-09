@@ -16,7 +16,6 @@
 //
 // “Make your code usable before you try to make it reusable”. -Casey Muratori.
 
-
 //
 // MACROS
 //
@@ -126,7 +125,6 @@ typedef unsigned int e_ID;
 #define EUI_FRAME_MIN_WIDTH 120
 #define EUI_FRAME_MIN_HEIGHT 60 
 #define EUI_HITBOX_RESIZE 16
-#define EUI_HITBOX_CLICKABLES 12
 
 enum
 {
@@ -157,6 +155,8 @@ typedef struct {
     e_UI_COLOR color_main;
     e_UI_COLOR color_border;
     e_UI_COLOR color_title_bar;
+    e_UI_COLOR color_button_close;
+    e_UI_COLOR color_button_roll;
 } e_UI_THEME;
 
 typedef struct {
@@ -213,6 +213,8 @@ static e_UI_THEME theme_default = {
     .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
     .color_border    = (e_UI_COLOR){ 255, 165, 0, 255},
     .color_title_bar = (e_UI_COLOR){ 20, 20, 20, 255},
+    .color_button_close = (e_UI_COLOR){ 255, 0, 0, 255},
+    .color_button_roll = (e_UI_COLOR){ 255, 255, 0, 255},
 };
 
 // impl.
@@ -293,6 +295,7 @@ int main(void)
         eui_open_frame(&ctx, (Rect){500, 300, 300, 300}, "window_three");
 
         // assume that frame z order is always from top to bottom (Z highest to lowest)
+        // Check for hoover over.
         for (int i = ctx.frame_count-1; i >= 0; i--) {
             if (rect_point_collision(ctx.frame_buffer[i].rect,
                                      ctx.input_data.mouse_pos_x,
@@ -303,8 +306,8 @@ int main(void)
             }
 
         }
-
-        // bug probably dereferencign null ptr. hovered_over_frame or (less likely) ctx.active_use_frame;
+        
+        // handle left press
         if (ctx.input_data.is_left_pressed) {
             if (ctx.hovered_over_frame && rect_point_collision(ctx.hovered_over_frame->rect,
                                           ctx.input_data.mouse_pos_x, ctx.input_data.mouse_pos_y))
@@ -424,13 +427,36 @@ int main(void)
                 draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
                 rect_pile_count++;
                 draw_call_pile_count++;
-           
+
+                // register rect deaw call (close button)
+                int hitbox_clickable_size = ctx.theme.size_title_bar - 2;
+
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.frame_buffer[i].rect.width - (hitbox_clickable_size + 2);
+                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border + 1;
+                rect_pile[rect_pile_count].rect.width = hitbox_clickable_size;
+                rect_pile[rect_pile_count].rect.height = hitbox_clickable_size; 
+                rect_pile[rect_pile_count].color = ctx.theme.color_button_close;
+
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
+#if 1 
+                rect_pile[rect_pile_count].rect.x = ctx.frame_buffer[i].rect.x + ctx.frame_buffer[i].rect.width - (2*hitbox_clickable_size+4);
+                rect_pile[rect_pile_count].rect.y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border + 1;
+                rect_pile[rect_pile_count].rect.width = hitbox_clickable_size;
+                rect_pile[rect_pile_count].rect.height = hitbox_clickable_size; 
+                rect_pile[rect_pile_count].color = ctx.theme.color_button_roll;
+
+                draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_RECT;
+                rect_pile_count++;
+                draw_call_pile_count++;
+#endif     
                 // TEXT DRAW CALLS //
                 strncpy(text_pile[text_pile_count].text, ctx.frame_buffer[i].name, sizeof(text_pile[text_pile_count].text));
                 text_pile[text_pile_count].text[sizeof(text_pile[text_pile_count].text) - 1] = '\0';
 
-                text_pile[text_pile_count].x = ctx.frame_buffer[i].rect.x;
-                text_pile[text_pile_count].y = ctx.frame_buffer[i].rect.y;
+                text_pile[text_pile_count].x = ctx.frame_buffer[i].rect.x + ctx.theme.size_border + 1;
+                text_pile[text_pile_count].y = ctx.frame_buffer[i].rect.y + ctx.theme.size_border + 1;
                 text_pile[text_pile_count].color = ctx.theme.color_text;
 
                 draw_calls_pile[draw_call_pile_count] = EUI_DRAW_COMMAND_TEXT;
