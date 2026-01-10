@@ -67,9 +67,11 @@ static const e_UI_THEME theme_default = {
 };
 
 static const int BORDER_OFFSET = 1;
-static const int ACTION_BAR_HEIGHT = 32;
+static const int BAR_HEIGHT = 32;
 static const int FRAME_DEFAULT_WIDTH = 420;
 static const int FRAME_DEFAULT_HEIGHT = 300;
+
+static const int BAR_BUTTON_SIZE = 16; 
 
 typedef struct {
     Rect rect;
@@ -141,25 +143,28 @@ int main(void)
         hitbox_bar.x = master_rect.x + BORDER_OFFSET; 
         hitbox_bar.y = master_rect.y + BORDER_OFFSET;
         hitbox_bar.width = master_rect.width - (BORDER_OFFSET*2);
-        hitbox_bar.height = ACTION_BAR_HEIGHT;
+        hitbox_bar.height = BAR_HEIGHT;
             
                         // notive hitbox_master not master_rect!.
         hitbox_main.x = hitbox_master.x + BORDER_OFFSET; 
-        hitbox_main.y = hitbox_master.y + (2*BORDER_OFFSET) + ACTION_BAR_HEIGHT;
+        hitbox_main.y = hitbox_master.y + (2*BORDER_OFFSET) + BAR_HEIGHT;
         hitbox_main.width = hitbox_master.width - (2*BORDER_OFFSET);
-        hitbox_main.height = hitbox_master.height - ((3*BORDER_OFFSET) + ACTION_BAR_HEIGHT);
+        hitbox_main.height = hitbox_master.height - ((3*BORDER_OFFSET) + BAR_HEIGHT);
 
         // recalculated becomes the master.
         master_rect = hitbox_master; 
 
         // recalculate button positions (Slots as i called them :D)
-        int slot_0_x = master_rect.x + master_rect.width  
-        int slot_0_y =  
+        // button 0 (close)
+        int slot_0_x = master_rect.x + master_rect.width - BAR_BUTTON_SIZE+BORDER_OFFSET;
+        int slot_0_y = master_rect.y + (BAR_HEIGHT/2+BORDER_OFFSET);
 
         // button 1
+
+
         // butoon 2
 
-
+    
 
         hitbox_button_close.x = 0;            
         hitbox_button_close.y = 0;            
