@@ -1,3 +1,53 @@
+#include "../include/raylib.h"
+#define UI_WIDTH 160
+#define UI_HEIGHT 90
+
+int main(void)
+{
+    const int screenWidth = 1920;
+    const int screenHeight = 1080;
+    
+    InitWindow(screenWidth, screenHeight, "UFF TESTY");
+    SetTargetFPS(60);
+    
+    RenderTexture2D uiTarget = LoadRenderTexture(UI_WIDTH, UI_HEIGHT);
+    
+    while (!WindowShouldClose())
+    {
+        // Render UI to texture
+        BeginTextureMode(uiTarget);
+        {
+            ClearBackground(BLANK);
+            DrawRectangle(10, 10, 50, 50, DARKGRAY);
+            DrawText("Hello UI", 10, 10, 10, RAYWHITE);
+        }
+        EndTextureMode();
+        
+        // Render to screen
+        BeginDrawing();
+        {
+            ClearBackground(RAYWHITE);
+            
+            DrawTexturePro(
+                uiTarget.texture,
+                (Rectangle){0, 0, UI_WIDTH, -UI_HEIGHT},  // Source (negative height to flip)
+                (Rectangle){0, 0, screenWidth, screenHeight},  // Destination
+                (Vector2){0, 0},  
+                0.0f,  
+                WHITE
+            );
+            
+            DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+        }
+        EndDrawing();
+    }
+    
+    UnloadRenderTexture(uiTarget);
+    CloseWindow();
+    
+    return 0;
+}
+
 // Setup (once)
 // RenderTexture2D target = LoadRenderTexture(800, 600);
 
@@ -59,42 +109,3 @@
 //    200 * uiScale,
 //    50 * uiScale
 //}
-
-
-
-#include "../include/raylib.h"
-
-//------------------------------------------------------------------------------------
-// Program main entry point
-//------------------------------------------------------------------------------------
-int main(void)
-{
-    // Initialization
-    //-------------------------------------------------------------------------------------
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
-
-    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
-
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
-
-         BeginTextureMode(target);
-             ClearBackground(BLACK);
-         EndTextureMode();
-        BeginDrawing();
-        {
-            ClearBackground(RAYWHITE);
-
-            DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
-        }
-        EndDrawing();
-    }
-    CloseWindow();        // Close window and OpenGL context
-
-    return 0;
-}

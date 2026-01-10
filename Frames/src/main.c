@@ -25,8 +25,8 @@
 #define eray_min(a, b) ((a) < (b) ? (a) : (b))
 #define eray_max(a, b) ((a) > (b) ? (a) : (b))
 #define eray_clamp(val, lo, hi) (eray_min(eray_max((val), (lo)), (hi)))
-
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
+
 #define perma_assert(var) do {                                          \
     if (!(var)) {                                                       \
         fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n", \
@@ -34,6 +34,7 @@
         abort();                                                        \
     }                                                                   \
 } while (0)
+
 #define unreachable() do {                                                  \
     fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__); \
     abort();                                                                \
