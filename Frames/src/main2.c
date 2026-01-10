@@ -48,13 +48,53 @@
 //     EndDrawing();
 // }
 
+//   // Instead of absolute coords
+ //  rect = {100, 100, 200, 50}
+   // Use anchors
+//   rect = {screenWidth * 0.1, screenHeight * 0.2, 200, 50}
+//float uiScale = screenHeight / 1080.0; // designed for 1080p
+//rect = {
+//    100 * uiScale,
+//    100 * uiScale,
+//    200 * uiScale,
+//    50 * uiScale
+//}
+
+
 
 #include "../include/raylib.h"
 
+//------------------------------------------------------------------------------------
+// Program main entry point
+//------------------------------------------------------------------------------------
 int main(void)
 {
-    InitWindow(800, 600, "TextureRender");
+    // Initialization
+    //-------------------------------------------------------------------------------------
+    const int screenWidth = 800;
+    const int screenHeight = 450;
+
+    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
+
+    // Main game loop
+    while (!WindowShouldClose())    // Detect window close button or ESC key
+    {
+
+         BeginTextureMode(target);
+             ClearBackground(BLACK);
+         EndTextureMode();
+        BeginDrawing();
+        {
+            ClearBackground(RAYWHITE);
+
+            DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+        }
+        EndDrawing();
+    }
+    CloseWindow();        // Close window and OpenGL context
+
     return 0;
 }
-
-

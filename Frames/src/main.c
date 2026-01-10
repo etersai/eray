@@ -19,6 +19,13 @@
 //
 // MACROS
 //
+#define eray_norm(value, min, max) (((value) - (min)) / ((max) - (min)))
+#define eray_lerp(norm, min, max) (((max) - (min)) * (norm) + (min))
+// MAP is the combianation of norm and lerp. (MAP ONE RANGE TO ANOTHER ONE)
+#define eray_min(a, b) ((a) < (b) ? (a) : (b))
+#define eray_max(a, b) ((a) > (b) ? (a) : (b))
+#define eray_clamp(val, lo, hi) (eray_min(eray_max((val), (lo)), (hi)))
+
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 #define perma_assert(var) do {                                          \
     if (!(var)) {                                                       \
@@ -31,10 +38,6 @@
     fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__); \
     abort();                                                                \
 } while (0)
-
-
-
-
 
 //
 // LOG 
