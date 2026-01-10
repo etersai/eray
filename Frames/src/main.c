@@ -277,8 +277,7 @@ bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
 
 }
 
-//void eui_zip_frame(e_UI_CTX* ctx, Rect rect, const char* name)
-
+    
 int main(void)
 {
     // Platform setup
