@@ -2,7 +2,15 @@
 #include <stdio.h>
 #include <assert.h>
 
-typedef struct { int x, y, width, height; } Rect;
+//
+// RECT
+//
+typedef struct { 
+    int x;
+    int y;
+    int width;
+    int height; 
+} Rect;
 Rect               rect_create(int x, int y, int width, int height);
 static inline bool rect_aabb_collision(Rect r1, Rect r2);
 static inline bool rect_point_collision(Rect r, int x, int y);
@@ -30,30 +38,47 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
             && r1.y + r1.height >= r2.y && r1.y <= r2.y + r2.height); // Y_AXIS
 }
 
-Color color_border = {255, 165, 0, 255};
-Color color_bar = { 20, 20, 20, 255};
-Color color_main = { 50, 50, 50, 255};
+//
+// THEME
+//
+typedef struct {
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
+} e_UI_COLOR;
 
-// static const e_UI_THEME theme_default = {  // ✅ Even better
-//     .default_frame_width = 420,
-//     // ...
-// };
+typedef struct {
+    e_UI_COLOR color_text;
+    e_UI_COLOR color_main;
+    e_UI_COLOR color_bar;
+    e_UI_COLOR color_border;
+    e_UI_COLOR color_button_close;
+    e_UI_COLOR color_button_roll;
+} e_UI_THEME;
+
+static const e_UI_THEME theme_default = {
+    .color_text      = (e_UI_COLOR){ 255, 165, 0, 255},
+    .color_main      = (e_UI_COLOR){ 50, 50, 50, 255},
+    .color_border    = (e_UI_COLOR){ 255, 165, 0, 255},
+    .color_bar = (e_UI_COLOR){ 20, 20, 20, 255},
+    .color_button_close = (e_UI_COLOR){ 255, 0, 0, 255},
+    .color_button_roll = (e_UI_COLOR){ 255, 255, 0, 255},
+};
+
+static const int BORDER_OFFSET = 1;
+static const int ACTION_BAR_HEIGHT = 32;
+static const int FRAME_DEFAULT_WIDTH = 420;
+static const int FRAME_DEFAULT_HEIGHT = 300;
 
 typedef struct {
     Rect rect;
+    Rect rect_prev;
     bool opened;
-    bool zipped_up;
-    Rect pre_zipped_dims;
+    bool zip;
     const char* name; // it's id for now.
-    float scale;
+    float scale; // 1.0f default.
 } e_UI_FRAME;
-
-
-static const int BORDER_OFFSET = 2;
-static const int ACTION_BAR_SIZE = 16;
-
-static const int FRAME_DEFAULT_WIDTH = 400;
-static const int FRAME_DEFAULT_HEIGHT = 300;
 
 int main(void)
 {
@@ -90,51 +115,85 @@ int main(void)
            master_rect.y += mouse_delta_y;
         }
 
+        // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
         char mouse_delta_buffer[BUFFER_MAX];
         snprintf(mouse_pos_buffer, BUFFER_MAX, "[MOUSE POS: %.2f, %.2f]", mouse_pos.x, mouse_pos.y);
         snprintf(mouse_delta_buffer, BUFFER_MAX, "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
-
-        // recalcualte hitbox.
-
+    
+        // RECT RECALCULATIONS //
         Rect hitbox_master;
-        Rect hitbox_action_bar; 
-        Rect hitbox_action_button_1;
-        Rect hitbox_button_;
+        Rect hitbox_bar; // |-| .,, |& . In memory of our pullup BAR.
+        Rect hitbox_main;
+        
+        // clickables.
+        Rect hitbox_button_close;
+        Rect hitbox_button_zip;
+        Rect hitbox_button_resize;
+       
+        static const float SCALE = 1.0f;
+        hitbox_master.x = master_rect.x;
+        hitbox_master.y = master_rect.y;
+        hitbox_master.width = FRAME_DEFAULT_WIDTH * SCALE;
+        hitbox_master.height = FRAME_DEFAULT_HEIGHT * SCALE;
+
+        hitbox_bar.x = master_rect.x + BORDER_OFFSET; 
+        hitbox_bar.y = master_rect.y + BORDER_OFFSET;
+        hitbox_bar.width = master_rect.width - (BORDER_OFFSET*2);
+        hitbox_bar.height = ACTION_BAR_HEIGHT;
+            
+                        // notive hitbox_master not master_rect!.
+        hitbox_main.x = hitbox_master.x + BORDER_OFFSET; 
+        hitbox_main.y = hitbox_master.y + (2*BORDER_OFFSET) + ACTION_BAR_HEIGHT;
+        hitbox_main.width = hitbox_master.width - (2*BORDER_OFFSET);
+        hitbox_main.height = hitbox_master.height - ((3*BORDER_OFFSET) + ACTION_BAR_HEIGHT);
+
+        // recalculated becomes the master.
+        master_rect = hitbox_master; 
+
+        // recalculate button positions (Slots as i called them :D)
+        int slot_0_x = master_rect.x + master_rect.width  
+        int slot_0_y =  
+
+        // button 1
+        // butoon 2
+
+
+
+        hitbox_button_close.x = 0;            
+        hitbox_button_close.y = 0;            
+        hitbox_button_close.width = 0;            
+        hitbox_button_close.height = 0;            
+
+        // if zipped_up dont send playground draw.
+        // Make draw command.
 
         BeginDrawing();
         {
-
-
-            Color COLOR_BORDER = {};
-            Color COLOR_ACTION_BAR = {};
-            Color COLOR_MAIN = {};
-            Color COLOR_BUTTON_CLOSE = {};
-            Color COLOR_BUTTON_ROLL = {};
-
             ClearBackground(BLACK);
             // BODER as master_rect, serves as it's border and overall hitbox. (masteR_eRect)
             DrawRectangle(master_rect.x,
                           master_rect.y,
                           master_rect.width,
                           master_rect.height,
-                          RED);
+                          *(Color*)&theme_default.color_border);
 
-            // ACTION_BAR
-            DrawRectangle(master_rect.x + BORDER_OFFSET, 
-                          master_rect.y + BORDER_OFFSET,
-                          master_rect.width - (BORDER_OFFSET*2),//(1*2)
-                          ACTION_BAR_SIZE,
-                          GREEN);
-            
+            // BAR
+            DrawRectangle(hitbox_bar.x,
+                        hitbox_bar.y,
+                        hitbox_bar.width,
+                        hitbox_bar.height,
+                        *(Color*)&theme_default.color_bar); 
+
             // MAIN AREA
-            DrawRectangle(master_rect.x + BORDER_OFFSET,
-                          master_rect.y + (2*BORDER_OFFSET) + ACTION_BAR_SIZE,
-                          master_rect.width - (2*BORDER_OFFSET),
-                          master_rect.height - ((3*BORDER_OFFSET) + ACTION_BAR_SIZE),
-                          BLUE);
+            DrawRectangle(hitbox_main.x,
+                          hitbox_main.y,
+                          hitbox_main.width,
+                          hitbox_main.height,
+                          *(Color*)&theme_default.color_main);
 
+            // NOW BUTTONS
     
             // Debug.
             enum { FONT_SIZE = 20 };
