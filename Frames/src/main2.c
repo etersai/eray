@@ -54,7 +54,7 @@ typedef struct {
     e_UI_COLOR color_bar;
     e_UI_COLOR color_border;
     e_UI_COLOR color_button_close;
-    e_UI_COLOR color_button_roll;
+    e_UI_COLOR color_button_zip;
 } e_UI_THEME;
 
 static const e_UI_THEME theme_default = {
@@ -63,7 +63,7 @@ static const e_UI_THEME theme_default = {
     .color_border    = (e_UI_COLOR){ 255, 165, 0, 255},
     .color_bar = (e_UI_COLOR){ 20, 20, 20, 255},
     .color_button_close = (e_UI_COLOR){ 255, 0, 0, 255},
-    .color_button_roll = (e_UI_COLOR){ 255, 255, 0, 255},
+    .color_button_zip = (e_UI_COLOR){ 255, 255, 0, 255},
 };
 
 static const int BORDER_OFFSET = 1;
@@ -74,6 +74,11 @@ static const int FRAME_DEFAULT_HEIGHT = 300;
 static const int BAR_BUTTON_SIZE = 16; 
 
 typedef struct {
+    e_UI_COLOR color;
+    Rect       rect; // preferably 4 ints but no time for that XD. (NOTE: will regret it XD)
+} eui_DrawRectInfo;
+
+typedef struct {
     Rect rect;
     Rect rect_prev;
     bool opened;
@@ -81,6 +86,8 @@ typedef struct {
     const char* name; // it's id for now.
     float scale; // 1.0f default.
 } e_UI_FRAME;
+
+
 
 int main(void)
 {
@@ -96,7 +103,7 @@ int main(void)
     bool    input_is_left_pressed = false;
 
     bool held = false;
-    Rect master_rect = rect_create(100, 100, FRAME_DEFAULT_WIDTH, FRAME_DEFAULT_HEIGHT);
+    Rect master_rect = rect_create(800, 400, FRAME_DEFAULT_WIDTH, FRAME_DEFAULT_HEIGHT);
     while (!WindowShouldClose())
     {
         Vector2 mouse_pos           = GetMousePosition();
@@ -133,12 +140,14 @@ int main(void)
         Rect hitbox_button_close;
         Rect hitbox_button_zip;
         Rect hitbox_button_resize;
-       
+      
+        static bool zip = false;
         static const float SCALE = 1.0f;
         hitbox_master.x = master_rect.x;
         hitbox_master.y = master_rect.y;
         hitbox_master.width = FRAME_DEFAULT_WIDTH * SCALE;
-        hitbox_master.height = FRAME_DEFAULT_HEIGHT * SCALE;
+        if (zip) { hitbox_master.height = BAR_HEIGHT + (2*BORDER_OFFSET); }
+        else { hitbox_master.height = FRAME_DEFAULT_HEIGHT * SCALE; }
 
         hitbox_bar.x = master_rect.x + BORDER_OFFSET; 
         hitbox_bar.y = master_rect.y + BORDER_OFFSET;
@@ -154,22 +163,29 @@ int main(void)
         // recalculated becomes the master.
         master_rect = hitbox_master; 
 
+        // BUTTONS //
         // recalculate button positions (Slots as i called them :D)
         // button 0 (close)
         int slot_0_x = master_rect.x + master_rect.width - BAR_BUTTON_SIZE+BORDER_OFFSET;
         int slot_0_y = master_rect.y + (BAR_HEIGHT/2+BORDER_OFFSET);
 
-        // button 1
+        // button 1 (zip)
+        int slot_1_x = slot_0_x - BAR_BUTTON_SIZE; 
+        int slot_1_y = slot_0_y;
+
+        // close
+        hitbox_button_close.x = slot_0_x - (BAR_BUTTON_SIZE/2);            
+        hitbox_button_close.y = slot_0_y - (BAR_BUTTON_SIZE/2);             
+        hitbox_button_close.width = BAR_BUTTON_SIZE;            
+        hitbox_button_close.height = BAR_BUTTON_SIZE;            
+        
+        // zip
+        hitbox_button_zip.x = slot_1_x - BAR_BUTTON_SIZE;            
+        hitbox_button_zip.y = slot_1_y - (BAR_BUTTON_SIZE/2);             
+        hitbox_button_zip.width = BAR_BUTTON_SIZE;            
+        hitbox_button_zip.height = BAR_BUTTON_SIZE;            
 
 
-        // butoon 2
-
-    
-
-        hitbox_button_close.x = 0;            
-        hitbox_button_close.y = 0;            
-        hitbox_button_close.width = 0;            
-        hitbox_button_close.height = 0;            
 
         // if zipped_up dont send playground draw.
         // Make draw command.
@@ -199,6 +215,18 @@ int main(void)
                           *(Color*)&theme_default.color_main);
 
             // NOW BUTTONS
+            DrawRectangle(hitbox_button_close.x,
+                    hitbox_button_close.y,
+                    hitbox_button_close.width,
+                    hitbox_button_close.height,
+                    *(Color*)&theme_default.color_button_close);
+
+            DrawRectangle(hitbox_button_zip.x,
+                    hitbox_button_zip.y,
+                    hitbox_button_zip.width,
+                    hitbox_button_zip.height,
+                    *(Color*)&theme_default.color_button_zip);
+    
     
             // Debug.
             enum { FONT_SIZE = 20 };
