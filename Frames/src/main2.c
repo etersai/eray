@@ -82,7 +82,7 @@ static const e_UI_THEME theme_default = {
     .color_button_zip = (e_UI_COLOR){ 255, 255, 0, 255},
 };
 
-static const int DEFAULT_BORDER_OFFSET = 1;
+static const int DEFAULT_BORDER_OFFSET = 2;
 static const int DEFAULT_BAR_HEIGHT = 32;
 static const int DEFAULT_FRAME_WIDTH = 420;
 static const int DEFAULT_FRAME_HEIGHT = 300;
@@ -183,7 +183,7 @@ int main(void)
             hitbox_main.x = hitbox_master.x + DEFAULT_BORDER_OFFSET; 
             hitbox_main.y = hitbox_master.y + 2*DEFAULT_BORDER_OFFSET + hitbox_bar.height;
             hitbox_main.width = hitbox_master.width - 2*DEFAULT_BORDER_OFFSET;
-            hitbox_main.height = hitbox_master.height + hitbox_bar.height - 3*DEFAULT_BORDER_OFFSET;
+            hitbox_main.height = hitbox_master.height - hitbox_bar.height - 3*DEFAULT_BORDER_OFFSET;
         }
 
         log_rect_print_n_flush(hitbox_main);
