@@ -17,7 +17,7 @@ static inline bool rect_point_collision(Rect r, int x, int y);
 
 Rect rect_create(int x, int y, int width, int height)
 {
-    assert(width > 0 && height > 0);
+    assert(width >= 0 && height >= 0);
     Rect r = {
         .x      = x,
         .y      = y,
@@ -37,6 +37,22 @@ static inline bool rect_aabb_collision(const Rect r1, const Rect r2)
     return (r1.x + r1.width >= r2.x && r1.x <= r2.x + r2.width        // X_AXIS
             && r1.y + r1.height >= r2.y && r1.y <= r2.y + r2.height); // Y_AXIS
 }
+
+// DEBUG.
+void log_rect_print_n_flush(const Rect r)
+{
+    fprintf(stdout, "[RECT X:%d, Y:%d, WIDTH:%d, HEIGHT:%d]\n", r.x, r.y, r.width, r.height);
+    fflush(stdout);
+}
+
+void draw_rect_outline(Rect r, Color color)
+{
+    DrawLine(r.x, r.y, r.x+r.width, r.y, color);
+    DrawLine(r.x+r.width, r.y, r.x+r.width, r.y+r.height, color);
+    DrawLine(r.x+r.width, r.y+r.height, r.x, r.y + r.height, color); 
+    DrawLine(r.x, r.y + r.height, r.x, r.y, color);
+}
+
 
 //
 // THEME
@@ -66,12 +82,11 @@ static const e_UI_THEME theme_default = {
     .color_button_zip = (e_UI_COLOR){ 255, 255, 0, 255},
 };
 
-static const int BORDER_OFFSET = 1;
-static const int BAR_HEIGHT = 32;
-static const int FRAME_DEFAULT_WIDTH = 420;
-static const int FRAME_DEFAULT_HEIGHT = 300;
-
-static const int BAR_BUTTON_SIZE = 16; 
+static const int DEFAULT_BORDER_OFFSET = 1;
+static const int DEFAULT_BAR_HEIGHT = 32;
+static const int DEFAULT_FRAME_WIDTH = 420;
+static const int DEFAULT_FRAME_HEIGHT = 300;
+static const int DEFAULT_BUTTON_SIZE = 16; 
 
 typedef struct {
     e_UI_COLOR color;
@@ -103,7 +118,7 @@ int main(void)
     bool    input_is_left_pressed = false;
 
     bool held = false;
-    Rect master_rect = rect_create(800, 400, FRAME_DEFAULT_WIDTH, FRAME_DEFAULT_HEIGHT);
+    Rect master_rect = rect_create(800, 400, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
     while (!WindowShouldClose())
     {
         Vector2 mouse_pos           = GetMousePosition();
@@ -135,57 +150,64 @@ int main(void)
         Rect hitbox_master;
         Rect hitbox_bar; // |-| .,, |& . In memory of our pullup BAR.
         Rect hitbox_main;
-        
         // clickables.
         Rect hitbox_button_close;
         Rect hitbox_button_zip;
         Rect hitbox_button_resize;
       
         static bool zip = false;
-        static const float SCALE = 1.0f;
+        static float SCALE = 1.0f;
+        
+        SCALE+=0.01;
+        if (SCALE >= 2.0f) {
+            SCALE = 1.0f;
+        }
+
         hitbox_master.x = master_rect.x;
         hitbox_master.y = master_rect.y;
-        hitbox_master.width = FRAME_DEFAULT_WIDTH * SCALE;
-        if (zip) { hitbox_master.height = BAR_HEIGHT + (2*BORDER_OFFSET); }
-        else { hitbox_master.height = FRAME_DEFAULT_HEIGHT * SCALE; }
+        hitbox_master.width = DEFAULT_FRAME_WIDTH * SCALE;
+        if (zip) { hitbox_master.height = DEFAULT_BAR_HEIGHT*SCALE + 2*DEFAULT_BORDER_OFFSET; }
+        else { hitbox_master.height = DEFAULT_FRAME_HEIGHT*SCALE; }
 
-        hitbox_bar.x = master_rect.x + BORDER_OFFSET; 
-        hitbox_bar.y = master_rect.y + BORDER_OFFSET;
-        hitbox_bar.width = master_rect.width - (BORDER_OFFSET*2);
-        hitbox_bar.height = BAR_HEIGHT;
-            
-                        // notive hitbox_master not master_rect!.
-        hitbox_main.x = hitbox_master.x + BORDER_OFFSET; 
-        hitbox_main.y = hitbox_master.y + (2*BORDER_OFFSET) + BAR_HEIGHT;
-        hitbox_main.width = hitbox_master.width - (2*BORDER_OFFSET);
-        hitbox_main.height = hitbox_master.height - ((3*BORDER_OFFSET) + BAR_HEIGHT);
+        hitbox_bar.x = hitbox_master.x + DEFAULT_BORDER_OFFSET; 
+        hitbox_bar.y = hitbox_master.y + DEFAULT_BORDER_OFFSET;
+        hitbox_bar.width = hitbox_master.width - DEFAULT_BORDER_OFFSET*2;
+        hitbox_bar.height = DEFAULT_BAR_HEIGHT * SCALE;
+    
+        if (zip) {
+            Rect NULL_HITBOX = {0};
+            hitbox_main = NULL_HITBOX;
+        }
+        else
+        {
+            hitbox_main.x = hitbox_master.x + DEFAULT_BORDER_OFFSET; 
+            hitbox_main.y = hitbox_master.y + 2*DEFAULT_BORDER_OFFSET + hitbox_bar.height;
+            hitbox_main.width = hitbox_master.width - 2*DEFAULT_BORDER_OFFSET;
+            hitbox_main.height = hitbox_master.height + hitbox_bar.height - 3*DEFAULT_BORDER_OFFSET;
+        }
 
-        // recalculated becomes the master.
-        master_rect = hitbox_master; 
+        log_rect_print_n_flush(hitbox_main);
 
-        // BUTTONS //
-        // recalculate button positions (Slots as i called them :D)
-        // button 0 (close)
-        int slot_0_x = master_rect.x + master_rect.width - BAR_BUTTON_SIZE+BORDER_OFFSET;
-        int slot_0_y = master_rect.y + (BAR_HEIGHT/2+BORDER_OFFSET);
-
-        // button 1 (zip)
-        int slot_1_x = slot_0_x - BAR_BUTTON_SIZE; 
-        int slot_1_y = slot_0_y;
+        // BUTTONS //* */
+        int button_slot_y_axis = hitbox_master.y + hitbox_bar.height/2 + DEFAULT_BORDER_OFFSET;
+        int button_slot_0_x = hitbox_master.x + hitbox_master.width - (DEFAULT_BUTTON_SIZE*SCALE)+DEFAULT_BORDER_OFFSET;
+        int button_slot_1_x = hitbox_master.x + hitbox_master.width - 2*((DEFAULT_BUTTON_SIZE*SCALE)+DEFAULT_BORDER_OFFSET);
 
         // close
-        hitbox_button_close.x = slot_0_x - (BAR_BUTTON_SIZE/2);            
-        hitbox_button_close.y = slot_0_y - (BAR_BUTTON_SIZE/2);             
-        hitbox_button_close.width = BAR_BUTTON_SIZE;            
-        hitbox_button_close.height = BAR_BUTTON_SIZE;            
+        hitbox_button_close.x = button_slot_0_x - (DEFAULT_BUTTON_SIZE*SCALE/2);            
+        hitbox_button_close.y = button_slot_y_axis - (DEFAULT_BUTTON_SIZE*SCALE/2);             
+        hitbox_button_close.width = DEFAULT_BUTTON_SIZE * SCALE;            
+        hitbox_button_close.height = DEFAULT_BUTTON_SIZE * SCALE;            
         
         // zip
-        hitbox_button_zip.x = slot_1_x - BAR_BUTTON_SIZE;            
-        hitbox_button_zip.y = slot_1_y - (BAR_BUTTON_SIZE/2);             
-        hitbox_button_zip.width = BAR_BUTTON_SIZE;            
-        hitbox_button_zip.height = BAR_BUTTON_SIZE;            
+        hitbox_button_zip.x = button_slot_1_x - DEFAULT_BUTTON_SIZE*SCALE;            
+        hitbox_button_zip.y = button_slot_y_axis - (DEFAULT_BUTTON_SIZE*SCALE/2);             
+        hitbox_button_zip.width = DEFAULT_BUTTON_SIZE * SCALE;            
+        hitbox_button_zip.height = DEFAULT_BUTTON_SIZE * SCALE;            
 
-
+        // ONLY AFTER RECALCULATIONS THIS NEW MAIN HITBOX BECOMES SAVED AS STRUCT STATE.
+        // recalculated becomes the master.
+        master_rect = hitbox_master;
 
         // if zipped_up dont send playground draw.
         // Make draw command.
@@ -194,6 +216,7 @@ int main(void)
         {
             ClearBackground(BLACK);
             // BODER as master_rect, serves as it's border and overall hitbox. (masteR_eRect)
+#if 0
             DrawRectangle(master_rect.x,
                           master_rect.y,
                           master_rect.width,
@@ -226,9 +249,15 @@ int main(void)
                     hitbox_button_zip.width,
                     hitbox_button_zip.height,
                     *(Color*)&theme_default.color_button_zip);
-    
-    
-            // Debug.
+#endif 
+#if 1       // Debug hitboxes.
+            Color DEBUG_COLOR = RED;
+            draw_rect_outline(master_rect, DEBUG_COLOR);
+            draw_rect_outline(hitbox_bar, DEBUG_COLOR);
+            draw_rect_outline(hitbox_main, DEBUG_COLOR);
+            draw_rect_outline(hitbox_button_close, DEBUG_COLOR);
+            draw_rect_outline(hitbox_button_zip, DEBUG_COLOR);
+#endif
             enum { FONT_SIZE = 20 };
             DrawFPS(0, 0);
             DrawText(mouse_pos_buffer, 0, 17, FONT_SIZE, LIME);
