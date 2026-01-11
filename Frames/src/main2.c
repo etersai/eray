@@ -181,29 +181,34 @@ int main(void)
         else
         {
             hitbox_main.x = hitbox_master.x + DEFAULT_BORDER_OFFSET; 
-            hitbox_main.y = hitbox_master.y + 2*DEFAULT_BORDER_OFFSET + hitbox_bar.height;
+            hitbox_main.y = hitbox_master.y + hitbox_bar.height + 2*DEFAULT_BORDER_OFFSET;
             hitbox_main.width = hitbox_master.width - 2*DEFAULT_BORDER_OFFSET;
             hitbox_main.height = hitbox_master.height - hitbox_bar.height - 3*DEFAULT_BORDER_OFFSET;
         }
 
-        log_rect_print_n_flush(hitbox_main);
-
-        // BUTTONS //* */
+        // BUTTONS //
+        int button_size = DEFAULT_BUTTON_SIZE * SCALE;
         int button_slot_y_axis = hitbox_master.y + hitbox_bar.height/2 + DEFAULT_BORDER_OFFSET;
-        int button_slot_0_x = hitbox_master.x + hitbox_master.width - (DEFAULT_BUTTON_SIZE*SCALE)+DEFAULT_BORDER_OFFSET;
-        int button_slot_1_x = hitbox_master.x + hitbox_master.width - 2*((DEFAULT_BUTTON_SIZE*SCALE)+DEFAULT_BORDER_OFFSET);
+        int button_slot_0_x = hitbox_master.x + hitbox_master.width + DEFAULT_BORDER_OFFSET - button_size;
+        int button_slot_1_x = hitbox_master.x + hitbox_master.width +DEFAULT_BORDER_OFFSET - 2*button_size;
 
         // close
-        hitbox_button_close.x = button_slot_0_x - (DEFAULT_BUTTON_SIZE*SCALE/2);            
-        hitbox_button_close.y = button_slot_y_axis - (DEFAULT_BUTTON_SIZE*SCALE/2);             
-        hitbox_button_close.width = DEFAULT_BUTTON_SIZE * SCALE;            
-        hitbox_button_close.height = DEFAULT_BUTTON_SIZE * SCALE;            
+        hitbox_button_close.x = button_slot_0_x - button_size/2;            
+        hitbox_button_close.y = button_slot_y_axis - button_size/2;             
+        hitbox_button_close.width = button_size;            
+        hitbox_button_close.height = button_size;            
         
         // zip
-        hitbox_button_zip.x = button_slot_1_x - DEFAULT_BUTTON_SIZE*SCALE;            
-        hitbox_button_zip.y = button_slot_y_axis - (DEFAULT_BUTTON_SIZE*SCALE/2);             
-        hitbox_button_zip.width = DEFAULT_BUTTON_SIZE * SCALE;            
-        hitbox_button_zip.height = DEFAULT_BUTTON_SIZE * SCALE;            
+        hitbox_button_zip.x = button_slot_1_x - button_size;            
+        hitbox_button_zip.y = button_slot_y_axis - button_size/2;             
+        hitbox_button_zip.width = button_size;            
+        hitbox_button_zip.height = button_size;            
+
+        // resize (bottom right location).
+        hitbox_button_resize.x = 
+        hitbox_button_resize.y =
+        hitbox_button_resize.width = button_size;
+        hitbox_button_resize.height = button_size;
 
         // ONLY AFTER RECALCULATIONS THIS NEW MAIN HITBOX BECOMES SAVED AS STRUCT STATE.
         // recalculated becomes the master.
