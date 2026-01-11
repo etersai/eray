@@ -117,6 +117,10 @@ int main(void)
     bool    input_is_left_released = false;
     bool    input_is_left_pressed = false;
 
+
+    bool zip = false;
+    float SCALE = 1.0f;
+
     bool held = false;
     Rect master_rect = rect_create(800, 400, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
     while (!WindowShouldClose())
@@ -147,22 +151,15 @@ int main(void)
         snprintf(mouse_delta_buffer, BUFFER_MAX, "[MOUSE DELTA: %d, %d]", mouse_delta_x, mouse_delta_y);
     
         // RECT RECALCULATIONS //
+        Rect hitbox_null = {0};
         Rect hitbox_master;
         Rect hitbox_bar; // |-| .,, |& . In memory of our pullup BAR.
         Rect hitbox_main;
-        // clickables.
         Rect hitbox_button_close;
         Rect hitbox_button_zip;
         Rect hitbox_button_resize;
       
-        static bool zip = false;
-        static float SCALE = 1.0f;
-        
-        SCALE+=0.01;
-        if (SCALE >= 2.0f) {
-            SCALE = 1.0f;
-        }
-
+           
         hitbox_master.x = master_rect.x;
         hitbox_master.y = master_rect.y;
         hitbox_master.width = DEFAULT_FRAME_WIDTH * SCALE;
@@ -175,8 +172,7 @@ int main(void)
         hitbox_bar.height = DEFAULT_BAR_HEIGHT * SCALE;
     
         if (zip) {
-            Rect NULL_HITBOX = {0};
-            hitbox_main = NULL_HITBOX;
+            hitbox_main = hitbox_null;
         }
         else
         {
@@ -205,10 +201,16 @@ int main(void)
         hitbox_button_zip.height = button_size;            
 
         // resize (bottom right location).
-        hitbox_button_resize.x = 
-        hitbox_button_resize.y =
-        hitbox_button_resize.width = button_size;
-        hitbox_button_resize.height = button_size;
+        if (zip) {  
+            hitbox_button_resize = hitbox_null;
+        }
+        else
+        {
+            hitbox_button_resize.x = hitbox_master.x + hitbox_master.width - button_size; 
+            hitbox_button_resize.y = hitbox_master.y + hitbox_master.height - button_size;
+            hitbox_button_resize.width = button_size;
+            hitbox_button_resize.height = button_size;
+        }
 
         // ONLY AFTER RECALCULATIONS THIS NEW MAIN HITBOX BECOMES SAVED AS STRUCT STATE.
         // recalculated becomes the master.
@@ -262,6 +264,7 @@ int main(void)
             draw_rect_outline(hitbox_main, DEBUG_COLOR);
             draw_rect_outline(hitbox_button_close, DEBUG_COLOR);
             draw_rect_outline(hitbox_button_zip, DEBUG_COLOR);
+            draw_rect_outline(hitbox_button_resize, DEBUG_COLOR);
 #endif
             enum { FONT_SIZE = 20 };
             DrawFPS(0, 0);
