@@ -182,7 +182,7 @@ typedef struct {
 }eui_DrawTextInfo;
 
 typedef struct {
-    // counts shoudl get rested each 'tick' of my ui 
+    // counts should get wiped each 'tick' of my ui 
     int count_draw_pile;
     int count_rect_pile;   
     int count_text_pile;
@@ -358,7 +358,9 @@ int main(void)
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
 
         if (input_is_left_released) { held = false; }
-
+        ctx.draw_calls.count_draw_pile = 0;
+        ctx.draw_calls.count_rect_pile = 0;
+        ctx.draw_calls.count_text_pile = 0;
 
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &frame, &hitbox);
