@@ -16,6 +16,8 @@
 #define eray_clamp(val, lo, hi) (eray_min(eray_max((val), (lo)), (hi)))
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 
+typedef struct { int x; int y; } vec2i; 
+
 #define perma_assert(var) do {                                          \
     if (!(var)) {                                                       \
         fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n", \
@@ -160,7 +162,14 @@ static const int DEFAULT_BUTTON_SIZE = 16;
 typedef struct {
     e_UI_COLOR color;
     Rect       rect; // preferably 4 ints but no time for that XD. (NOTE: will regret it XD)
-} eui_DrawRectInfo;
+} e_UI_DrawRectInfo;
+
+typedef struct {
+    char text[1024]; // pls dont pass it more that that XD
+    e_UI_COLOR color;
+    int  x; // Assumed first letter pos at top-left corner.
+    int  y;
+}e_UI_DrawTextInfo;
 
 typedef struct { 
     Rect master;
@@ -169,6 +178,7 @@ typedef struct {
     Rect button_close;
     Rect button_zip;
     Rect button_resize;
+    vec2i text_pos; 
 } eui_Hitbox; 
 
 typedef struct {
