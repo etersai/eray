@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 //
 // MACROS
@@ -161,6 +162,7 @@ static const int DEFAULT_BUTTON_SIZE = 16;
 
 #define EUI_MAX_FRAMES 1024
 #define EUI_MAX_DRAWCALLS 1024
+#define EUI_MAX_TEXT_LEN 1024
 
 enum // DRAWCALL TYPES
 {
@@ -174,7 +176,7 @@ typedef struct {
 } eui_DrawRectInfo;
 
 typedef struct {
-    char text[1024]; // pls dont pass it more that that XD
+    char text[EUI_MAX_TEXT_LEN]; // pls dont pass it more that that XD
     e_UI_COLOR color;
     int  x; // Assumed first letter pos at top-left corner.
     int  y;
@@ -309,7 +311,7 @@ void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox
     frame->rect = hitbox->master; // assign recalculated hitbox as the main.
 }
 
-void eui_hitbox_data_transform_to_draw_calls(eui_Hitbox* hitbox)
+void eui_hitbox_data_transform_to_draw_calls(e_UI_CTX* ctx, eui_Hitbox* hitbox)
 {
        
 }
@@ -409,10 +411,41 @@ int main(void)
 
         // frame lag (not sure tho.) but whateever 
         // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
-    
-        ctx.draw_calls.count_draw_pile;
-        ctx.draw_calls.count_rect_pile;
-        ctx.draw_calls.count_text_pile;
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count_draw_pile++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.master;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_border;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count_draw_pile++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.bar;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_bar;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count_draw_pile++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.main;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_main;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count_draw_pile++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.button_close;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_close;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count_draw_pile++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.button_zip;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_zip;
+        ctx.draw_calls.count_rect_pile++;
+        // BUTTON RESIZE NOT RENDERED.
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count_draw_pile++] = EUI_DRAWCALL_TEXT;
+        strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, frame.name, EUI_MAX_TEXT_LEN);
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
+        ctx.draw_calls.count_text_pile++;
+
+        log_print_n_flush("[RECTS: %d, TEXTS: %d]\n", ctx.draw_calls.count_rect_pile, ctx.draw_calls.count_text_pile);
 
 // typedef struct { 
 //     Rect master;
@@ -443,6 +476,7 @@ int main(void)
         {
             ClearBackground(BLACK);
             // BODER as master_rect, serves as it's border and overall hitbox. (masteR_eRect)
+            
 #if 0
             DrawRectangle(master_rect.x,
                           master_rect.y,
