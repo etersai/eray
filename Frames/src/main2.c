@@ -18,7 +18,7 @@
 
 typedef struct { int x; int y; } vec2i; 
 
-#define perma_assert(var) do {                                          \
+#define expect(var) do {                                          \
     if (!(var)) {                                                       \
         fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n", \
         __FILE__, __LINE__, #var);                                      \
@@ -37,8 +37,8 @@ typedef struct { int x; int y; } vec2i;
 #define LOG_BUFFER_BEAUTIFY_MAX 64
 void log_print_beautify(const char* prefix, const char* format, ...)
 {
-    perma_assert(prefix);
-    perma_assert(format);
+    expect(prefix);
+    expect(format);
 
     int idx = 0;
     char buffer[LOG_BUFFER_BEAUTIFY_MAX] = {0};
@@ -159,17 +159,33 @@ static const int DEFAULT_FRAME_WIDTH = 420;
 static const int DEFAULT_FRAME_HEIGHT = 300;
 static const int DEFAULT_BUTTON_SIZE = 16; 
 
+
+// DRAWCALLS
 typedef struct {
     e_UI_COLOR color;
     Rect       rect; // preferably 4 ints but no time for that XD. (NOTE: will regret it XD)
-} e_UI_DrawRectInfo;
+} eui_DrawRectInfo;
 
 typedef struct {
     char text[1024]; // pls dont pass it more that that XD
     e_UI_COLOR color;
     int  x; // Assumed first letter pos at top-left corner.
     int  y;
-}e_UI_DrawTextInfo;
+    float font_size; // already scaled??.
+}eui_DrawTextInfo;
+
+enum
+{
+    EUI_DRAWCALL_RECT = 0,
+    EUI_DRAWCALL_TEXT,
+};
+
+#define EUI_MAX_DRAW_CALLS 1024
+typedef struct {
+    int              draw_calls_pile[EUI_MAX_DRAW_CALLS];
+    eui_DrawRectInfo       rect_pile[EUI_MAX_DRAW_CALLS]; 
+    eui_DrawTextInfo       text_pile[EUI_MAX_DRAW_CALLS];
+} eui_SynchronizedOutputData; 
 
 typedef struct { 
     Rect master;
@@ -179,7 +195,22 @@ typedef struct {
     Rect button_zip;
     Rect button_resize;
     vec2i text_pos; 
+    float text_size;
 } eui_Hitbox; 
+
+typedef struct {
+    int width;
+    int height;
+} e_UI_TEXT_DIMS;
+
+typedef struct {
+    bool    is_left_released;
+    bool    is_left_pressed;   
+    int     mouse_pos_x;
+    int     mouse_pos_y;
+    int     mouse_delta_x;
+    int     mouse_delta_y;
+} e_UI_INPUT_DATA;
 
 typedef struct {
     Rect rect;
@@ -189,10 +220,27 @@ typedef struct {
     float scale; // 1.0f default.
 } e_UI_FRAME;
 
+#define EUI_FRAMES_MAX 1024
+
+typedef struct {
+    e_UI_FRAME   frame_buffer[EUI_FRAMES_MAX];
+    size_t       frame_count;
+    e_UI_THEME   theme;
+    e_UI_INPUT_DATA input_data;
+    e_UI_FRAME*  that_frame;
+    e_UI_TEXT_DIMS (*eui_get_font_metrics)(const char* text, int font_size);
+} e_UI_CTX;
+
+// you need to provide this callback. 
+static e_UI_TEXT_DIMS (*eui_get_font_metrics)(const char* text, int font_size) = NULL;
+
+static Font g_test_font;
+static int g_font_size;
+
 void eui_calculate_hitboxes(e_UI_FRAME* frame, eui_Hitbox* hitbox)
 {
-    perma_assert(frame);
-    perma_assert(hitbox);
+    expect(frame);
+    expect(hitbox);
 
     Rect hitbox_null = {0};
 
@@ -250,8 +298,42 @@ void eui_calculate_hitboxes(e_UI_FRAME* frame, eui_Hitbox* hitbox)
         hitbox->button_resize.width = button_size;
         hitbox->button_resize.height = button_size;
     }
+
+    expect(eui_get_font_metrics); // probably do it a the init function. (user expected to pass it at the begiining)
+    e_UI_TEXT_DIMS text_dimensions = eui_get_font_metrics(frame->name, g_font_size*frame->scale);
+    vec2i text_pos;
+    text_pos.x = hitbox->bar.x + 5;
+    text_pos.y = hitbox->bar.y + (hitbox->bar.height - text_dimensions.height)/2;
+    hitbox->text_pos = text_pos;
+    hitbox->text_size = g_font_size*frame->scale;
 }
 
+static void eui_hitbox_data_transform_to_draw_calls(eui_Hitbox* hitbox)
+{
+       
+}
+
+//
+// typedef struct {
+//     e_UI_COLOR color;
+//     Rect       rect; // preferably 4 ints but no time for that XD. (NOTE: will regret it XD)
+// } e_UI_DrawRectInfo;
+//
+// typedef struct {
+//     char text[1024]; // pls dont pass it more that that XD
+//     e_UI_COLOR color;
+//     int  x; // Assumed first letter pos at top-left corner.
+//     int  y;
+//     float font_size; // already scaled??.
+// }e_UI_DrawTextInfo;
+//
+//
+
+static e_UI_TEXT_DIMS my_font_metrics(const char* text, int font_size)
+{
+    Vector2 metrics = MeasureTextEx(g_test_font, text, font_size, 0.0f);    
+    return (e_UI_TEXT_DIMS){ .width = metrics.x, .height = metrics.y };
+}
 
 int main(void)
 {
@@ -259,8 +341,12 @@ int main(void)
     const int screenHeight = 1080;
     InitWindow(screenWidth, screenHeight, "RewriteKinda");
     SetTargetFPS(60);
-        
+       
+    // kinda debub hacks.
     bool held = false;
+    g_test_font = GetFontDefault();
+    g_font_size = 16; // font size in points.
+    eui_get_font_metrics = my_font_metrics;
 
     e_UI_FRAME frame = {0};
     frame.name = "Co jest frame?";
@@ -285,7 +371,10 @@ int main(void)
 
         if (input_is_left_released) { held = false; }
 
- 
+        int draw_call_pile_count = 0; 
+        int rect_pile_count = 0;
+        int text_pile_count = 0;
+
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&frame, &hitbox);
         frame.rect = hitbox.master; // assign recalculated hitbox as the main.
@@ -387,6 +476,7 @@ int main(void)
             draw_rect_outline(hitbox.button_close, DEBUG_COLOR);
             draw_rect_outline(hitbox.button_zip, DEBUG_COLOR);
             draw_rect_outline(hitbox.button_resize, DEBUG_COLOR);
+            DrawText(frame.name, hitbox.text_pos.x, hitbox.text_pos.y, g_font_size*frame.scale, RED);
 #endif
             enum { FONT_SIZE = 20 };
             DrawFPS(0, 0);
@@ -448,8 +538,6 @@ int main(void)
 //
 // Cleanup (when done)
 //UnloadRenderTexture(target);
-
-
 
 //////////////////////////////////////
 // For your fullscreen scaling case //
