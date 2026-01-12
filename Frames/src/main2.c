@@ -477,6 +477,10 @@ int main(void)
             ClearBackground(BLACK);
             // BODER as master_rect, serves as it's border and overall hitbox. (masteR_eRect)
             
+            
+
+
+
 #if 0
             DrawRectangle(master_rect.x,
                           master_rect.y,
