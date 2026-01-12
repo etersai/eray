@@ -182,10 +182,9 @@ typedef struct {
 }eui_DrawTextInfo;
 
 typedef struct {
-    // counts shoudl get rested each 'tick' of my ui 
-    int count_draw_pile;
-    int count_rect_pile;   
-    int count_text_pile;
+    int draw_call_pile_count; // this counts shoudl get rested each 'tick' of my ui
+    int rect_pile_count;
+    int text_pile_count;
     int              draw_calls_pile[EUI_MAX_DRAWCALLS];
     eui_DrawRectInfo       rect_pile[EUI_MAX_DRAWCALLS]; 
     eui_DrawTextInfo       text_pile[EUI_MAX_DRAWCALLS];
@@ -360,6 +359,7 @@ int main(void)
         if (input_is_left_released) { held = false; }
 
 
+
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &frame, &hitbox);
         
@@ -399,34 +399,12 @@ int main(void)
             }
 
         }
-
+       
+            
         if (held) {
            frame.rect.x += mouse_delta_x;
            frame.rect.y += mouse_delta_y;
         }
-
-        // frame lag (not sure tho.) but whateever 
-        // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
-    
-        ctx.draw_calls.count_draw_pile;
-        ctx.draw_calls.count_rect_pile;
-        ctx.draw_calls.count_text_pile;
-
-// typedef struct { 
-//     Rect master;
-//     Rect bar; // |-| .,, |& . In memory of our pullup BAR.
-//     Rect main; 
-//     Rect button_close;
-//     Rect button_zip;
-//     Rect button_resize;
-//     vec2i text_pos; 
-//     float text_size;
-// } eui_Hitbox; 
-//
-   
-         
-
-
 
         // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
