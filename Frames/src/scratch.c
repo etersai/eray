@@ -60,100 +60,105 @@ size_t       count;
 
 int main(void)
 {  
-    // init.
-    count = 0;
-
-    items[0].data = 10;
-    items[0].id   = 0;
-    count++; // 1
-
-    items[1].data = 20;
-    items[1].id   = 1;
-    count++; // 2
-
-
-    items[2].data = 30;
-    items[2].id   = 2;
-    count++; // 3
     
-    for (int i = 0; i < count; i++) {
-
-        printf("%d, %d\n", items[i].id, items[i].data);
-
-    }
-
-    // search for id.
-    int id_to_find = 1; // middle man
-    int found_index = -1;
-    for (int i = 0; i < count; i++) {
-        if (items[i].id == id_to_find) {
-            found_index = i;
-            break;
-        }
-    }
-    if (found_index < 0) {
-        abort(); // item with that id not on the lsit.
-    }
-
-    // found_index == 1;
-    Thing temp;
-    temp.id = items[found_index].id;
-    temp.data = items[found_index].data;
-
-    for (int i = found_index+1; i < count; i++) {
-        items[i-1].data = items[i].data;
-        items[i-1].id = items[i].id;
-    }
-
-    items[count-1].data = temp.data;
-    items[count-1].id   = temp.id;
-
-
-    for (int i = 0; i < count; i++) {
-
-        printf("%d, %d\n", items[i].id, items[i].data);
-
-    }
-
-
-
-    // search for id.
-    id_to_find = 0; // middle man
-    found_index = -1;
-    for (int i = 0; i < count; i++) {
-        if (items[i].id == id_to_find) {
-            found_index = i;
-            break;
-        }
-    }
-    if (found_index < 0) {
-        abort(); // item with that id not on the lsit.
-    }
-
-    // found_index == 1;
-    Thing temp2;
-    temp2.id = items[found_index].id;
-    temp2.data = items[found_index].data;
-
-    for (int i = found_index+1; i < count; i++) {
-        items[i-1].data = items[i].data;
-        items[i-1].id = items[i].id;
-    }
-
-    items[count-1].data = temp2.data;
-    items[count-1].id   = temp2.id;
-
-
-    for (int i = 0; i < count; i++) {
-
-        printf("%d, %d\n", items[i].id, items[i].data);
-
-    }
-        
-    for (int i = 2-1; i >= 0; i--) {
+    for (int i = 1; i >= 0; i--) {
         printf("[%d]\n", i);
     }
 
+    // // init.
+    // count = 0;
+    //
+    // items[0].data = 10;
+    // items[0].id   = 0;
+    // count++; // 1
+    //
+    // items[1].data = 20;
+    // items[1].id   = 1;
+    // count++; // 2
+    //
+    //
+    // items[2].data = 30;
+    // items[2].id   = 2;
+    // count++; // 3
+    //
+    // for (int i = 0; i < count; i++) {
+    //
+    //     printf("%d, %d\n", items[i].id, items[i].data);
+    //
+    // }
+    //
+    // // search for id.
+    // int id_to_find = 1; // middle man
+    // int found_index = -1;
+    // for (int i = 0; i < count; i++) {
+    //     if (items[i].id == id_to_find) {
+    //         found_index = i;
+    //         break;
+    //     }
+    // }
+    // if (found_index < 0) {
+    //     abort(); // item with that id not on the lsit.
+    // }
+    //
+    // // found_index == 1;
+    // Thing temp;
+    // temp.id = items[found_index].id;
+    // temp.data = items[found_index].data;
+    //
+    // for (int i = found_index+1; i < count; i++) {
+    //     items[i-1].data = items[i].data;
+    //     items[i-1].id = items[i].id;
+    // }
+    //
+    // items[count-1].data = temp.data;
+    // items[count-1].id   = temp.id;
+    //
+    //
+    // for (int i = 0; i < count; i++) {
+    //
+    //     printf("%d, %d\n", items[i].id, items[i].data);
+    //
+    // }
+    //
+    //
+    //
+    // // search for id.
+    // id_to_find = 0; // middle man
+    // found_index = -1;
+    // for (int i = 0; i < count; i++) {
+    //     if (items[i].id == id_to_find) {
+    //         found_index = i;
+    //         break;
+    //     }
+    // }
+    // if (found_index < 0) {
+    //     abort(); // item with that id not on the lsit.
+    // }
+    //
+    // // found_index == 1;
+    // Thing temp2;
+    // temp2.id = items[found_index].id;
+    // temp2.data = items[found_index].data;
+    //
+    // for (int i = found_index+1; i < count; i++) {
+    //     items[i-1].data = items[i].data;
+    //     items[i-1].id = items[i].id;
+    // }
+    //
+    // items[count-1].data = temp2.data;
+    // items[count-1].id   = temp2.id;
+    //
+    //
+    // for (int i = 0; i < count; i++) {
+    //
+    //     printf("%d, %d\n", items[i].id, items[i].data);
+    //
+    // }
+    //
+    // for (int i = 2-1; i >= 0; i--) {
+    //     printf("[%d]\n", i);
+    // }
+    //
 
     return 0;
 }

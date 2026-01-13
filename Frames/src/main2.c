@@ -1,5 +1,6 @@
 #include "../include/raylib.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,6 +80,11 @@ void log_print_n_flush(const char* format, ...)
 // HELPERS
 //
 const char* stringify_bool(bool var) { return var ? "TRUE" : "FALSE"; }
+static inline float clamp_me_float(float val, float min, float max) {
+    if      (val > max) {return max;}
+    else if (val < min) {return min;}
+    else                {return val;}
+}
 
 //
 // RECT
@@ -137,6 +143,7 @@ void draw_rect_outline(Rect r, Color color)
 #define EUI_MAX_FRAMES 1024
 #define EUI_MAX_DRAWCALLS 2048
 #define EUI_MAX_TEXT_LEN 1024
+#define EUI_INVERSE_SCROLL true
 
 static const int DEFAULT_BORDER_OFFSET = 2;
 static const int DEFAULT_BAR_HEIGHT = 32;
@@ -389,28 +396,27 @@ static e_UI_TEXT_DIMS ray_get_text_metrics(const char* text, int font_size)
     return (e_UI_TEXT_DIMS){ .width = metrics.x, .height = metrics.y };
 }
 
+// nifty trick for the record, maybe i will find an usecase for it :D.
+//Rect* as_array = (Rect*)&hitbox;
+//size_t num_hitbox = sizeof(eui_Hitbox)/sizeof(Rect);
+//
+//
+
 int main(void)
 {
-    const int screenWidth = 1920;
-    const int screenHeight = 1080;
+    const int screenWidth = 1920/2;
+    const int screenHeight = 1080/2;
     InitWindow(screenWidth, screenHeight, "RewriteKinda");
-    SetTargetFPS(60);
-
-    bool held = false; // kinda debug hack
+    //SetTargetFPS(120);
 
     // UI INIT STEPS
     e_UI_CTX ctx = {0};
+    ctx.active_frame = &ctx.frame_buffer[0]; // HACKY
     ctx.eui_get_text_metrics = ray_get_text_metrics;
     ctx.user_font_size = 16;
     eui_init(&ctx);
-    
-    // e_UI_FRAME frame = {0};
-    // frame.name = "Hello, frame!";
-    // frame.opened = true;
-    // frame.rect = rect_create(100, 100, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
-    // frame.scale = 1.0f;
-    // frame.zipped = false;
 
+    // Platform input init
     Vector2 mouse_pos_prev = {0};  
     int     mouse_delta_x = 0;
     int     mouse_delta_y = 0;
@@ -424,42 +430,59 @@ int main(void)
         input_is_left_pressed       = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
-
+        
+        // USER REGISTERED DATA STRUCT.
         // UI REGISTER INPUT DATA. assert(capture before first frame spawn)
         ctx.input_data.mouse_pos_x = mouse_pos.x;
         ctx.input_data.mouse_pos_y = mouse_pos.y;
+        ctx.input_data.mouse_delta_x = mouse_delta_x;
+        ctx.input_data.mouse_delta_y = mouse_delta_y;
+        ctx.input_data.mouse_scroll_x = mouse_scroll.x;
+        ctx.input_data.mouse_scroll_y = mouse_scroll.y;
+        ctx.input_data.is_left_pressed = input_is_left_pressed;
+        ctx.input_data.is_left_released = input_is_left_released;
 
-        Rect DEFAULT_RECT = (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}; 
-        if (eui_open_frame(&ctx, DEFAULT_RECT, "Tie me in!")) {
-            log_print_n_flush("SHAISTY!");
-            abort();
-        }
-
-
-
-
-        // drop frame if holding.
+        // drop frame if releaased and holding something 
         if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
-
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
 
-        eui_Hitbox hitbox = {0};
-        eui_calculate_hitboxes(&ctx, &frame, &hitbox);
-
-        
-        // nifty trick for the record, maybe i will find an usecase for it :D.
-        //Rect* as_array = (Rect*)&hitbox;
-        //size_t num_hitbox = sizeof(eui_Hitbox)/sizeof(Rect);
-
-        if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-            float not_so_fast = 16.0f;
-            frame.scale -= mouse_scroll.y/not_so_fast;
-            // my reterded clamping XD
-            if (frame.scale >= 2.0f) { frame.scale = 2.0f; }
-            else if (frame.scale <= 1.0f) { frame.scale = 1.0f; }
+        Rect DEFAULT_RECT = (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}; 
+        if (eui_open_frame(&ctx, DEFAULT_RECT, "eray")) {
+            // do your stuff here.
         }
+
+#if 0
+        eui_Hitbox hitbox = {0};
+        // to not compute everything just check if RECT BIG HIT FIRST.
+        // iterate from back for correct Z order. CONSTANTLY MONITOR FOR HOVERS.
+        for (int i = ctx.frame_count-1; i >= 0; i--) {
+        if (rect_point_collision(ctx.frame_buffer[i].rect,
+                                 ctx.input_data.mouse_pos_x,
+                                 ctx.input_data.mouse_pos_y)) {
+            log_print_n_flush("[HOVER]");
+
+            eui_calculate_hitboxes(&ctx, ctx.active_frame, &hitbox);
+
+ 
+             if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+                const float SCALE_SENSITIVITY = 0.1f;
+                const float SCALE_MIN = 1.0f;
+                const float SCALE_MAX = 2.0f;
+                float scroll = ctx.input_data.mouse_scroll_y;
+                if (scroll != 0.0f) {
+                    if (EUI_INVERSE_SCROLL) {
+                    ctx.active_frame->scale += -scroll * SCALE_SENSITIVITY;
+                    }
+                    else {
+                    ctx.active_frame->scale += scroll * SCALE_SENSITIVITY;
+                    }
+                
+                ctx.active_frame->scale = clamp_me_float(ctx.active_frame->scale, SCALE_MIN, SCALE_MAX);
+                }
+            }
+
 
         if (input_is_left_pressed) {
 
@@ -467,7 +490,7 @@ int main(void)
                 log_print_n_flush("CLOSE!\n");
             }
             else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
-                frame.zipped = !frame.zipped;
+                ctx.active_frame->zipped = !ctx.active_frame->zipped;
                 log_print_n_flush("ZIP!\n");
             }
             else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
@@ -477,7 +500,7 @@ int main(void)
                 log_print_n_flush("MAIN!\n");
             }
             else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-                held = true;
+                ctx.held_frame = ctx.active_frame;
                 log_print_n_flush("BAR!\n");
             }
             else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
@@ -486,9 +509,90 @@ int main(void)
 
         }
 
-        if (held) {
-           frame.rect.x += mouse_delta_x;
-           frame.rect.y += mouse_delta_y;
+
+
+
+        }}
+#endif
+#if 1
+
+        static eui_Hitbox hitbox = {0}; // XD
+        for (int i = ctx.frame_count-1; i >= 0; i--) {
+            
+            if (rect_point_collision(ctx.frame_buffer[i].rect,
+                                 ctx.input_data.mouse_pos_x,
+                                 ctx.input_data.mouse_pos_y)) {
+                ctx.hovered_frame = &ctx.frame_buffer[i];
+            }
+            
+             
+
+        }
+        eui_calculate_hitboxes(&ctx, ctx.active_frame, &hitbox);
+
+        e_UI_FRAME* being_actually_hovered_over;
+        for (int i = ctx.frame_count-1; i >= 0; i--) {
+            if (rect_point_collision(ctx.frame_buffer[i].rect,
+                                 ctx.input_data.mouse_pos_x,
+                                 ctx.input_data.mouse_pos_y)) {
+                being_actually_hovered_over = &ctx.frame_buffer[i];
+            }
+        }
+
+        if (ctx.hovered_frame != being_actually_hovered_over) {
+            ctx.hovered_frame = being_actually_hovered_over;
+            eui_calculate_hitboxes(&ctx, ctx.hovered_frame, &hitbox);
+        }
+        
+
+         if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+            const float SCALE_SENSITIVITY = 0.1f;
+            const float SCALE_MIN = 1.0f;
+            const float SCALE_MAX = 2.0f;
+            float scroll = ctx.input_data.mouse_scroll_y;
+            if (scroll != 0.0f) {
+                if (EUI_INVERSE_SCROLL) {
+                ctx.active_frame->scale += -scroll * SCALE_SENSITIVITY;
+                }
+                else {
+                ctx.active_frame->scale += scroll * SCALE_SENSITIVITY;
+                }
+            
+            ctx.active_frame->scale = clamp_me_float(ctx.active_frame->scale, SCALE_MIN, SCALE_MAX);
+            }
+        }
+
+        if (input_is_left_pressed) {
+
+            if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
+                log_print_n_flush("CLOSE!\n");
+            }
+            else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
+                ctx.active_frame->zipped = !ctx.active_frame->zipped;
+                log_print_n_flush("ZIP!\n");
+            }
+            else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
+                log_print_n_flush("RESIZE!\n");
+            }
+            else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
+                log_print_n_flush("MAIN!\n");
+            }
+            else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+                ctx.held_frame = ctx.active_frame;
+                log_print_n_flush("BAR!\n");
+            }
+            else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
+                log_print_n_flush("MASTER!\n");
+            }
+
+        }
+    
+#endif        
+       
+
+        if (ctx.held_frame) {
+           ctx.held_frame->rect.x += ctx.input_data.mouse_delta_x;
+           ctx.held_frame->rect.y += ctx.input_data.mouse_delta_y;
         }
 
         // frame lag (not sure tho.) but whateever 
@@ -518,15 +622,13 @@ int main(void)
         ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_zip;
         ctx.draw_calls.count_rect_pile++;
 
-        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;
-        strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, frame.name, EUI_MAX_TEXT_LEN);
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;    
+        strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.active_frame->name, EUI_MAX_TEXT_LEN);
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
         ctx.draw_calls.count_text_pile++;
-
-
 
         // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
