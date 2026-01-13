@@ -335,9 +335,6 @@ void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox
     text_pos.y = hitbox->bar.y + (hitbox->bar.height - text_dimensions.height)/2;
     hitbox->text_pos = text_pos;
     hitbox->text_size = ctx->user_font_size*frame->scale;
-
-    // IMPORTANT !!!
-    frame->rect = hitbox->master; // assign recalculated hitbox as the main.
 }
 
 bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
@@ -399,8 +396,6 @@ static e_UI_TEXT_DIMS ray_get_text_metrics(const char* text, int font_size)
 // nifty trick for the record, maybe i will find an usecase for it :D.
 //Rect* as_array = (Rect*)&hitbox;
 //size_t num_hitbox = sizeof(eui_Hitbox)/sizeof(Rect);
-//
-//
 
 int main(void)
 {
@@ -444,30 +439,35 @@ int main(void)
 
         // drop frame if releaased and holding something 
         if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
-        if (input_is_left_released && ctx.active_frame != NULL) { ctx.active_frame = NULL; }
+        if (input_is_left_released && ctx.active_frame) { ctx.active_frame = NULL; }
         ctx.hovered_frame = NULL;
 
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
 
+        // WE OPEN FRAM
         Rect DEFAULT_RECT = (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}; 
         if (eui_open_frame(&ctx, DEFAULT_RECT, "eray")) {
             // do your stuff here.
         }
 
-#if 1
-        static eui_Hitbox hitbox = {0}; // XD
+#if 1   // DO SOME WORK
         for (int i = ctx.frame_count-1; i >= 0; i--) {
             
+            // check for hoover.
             if (rect_point_collision(ctx.frame_buffer[i].rect,
                                  ctx.input_data.mouse_pos_x,
                                  ctx.input_data.mouse_pos_y)) {
                 ctx.hovered_frame = &ctx.frame_buffer[i];
+                break;
             }
-            
-            eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
 
+            // Calculate hitboxes for every single one of frames as we need to pack them for draw calls.
+            eui_Hitbox hitbox = {0};
+            eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
+    
+            // if hovered on bar chceck for zoom
             if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y) && ctx.hovered_frame) {
                 const float SCALE_SENSITIVITY = 0.1f;
                 const float SCALE_MIN = 1.0f;
@@ -486,8 +486,7 @@ int main(void)
             }
 
             if (input_is_left_pressed && ctx.hovered_frame) {
-               
-                log_print_n_flush("[HEH]\n");
+              
                 ctx.active_frame = ctx.hovered_frame;
 
                 if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
@@ -511,20 +510,60 @@ int main(void)
                 log_print_n_flush("MASTER!\n");
                 }
             } // end hitbox checks.
-             
+            
+            // here goes the packing up??
+            // REMEMBER =>> assert(ctx.draw_calls.count < EUI_MAX_DRAWCALLS);
+            // PACKUP ALL HITBOXES TO DRAWCALLS
+            // frame lag (not sure tho.) but whateever 
+            // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
+            ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.master;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_border;
+            ctx.draw_calls.count_rect_pile++;
+
+            ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.bar;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_bar;
+            ctx.draw_calls.count_rect_pile++;
+
+            ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.main;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_main;
+            ctx.draw_calls.count_rect_pile++;
+
+            ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.button_close;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_close;
+            ctx.draw_calls.count_rect_pile++;
+
+            ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.button_zip;
+            ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_zip;
+            ctx.draw_calls.count_rect_pile++;
+
+            ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;   /// hacky 
+            strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.frame_buffer[i].name, EUI_MAX_TEXT_LEN);
+            ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
+            ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
+            ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
+            ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
+            ctx.draw_calls.count_text_pile++;
 
         } // for loop ends
 
 #endif        
        
-
+        // UPDATE
         if (ctx.held_frame) {
            ctx.held_frame->rect.x += ctx.input_data.mouse_delta_x;
            ctx.held_frame->rect.y += ctx.input_data.mouse_delta_y;
         }
 
+        // REMEMBER =>> assert(ctx.draw_calls.count < EUI_MAX_DRAWCALLS);
+        // PACKUP ALL HITBOXES TO DRAWCALLS
         // frame lag (not sure tho.) but whateever 
         // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
+#if 0
         ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
         ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.master;
         ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_border;
@@ -550,14 +589,14 @@ int main(void)
         ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_zip;
         ctx.draw_calls.count_rect_pile++;
 
-        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;    
-        strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.active_frame->name, EUI_MAX_TEXT_LEN);
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;   /// hacky 
+        strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.frame_buffer[0].name, EUI_MAX_TEXT_LEN);
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
         ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
         ctx.draw_calls.count_text_pile++;
-
+#endif
         // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
         char mouse_pos_buffer[BUFFER_MAX];
