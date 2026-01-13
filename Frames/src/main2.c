@@ -444,7 +444,9 @@ int main(void)
 
         // drop frame if releaased and holding something 
         if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
+        if (input_is_left_released && ctx.active_frame != NULL) { ctx.active_frame = NULL; }
         ctx.hovered_frame = NULL;
+
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
@@ -466,25 +468,26 @@ int main(void)
             
             eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
 
-            if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+            if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y) && ctx.hovered_frame) {
                 const float SCALE_SENSITIVITY = 0.1f;
                 const float SCALE_MIN = 1.0f;
                 const float SCALE_MAX = 2.0f;
                 float scroll = ctx.input_data.mouse_scroll_y;
                 if (scroll != 0.0f) {
                     if (EUI_INVERSE_SCROLL) {
-                        ctx.active_frame->scale += -scroll * SCALE_SENSITIVITY;
+                        ctx.hovered_frame->scale += -scroll * SCALE_SENSITIVITY;
                     }
                     else 
                     {
-                        ctx.active_frame->scale += scroll * SCALE_SENSITIVITY;
+                        ctx.hovered_frame->scale += scroll * SCALE_SENSITIVITY;
                     }
-                    ctx.active_frame->scale = clamp_me_float(ctx.active_frame->scale, SCALE_MIN, SCALE_MAX);
+                    ctx.hovered_frame->scale = clamp_me_float(ctx.hovered_frame->scale, SCALE_MIN, SCALE_MAX);
                 }
             }
 
             if (input_is_left_pressed && ctx.hovered_frame) {
-                 
+               
+                log_print_n_flush("[HEH]\n");
                 ctx.active_frame = ctx.hovered_frame;
 
                 if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
