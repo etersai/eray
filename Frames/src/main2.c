@@ -159,10 +159,19 @@ static const int DEFAULT_BAR_HEIGHT = 32;
 static const int DEFAULT_FRAME_WIDTH = 420;
 static const int DEFAULT_FRAME_HEIGHT = 300;
 static const int DEFAULT_BUTTON_SIZE = 16; 
+static const int DEFAULT_MIN_WIDTH = 256;
+static const int DEFAULT_MIN_HEIGHT = 128;
 
 #define EUI_MAX_FRAMES 1024
-#define EUI_MAX_DRAWCALLS 1024
+#define EUI_MAX_DRAWCALLS 2048
 #define EUI_MAX_TEXT_LEN 1024
+
+enum // INTERACTIONS
+{
+    EUI_INTERACTION_NONE = 0,
+    EUI_INTERACTION_DRAG,
+    EUI_INTERACTION_RESIZE,
+};
 
 enum // DRAWCALL TYPES
 {
@@ -408,6 +417,12 @@ int main(void)
            frame.rect.x += mouse_delta_x;
            frame.rect.y += mouse_delta_y;
         }
+        else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
+                ctx.active_use_frame->rect.width  += mouse_delta_x;                
+                ctx.active_use_frame->rect.height += mouse_delta_y;                
+                if (ctx.active_use_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_use_frame->rect.width = EUI_FRAME_MIN_WIDTH;
+                if (ctx.active_use_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_use_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
+            }
 
         // frame lag (not sure tho.) but whateever 
         // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
