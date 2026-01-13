@@ -460,7 +460,6 @@ int main(void)
                                  ctx.input_data.mouse_pos_x,
                                  ctx.input_data.mouse_pos_y)) {
                 ctx.hovered_frame = &ctx.frame_buffer[i];
-                break;
             }
 
             // Calculate hitboxes for every single one of frames as we need to pack them for draw calls.
@@ -554,7 +553,7 @@ int main(void)
 #endif        
        
         // UPDATE
-        if (ctx.held_frame) {
+        if (ctx.held_frame) { // dunno if this pattern or INTERACTION
            ctx.held_frame->rect.x += ctx.input_data.mouse_delta_x;
            ctx.held_frame->rect.y += ctx.input_data.mouse_delta_y;
         }
