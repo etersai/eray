@@ -444,6 +444,7 @@ int main(void)
 
         // drop frame if releaased and holding something 
         if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
+        ctx.hovered_frame = NULL;
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
@@ -453,69 +454,7 @@ int main(void)
             // do your stuff here.
         }
 
-#if 0
-        eui_Hitbox hitbox = {0};
-        // to not compute everything just check if RECT BIG HIT FIRST.
-        // iterate from back for correct Z order. CONSTANTLY MONITOR FOR HOVERS.
-        for (int i = ctx.frame_count-1; i >= 0; i--) {
-        if (rect_point_collision(ctx.frame_buffer[i].rect,
-                                 ctx.input_data.mouse_pos_x,
-                                 ctx.input_data.mouse_pos_y)) {
-            log_print_n_flush("[HOVER]");
-
-            eui_calculate_hitboxes(&ctx, ctx.active_frame, &hitbox);
-
- 
-             if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-                const float SCALE_SENSITIVITY = 0.1f;
-                const float SCALE_MIN = 1.0f;
-                const float SCALE_MAX = 2.0f;
-                float scroll = ctx.input_data.mouse_scroll_y;
-                if (scroll != 0.0f) {
-                    if (EUI_INVERSE_SCROLL) {
-                    ctx.active_frame->scale += -scroll * SCALE_SENSITIVITY;
-                    }
-                    else {
-                    ctx.active_frame->scale += scroll * SCALE_SENSITIVITY;
-                    }
-                
-                ctx.active_frame->scale = clamp_me_float(ctx.active_frame->scale, SCALE_MIN, SCALE_MAX);
-                }
-            }
-
-
-        if (input_is_left_pressed) {
-
-            if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("CLOSE!\n");
-            }
-            else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
-                ctx.active_frame->zipped = !ctx.active_frame->zipped;
-                log_print_n_flush("ZIP!\n");
-            }
-            else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("RESIZE!\n");
-            }
-            else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("MAIN!\n");
-            }
-            else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-                ctx.held_frame = ctx.active_frame;
-                log_print_n_flush("BAR!\n");
-            }
-            else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("MASTER!\n");
-            }
-
-        }
-
-
-
-
-        }}
-#endif
 #if 1
-
         static eui_Hitbox hitbox = {0}; // XD
         for (int i = ctx.frame_count-1; i >= 0; i--) {
             
@@ -525,68 +464,54 @@ int main(void)
                 ctx.hovered_frame = &ctx.frame_buffer[i];
             }
             
-             
+            eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
 
-        }
-        eui_calculate_hitboxes(&ctx, ctx.active_frame, &hitbox);
-
-        e_UI_FRAME* being_actually_hovered_over;
-        for (int i = ctx.frame_count-1; i >= 0; i--) {
-            if (rect_point_collision(ctx.frame_buffer[i].rect,
-                                 ctx.input_data.mouse_pos_x,
-                                 ctx.input_data.mouse_pos_y)) {
-                being_actually_hovered_over = &ctx.frame_buffer[i];
-            }
-        }
-
-        if (ctx.hovered_frame != being_actually_hovered_over) {
-            ctx.hovered_frame = being_actually_hovered_over;
-            eui_calculate_hitboxes(&ctx, ctx.hovered_frame, &hitbox);
-        }
-        
-
-         if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-            const float SCALE_SENSITIVITY = 0.1f;
-            const float SCALE_MIN = 1.0f;
-            const float SCALE_MAX = 2.0f;
-            float scroll = ctx.input_data.mouse_scroll_y;
-            if (scroll != 0.0f) {
-                if (EUI_INVERSE_SCROLL) {
-                ctx.active_frame->scale += -scroll * SCALE_SENSITIVITY;
+            if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+                const float SCALE_SENSITIVITY = 0.1f;
+                const float SCALE_MIN = 1.0f;
+                const float SCALE_MAX = 2.0f;
+                float scroll = ctx.input_data.mouse_scroll_y;
+                if (scroll != 0.0f) {
+                    if (EUI_INVERSE_SCROLL) {
+                        ctx.active_frame->scale += -scroll * SCALE_SENSITIVITY;
+                    }
+                    else 
+                    {
+                        ctx.active_frame->scale += scroll * SCALE_SENSITIVITY;
+                    }
+                    ctx.active_frame->scale = clamp_me_float(ctx.active_frame->scale, SCALE_MIN, SCALE_MAX);
                 }
-                else {
-                ctx.active_frame->scale += scroll * SCALE_SENSITIVITY;
-                }
-            
-            ctx.active_frame->scale = clamp_me_float(ctx.active_frame->scale, SCALE_MIN, SCALE_MAX);
             }
-        }
 
-        if (input_is_left_pressed) {
+            if (input_is_left_pressed && ctx.hovered_frame) {
+                 
+                ctx.active_frame = ctx.hovered_frame;
 
-            if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
+                if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
                 log_print_n_flush("CLOSE!\n");
-            }
-            else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
+                }
+                else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
                 ctx.active_frame->zipped = !ctx.active_frame->zipped;
                 log_print_n_flush("ZIP!\n");
-            }
-            else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
+                }
+                else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
                 log_print_n_flush("RESIZE!\n");
-            }
-            else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
+                }
+                else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
                 log_print_n_flush("MAIN!\n");
-            }
-            else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+                }
+                else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
                 ctx.held_frame = ctx.active_frame;
                 log_print_n_flush("BAR!\n");
-            }
-            else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
+                }
+                else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
                 log_print_n_flush("MASTER!\n");
-            }
+                }
+            } // end hitbox checks.
+             
 
-        }
-    
+        } // for loop ends
+
 #endif        
        
 
