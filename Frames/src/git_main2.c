@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 //
 // MACROS
@@ -158,9 +159,19 @@ static const int DEFAULT_BAR_HEIGHT = 32;
 static const int DEFAULT_FRAME_WIDTH = 420;
 static const int DEFAULT_FRAME_HEIGHT = 300;
 static const int DEFAULT_BUTTON_SIZE = 16; 
+static const int DEFAULT_MIN_WIDTH = 256;
+static const int DEFAULT_MIN_HEIGHT = 128;
 
 #define EUI_MAX_FRAMES 1024
-#define EUI_MAX_DRAWCALLS 1024
+#define EUI_MAX_DRAWCALLS 2048
+#define EUI_MAX_TEXT_LEN 1024
+
+enum // INTERACTIONS
+{
+    EUI_INTERACTION_NONE = 0,
+    EUI_INTERACTION_DRAG,
+    EUI_INTERACTION_RESIZE,
+};
 
 enum // DRAWCALL TYPES
 {
@@ -174,17 +185,18 @@ typedef struct {
 } eui_DrawRectInfo;
 
 typedef struct {
-    char text[1024]; // pls dont pass it more that that XD
+    char text[EUI_MAX_TEXT_LEN]; // pls dont pass it more that that XD
     e_UI_COLOR color;
     int  x; // Assumed first letter pos at top-left corner.
     int  y;
-    float font_size; // already scaled??.
+    float font_size; // already scaled. (don't know if it's the right choice but will see)
 }eui_DrawTextInfo;
 
 typedef struct {
-    int draw_call_pile_count; // this counts shoudl get rested each 'tick' of my ui
-    int rect_pile_count;
-    int text_pile_count;
+    // counts should get wiped each 'tick' of my ui 
+    int count;
+    int count_rect_pile;   
+    int count_text_pile;
     int              draw_calls_pile[EUI_MAX_DRAWCALLS];
     eui_DrawRectInfo       rect_pile[EUI_MAX_DRAWCALLS]; 
     eui_DrawTextInfo       text_pile[EUI_MAX_DRAWCALLS];
@@ -308,9 +320,8 @@ void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox
     frame->rect = hitbox->master; // assign recalculated hitbox as the main.
 }
 
-void eui_hitbox_data_transform_to_draw_calls(eui_Hitbox* hitbox)
+void eui_hitbox_data_transform_to_draw_calls(e_UI_CTX* ctx, eui_Hitbox* hitbox)
 {
-       
 }
 
 // renderer specific thigies.
@@ -333,6 +344,7 @@ int main(void)
     e_UI_CTX ctx = {0};
     ctx.eui_get_text_metrics = ray_get_text_metrics;
     ctx.user_font_size = 16;
+    ctx.theme = theme_default;
     expect(ctx.eui_get_text_metrics);
 
     e_UI_FRAME frame = {0};
@@ -357,8 +369,9 @@ int main(void)
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
 
         if (input_is_left_released) { held = false; }
-
-
+        ctx.draw_calls.count = 0;
+        ctx.draw_calls.count_rect_pile = 0;
+        ctx.draw_calls.count_text_pile = 0;
 
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &frame, &hitbox);
@@ -399,12 +412,48 @@ int main(void)
             }
 
         }
-       
-            
+
         if (held) {
            frame.rect.x += mouse_delta_x;
            frame.rect.y += mouse_delta_y;
         }
+
+        // frame lag (not sure tho.) but whateever 
+        // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.master;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_border;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.bar;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_bar;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.main;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_main;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.button_close;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_close;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.button_zip;
+        ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_button_zip;
+        ctx.draw_calls.count_rect_pile++;
+
+        ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;
+        strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, frame.name, EUI_MAX_TEXT_LEN);
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
+        ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
+        ctx.draw_calls.count_text_pile++;
+
+
 
         // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
@@ -418,41 +467,34 @@ int main(void)
         BeginDrawing();
         {
             ClearBackground(BLACK);
-            // BODER as master_rect, serves as it's border and overall hitbox. (masteR_eRect)
-#if 0
-            DrawRectangle(master_rect.x,
-                          master_rect.y,
-                          master_rect.width,
-                          master_rect.height,
-                          *(Color*)&theme_default.color_border);
+            
+            int pops_rect = 0;
+            int pops_text = 0;
+            for (int i = 0; i < ctx.draw_calls.count; i++) {
+                assert(pops_rect <= ctx.draw_calls.count_rect_pile);
+                assert(pops_text <= ctx.draw_calls.count_text_pile);
+                int type = ctx.draw_calls.draw_calls_pile[i];
+                switch (type) 
+                {
+                case EUI_DRAWCALL_RECT:
+                DrawRectangle(ctx.draw_calls.rect_pile[pops_rect].rect.x,
+                              ctx.draw_calls.rect_pile[pops_rect].rect.y,
+                              ctx.draw_calls.rect_pile[pops_rect].rect.width,
+                              ctx.draw_calls.rect_pile[pops_rect].rect.height,
+                              *(Color*)&ctx.draw_calls.rect_pile[pops_rect].color);
+                pops_rect++;
+                break;
+                case EUI_DRAWCALL_TEXT:
+                DrawText(ctx.draw_calls.text_pile[pops_text].text,
+                        ctx.draw_calls.text_pile[pops_text].x,
+                        ctx.draw_calls.text_pile[pops_text].y,
+                        ctx.draw_calls.text_pile[pops_text].font_size,
+                        ORANGE);
+                pops_text++;
+                break;
+                }
+            }            
 
-            // BAR
-            DrawRectangle(hitbox_bar.x,
-                        hitbox_bar.y,
-                        hitbox_bar.width,
-                        hitbox_bar.height,
-                        *(Color*)&theme_default.color_bar); 
-
-            // MAIN AREA
-            DrawRectangle(hitbox_main.x,
-                          hitbox_main.y,
-                          hitbox_main.width,
-                          hitbox_main.height,
-                          *(Color*)&theme_default.color_main);
-
-            // NOW BUTTONS
-            DrawRectangle(hitbox_button_close.x,
-                    hitbox_button_close.y,
-                    hitbox_button_close.width,
-                    hitbox_button_close.height,
-                    *(Color*)&theme_default.color_button_close);
-
-            DrawRectangle(hitbox_button_zip.x,
-                    hitbox_button_zip.y,
-                    hitbox_button_zip.width,
-                    hitbox_button_zip.height,
-                    *(Color*)&theme_default.color_button_zip);
-#endif 
 #if 1       // Debug hitboxes.
             Color DEBUG_COLOR = RED;
             draw_rect_outline(frame.rect, DEBUG_COLOR);

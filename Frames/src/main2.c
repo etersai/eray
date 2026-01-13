@@ -76,6 +76,11 @@ void log_print_n_flush(const char* format, ...)
 }
 
 //
+// HELPERS
+//
+const char* stringify_bool(bool var) { return var ? "TRUE" : "FALSE"; }
+
+//
 // RECT
 //
 typedef struct { 
@@ -127,6 +132,22 @@ void draw_rect_outline(Rect r, Color color)
 }
 
 //
+// CONSTANTS
+//
+#define EUI_MAX_FRAMES 1024
+#define EUI_MAX_DRAWCALLS 2048
+#define EUI_MAX_TEXT_LEN 1024
+
+static const int DEFAULT_BORDER_OFFSET = 2;
+static const int DEFAULT_BAR_HEIGHT = 32;
+static const int DEFAULT_FRAME_WIDTH = 420;
+static const int DEFAULT_FRAME_HEIGHT = 300;
+static const int DEFAULT_BUTTON_SIZE = 16; 
+static const int DEFAULT_MIN_WIDTH = 256;
+static const int DEFAULT_MIN_HEIGHT = 128;
+static const float DEAFULT_UI_SCALE = 1.0f;
+
+//
 // THEME
 //
 typedef struct {
@@ -154,18 +175,6 @@ static const e_UI_THEME theme_default = {
     .color_button_zip = (e_UI_COLOR){ 255, 255, 0, 255},
 };
 
-static const int DEFAULT_BORDER_OFFSET = 2;
-static const int DEFAULT_BAR_HEIGHT = 32;
-static const int DEFAULT_FRAME_WIDTH = 420;
-static const int DEFAULT_FRAME_HEIGHT = 300;
-static const int DEFAULT_BUTTON_SIZE = 16; 
-static const int DEFAULT_MIN_WIDTH = 256;
-static const int DEFAULT_MIN_HEIGHT = 128;
-
-#define EUI_MAX_FRAMES 1024
-#define EUI_MAX_DRAWCALLS 2048
-#define EUI_MAX_TEXT_LEN 1024
-
 enum // INTERACTIONS
 {
     EUI_INTERACTION_NONE = 0,
@@ -189,7 +198,7 @@ typedef struct {
     e_UI_COLOR color;
     int  x; // Assumed first letter pos at top-left corner.
     int  y;
-    float font_size; // already scaled??.
+    float font_size; // already scaled. (don't know if it's the right choice but will see)
 }eui_DrawTextInfo;
 
 typedef struct {
@@ -242,7 +251,8 @@ typedef struct {
     e_UI_THEME   theme;
     int          user_font_size;
     e_UI_INPUT_DATA input_data;
-    e_UI_FRAME*  that_frame;
+    e_UI_FRAME*  active_frame;
+    e_UI_FRAME*  hovered_frame;
     e_UI_TEXT_DIMS (*eui_get_text_metrics)(const char* text, int font_size);
 } e_UI_CTX;
 
@@ -320,8 +330,52 @@ void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox
     frame->rect = hitbox->master; // assign recalculated hitbox as the main.
 }
 
+bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
+{
+    expect(ctx);
+    expect(name);
+
+    // this is slow, later hash or smth.
+    int found_idx = -1;
+    for (int i = 0; i < ctx->frame_count; i++) {    
+        if (strcmp(ctx->frame_buffer[i].name, name) == 0) {
+            found_idx = i;
+            break;
+        }
+    }
+
+    if (found_idx == -1) { // not found. create default.
+        ctx->frame_buffer[ctx->frame_count].rect = rect;
+        ctx->frame_buffer[ctx->frame_count].name = name;
+        ctx->frame_buffer[ctx->frame_count].scale = DEAFULT_UI_SCALE;
+        ctx->frame_buffer[ctx->frame_count].opened = true;
+        ctx->frame_buffer[ctx->frame_count].zipped = false;
+        ctx->frame_count++;
+        return true; // newly created window opened by deafult.
+    }
+    else
+    {
+#if 0
+        log_print_n_flush("[Frame %s already exits [%s]]\n",
+                ctx->frame_buffer[found_idx].name, stringify_bool(ctx->frame_buffer[found_idx].opened));
+#endif
+        return ctx->frame_buffer[found_idx].opened;
+    }
+
+}
+
 void eui_hitbox_data_transform_to_draw_calls(e_UI_CTX* ctx, eui_Hitbox* hitbox)
 {
+    // TOFUCKINGDO!
+}
+
+int eui_init(e_UI_CTX* ctx)
+{
+    expect(ctx);
+    expect(ctx->eui_get_text_metrics);
+    expect(ctx->user_font_size > 0);
+    ctx->theme = theme_default;
+    return 0;
 }
 
 // renderer specific thigies.
@@ -341,18 +395,18 @@ int main(void)
 
     bool held = false; // kinda debug hack
 
+    // UI INIT STEPS
     e_UI_CTX ctx = {0};
     ctx.eui_get_text_metrics = ray_get_text_metrics;
     ctx.user_font_size = 16;
-    ctx.theme = theme_default;
-    expect(ctx.eui_get_text_metrics);
-
-    e_UI_FRAME frame = {0};
-    frame.name = "Hello, frame!";
-    frame.opened = true;
-    frame.rect = rect_create(100, 100, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
-    frame.scale = 1.0f;
-    frame.zipped = false;
+    eui_init(&ctx);
+    
+    // e_UI_FRAME frame = {0};
+    // frame.name = "Hello, frame!";
+    // frame.opened = true;
+    // frame.rect = rect_create(100, 100, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
+    // frame.scale = 1.0f;
+    // frame.zipped = false;
 
     Vector2 mouse_pos_prev = {0};  
     int     mouse_delta_x = 0;
@@ -367,6 +421,10 @@ int main(void)
         input_is_left_pressed       = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
+
+        // UI REGISTER INPUT DATA.
+        ctx.input_data.mouse_pos_x = mouse_pos.x;
+        ctx.input_data.mouse_pos_y = mouse_pos.y;
 
         if (input_is_left_released) { held = false; }
         ctx.draw_calls.count = 0;
@@ -417,12 +475,6 @@ int main(void)
            frame.rect.x += mouse_delta_x;
            frame.rect.y += mouse_delta_y;
         }
-        else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
-                ctx.active_use_frame->rect.width  += mouse_delta_x;                
-                ctx.active_use_frame->rect.height += mouse_delta_y;                
-                if (ctx.active_use_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_use_frame->rect.width = EUI_FRAME_MIN_WIDTH;
-                if (ctx.active_use_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_use_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
-            }
 
         // frame lag (not sure tho.) but whateever 
         // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
@@ -495,7 +547,7 @@ int main(void)
                         ctx.draw_calls.text_pile[pops_text].x,
                         ctx.draw_calls.text_pile[pops_text].y,
                         ctx.draw_calls.text_pile[pops_text].font_size,
-                        ORANGE);
+                        *(Color*)&ctx.draw_calls.text_pile[pops_text].color);
                 pops_text++;
                 break;
                 }
