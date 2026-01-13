@@ -425,11 +425,22 @@ int main(void)
         mouse_delta_x = mouse_pos.x - mouse_pos_prev.x;
         mouse_delta_y = mouse_pos.y - mouse_pos_prev.y;
 
-        // UI REGISTER INPUT DATA.
+        // UI REGISTER INPUT DATA. assert(capture before first frame spawn)
         ctx.input_data.mouse_pos_x = mouse_pos.x;
         ctx.input_data.mouse_pos_y = mouse_pos.y;
 
+        Rect DEFAULT_RECT = (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}; 
+        if (eui_open_frame(&ctx, DEFAULT_RECT, "Tie me in!")) {
+            log_print_n_flush("SHAISTY!");
+            abort();
+        }
+
+
+
+
+        // drop frame if holding.
         if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
+
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
