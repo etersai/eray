@@ -232,6 +232,8 @@ typedef struct {
     bool    is_left_pressed;   
     int     mouse_pos_x;
     int     mouse_pos_y;
+    float   mouse_scroll_x;
+    float   mouse_scroll_y;
     int     mouse_delta_x;
     int     mouse_delta_y;
 } e_UI_INPUT_DATA;
@@ -251,6 +253,7 @@ typedef struct {
     e_UI_THEME   theme;
     int          user_font_size;
     e_UI_INPUT_DATA input_data;
+    e_UI_FRAME*  held_frame;
     e_UI_FRAME*  active_frame;
     e_UI_FRAME*  hovered_frame;
     e_UI_TEXT_DIMS (*eui_get_text_metrics)(const char* text, int font_size);
@@ -426,13 +429,14 @@ int main(void)
         ctx.input_data.mouse_pos_x = mouse_pos.x;
         ctx.input_data.mouse_pos_y = mouse_pos.y;
 
-        if (input_is_left_released) { held = false; }
+        if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
 
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &frame, &hitbox);
+
         
         // nifty trick for the record, maybe i will find an usecase for it :D.
         //Rect* as_array = (Rect*)&hitbox;
