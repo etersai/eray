@@ -530,11 +530,12 @@ int main(void)
                 ctx.active_frame->rect.y += ctx.input_data.mouse_delta_y;
             }
             else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
-                log_print_n_flush("HEHE");
                 ctx.active_frame->rect.width  += mouse_delta_x;                
                 ctx.active_frame->rect.height += mouse_delta_y;                
-                if (ctx.active_frame->rect.width < DEFAULT_MIN_WIDTH) ctx.active_frame->rect.width = DEFAULT_MIN_WIDTH;
-                if (ctx.active_frame->rect.height < DEFAULT_MIN_HEIGHT) ctx.active_frame->rect.height = DEFAULT_MIN_HEIGHT;
+                if (ctx.active_frame->rect.width < DEFAULT_MIN_WIDTH) 
+                    ctx.active_frame->rect.width = DEFAULT_MIN_WIDTH;
+                if (ctx.active_frame->rect.height < DEFAULT_MIN_HEIGHT) 
+                    ctx.active_frame->rect.height = DEFAULT_MIN_HEIGHT;
             }
         }
 
