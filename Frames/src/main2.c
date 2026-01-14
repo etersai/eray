@@ -248,6 +248,7 @@ typedef struct {
     Rect rect;
     bool opened;
     bool zipped;
+    bool needs_rescaling;
     const char* name; // it's id for now.
     float scale; // 1.0f default.
 } e_UI_FRAME;
@@ -267,6 +268,7 @@ typedef struct {
 
 void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox)
 {
+    expect(ctx);
     expect(frame);
     expect(hitbox);
 
@@ -439,6 +441,10 @@ int main(void)
         if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_DRAG) {
             ctx.interaction_type = EUI_INTERACTION_NONE; ctx.active_frame = NULL;
         }
+        if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_RESIZE) {
+            ctx.interaction_type = EUI_INTERACTION_NONE; ctx.active_frame = NULL;
+        }
+
         ctx.hovered_frame = NULL;
 
         ctx.draw_calls.count = 0;
@@ -470,8 +476,35 @@ int main(void)
             eui_calculate_hitboxes(&ctx, ctx.hovered_frame, &hitbox);
             ctx.hovered_frame->rect = hitbox.master;
 
-            // if hovered on bar chceck for scroll and update scale.
-            if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y) && ctx.hovered_frame) {
+            if (input_is_left_pressed) {
+               
+                // REORDER HERE
+                ctx.active_frame = ctx.hovered_frame;
+
+                if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
+                    log_print_n_flush("CLOSE!\n");
+                }
+                else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
+                    ctx.active_frame->zipped = !ctx.active_frame->zipped;
+                    log_print_n_flush("ZIP!\n");
+                }
+                else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
+                    ctx.interaction_type = EUI_INTERACTION_RESIZE;
+                    log_print_n_flush("RESIZE!\n");
+                }
+                else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
+                    log_print_n_flush("MAIN!\n");
+                }
+                else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
+                    ctx.interaction_type = EUI_INTERACTION_DRAG;
+                    log_print_n_flush("BAR!\n");
+                }
+                else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
+                    log_print_n_flush("MASTER!\n");
+                }
+
+            }
+            else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y) && ctx.hovered_frame) {
                 const float SCALE_SENSITIVITY = 0.1f;
                 const float SCALE_MIN = 1.0f;
                 const float SCALE_MAX = 2.0f;
@@ -487,38 +520,22 @@ int main(void)
                     ctx.hovered_frame->scale = clamp_me_float(ctx.hovered_frame->scale, SCALE_MIN, SCALE_MAX);
                 }
             }
-
-            if (input_is_left_pressed) {
-              
-                ctx.active_frame = ctx.hovered_frame;
-
-                if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
-                    log_print_n_flush("CLOSE!\n");
-                }
-                else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
-                    ctx.active_frame->zipped = !ctx.active_frame->zipped;
-                    log_print_n_flush("ZIP!\n");
-                }
-                else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
-                    log_print_n_flush("RESIZE!\n");
-                }
-                else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
-                    log_print_n_flush("MAIN!\n");
-                }
-                else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-                    ctx.interaction_type = EUI_INTERACTION_DRAG;
-                    log_print_n_flush("BAR!\n");
-                }
-                else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
-                    log_print_n_flush("MASTER!\n");
-                }
-            }
-        }
         
+        }
+
         // UPDATE (if active frame and switch on interactions??)
-        if (ctx.active_frame && ctx.interaction_type == EUI_INTERACTION_DRAG) {
-            ctx.active_frame->rect.x += ctx.input_data.mouse_delta_x;
-            ctx.active_frame->rect.y += ctx.input_data.mouse_delta_y;
+        if (ctx.active_frame) {
+            if (ctx.interaction_type == EUI_INTERACTION_DRAG) {
+                ctx.active_frame->rect.x += ctx.input_data.mouse_delta_x;
+                ctx.active_frame->rect.y += ctx.input_data.mouse_delta_y;
+            }
+            else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
+                log_print_n_flush("HEHE");
+                ctx.active_frame->rect.width  += mouse_delta_x;                
+                ctx.active_frame->rect.height += mouse_delta_y;                
+                if (ctx.active_frame->rect.width < DEFAULT_MIN_WIDTH) ctx.active_frame->rect.width = DEFAULT_MIN_WIDTH;
+                if (ctx.active_frame->rect.height < DEFAULT_MIN_HEIGHT) ctx.active_frame->rect.height = DEFAULT_MIN_HEIGHT;
+            }
         }
 
         for (int i = 0; i < ctx.frame_count; i++) {
