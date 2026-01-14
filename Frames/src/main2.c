@@ -248,7 +248,6 @@ typedef struct {
     Rect rect;
     bool opened;
     bool zipped;
-    bool needs_rescaling;
     const char* name; // it's id for now.
     float scale; // 1.0f default.
 } e_UI_FRAME;
@@ -265,6 +264,8 @@ typedef struct {
     unsigned int interaction_type;
     e_UI_TEXT_DIMS (*eui_get_text_metrics)(const char* text, int font_size);
 } e_UI_CTX;
+
+
 
 void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox)
 {
@@ -438,13 +439,10 @@ int main(void)
         ctx.input_data.is_left_released = input_is_left_released;
 
         // drop frame if releaased and holding something 
-        if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_DRAG) {
-            ctx.interaction_type = EUI_INTERACTION_NONE; ctx.active_frame = NULL;
+        if (input_is_left_released) {
+            ctx.interaction_type = EUI_INTERACTION_NONE;
+            ctx.active_frame = NULL;
         }
-        if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_RESIZE) {
-            ctx.interaction_type = EUI_INTERACTION_NONE; ctx.active_frame = NULL;
-        }
-
         ctx.hovered_frame = NULL;
 
         ctx.draw_calls.count = 0;
@@ -455,7 +453,7 @@ int main(void)
         if (eui_open_frame(&ctx, (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}, "eray")) {
             // do your stuff here.
         }
-#if 0
+#if 1
         if (eui_open_frame(&ctx, (Rect){200, 200, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}, "mino")) {
             // second frame.
         }
@@ -480,6 +478,41 @@ int main(void)
                
                 // REORDER HERE
                 ctx.active_frame = ctx.hovered_frame;
+
+                {// bring it to the top of Z order pile
+                    int found_idx = -1;                                                                   
+                    for (int i = 0; i < ctx.frame_count; i++) {                                        
+                        if (strcmp(ctx.frame_buffer[i].name, ctx.active_frame->name) == 0) {
+                            found_idx = i;
+                            break;
+                        }
+                    }
+
+                    if (found_idx == -1) { unreachable(); } // if not on list. (abort for now.)
+                
+                    // cache state.
+                    e_UI_FRAME temp;                               
+                    temp.name = ctx.frame_buffer[found_idx].name;
+                    temp.opened = ctx.frame_buffer[found_idx].opened;
+                    temp.zipped = ctx.frame_buffer[found_idx].zipped;
+                    temp.rect = ctx.frame_buffer[found_idx].rect;
+                    temp.scale = ctx.frame_buffer[found_idx].scale;
+
+                    for (int i = found_idx+1; i < ctx.frame_count; i++) {         
+                        ctx.frame_buffer[i-1].rect = ctx.frame_buffer[i].rect;
+                        ctx.frame_buffer[i-1].name = ctx.frame_buffer[i].name;  
+                        ctx.frame_buffer[i-1].opened = ctx.frame_buffer[i].opened;  
+                        ctx.frame_buffer[i-1].zipped = ctx.frame_buffer[i].zipped;
+                        ctx.frame_buffer[i-1].scale = ctx.frame_buffer[i].scale;
+                    }                                                                      
+                    ctx.frame_buffer[ctx.frame_count-1].rect = temp.rect;                                  
+                    ctx.frame_buffer[ctx.frame_count-1].opened = temp.opened;                                    
+                    ctx.frame_buffer[ctx.frame_count-1].zipped = temp.zipped;
+                    ctx.frame_buffer[ctx.frame_count-1].name = temp.name;                                    
+                    ctx.frame_buffer[ctx.frame_count-1].scale = temp.scale;                                    
+                    ctx.active_frame = &ctx.frame_buffer[ctx.frame_count-1]; // top one becomes new active.
+                }
+
 
                 if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
                     log_print_n_flush("CLOSE!\n");
@@ -571,28 +604,13 @@ int main(void)
             ctx.draw_calls.count_rect_pile++;
 
             ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;   /// hacky 
-            strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.frame_buffer[0].name, EUI_MAX_TEXT_LEN);
+            strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.frame_buffer[i].name, EUI_MAX_TEXT_LEN);
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
             ctx.draw_calls.count_text_pile++;
-
         } 
-
-        // MESSY NOTES
-        // here goes the packing up??
-        // REMEMBER =>> assert(ctx.draw_calls.count < EUI_MAX_DRAWCALLS);
-        // PACKUP ALL HITBOXES TO DRAWCALLS
-        // frame lag (not sure tho.) but whateever 
-        // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
-
-        // else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
-        //     ctx.active_use_frame->rect.width  += mouse_delta_x;                
-        //     ctx.active_use_frame->rect.height += mouse_delta_y;                
-        //     if (ctx.active_use_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_use_frame->rect.width = EUI_FRAME_MIN_WIDTH;
-        //     if (ctx.active_use_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_use_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
-        // }
 
         // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
@@ -739,4 +757,4 @@ int main(void)
 //    100 * uiScale,
 //    200 * uiScale,
 //    50 * uiScale
-//}
+//
