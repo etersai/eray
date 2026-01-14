@@ -259,12 +259,11 @@ typedef struct {
     e_UI_THEME   theme;
     int          user_font_size;
     e_UI_INPUT_DATA input_data;
-    e_UI_FRAME*  held_frame;
     e_UI_FRAME*  active_frame;
     e_UI_FRAME*  hovered_frame;
+    unsigned int interaction_type;
     e_UI_TEXT_DIMS (*eui_get_text_metrics)(const char* text, int font_size);
 } e_UI_CTX;
-
 
 void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox)
 {
@@ -437,7 +436,9 @@ int main(void)
         ctx.input_data.is_left_released = input_is_left_released;
 
         // drop frame if releaased and holding something 
-        if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
+        //if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
+        if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_DRAG)
+        { ctx.interaction_type = EUI_INTERACTION_NONE; }
         if (input_is_left_released && ctx.active_frame) { ctx.active_frame = NULL; }
         ctx.hovered_frame = NULL;
 
@@ -469,6 +470,7 @@ int main(void)
             // Calculate hitboxes for every single one of frames as we need to pack them for draw calls.
             eui_Hitbox hitbox = {0};
             eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
+            ctx.frame_buffer[i].rect = hitbox.master; // not sure if it's the right approach...
    
             // if hovered on bar chceck for zoom
             if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y) && ctx.hovered_frame) {
@@ -507,7 +509,8 @@ int main(void)
                 log_print_n_flush("MAIN!\n");
                 }
                 else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-                ctx.held_frame = ctx.active_frame;
+                //ctx.held_frame = ctx.active_frame;
+                ctx.interaction_type = EUI_INTERACTION_DRAG;
                 log_print_n_flush("BAR!\n");
                 }
                 else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
@@ -557,10 +560,16 @@ int main(void)
 
 #endif        
         // UPDATE
-        if (ctx.held_frame) { // dunno if this pattern or INTERACTION
-           ctx.held_frame->rect.x += ctx.input_data.mouse_delta_x;
-           ctx.held_frame->rect.y += ctx.input_data.mouse_delta_y;
+        if (ctx.active_frame && ctx.interaction_type == EUI_INTERACTION_DRAG) { // dunno if this pattern or INTERACTION
+           ctx.active_frame->rect.x += ctx.input_data.mouse_delta_x;
+           ctx.active_frame->rect.y += ctx.input_data.mouse_delta_y;
         }
+        // else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
+        //     ctx.active_use_frame->rect.width  += mouse_delta_x;                
+        //     ctx.active_use_frame->rect.height += mouse_delta_y;                
+        //     if (ctx.active_use_frame->rect.width < EUI_FRAME_MIN_WIDTH) ctx.active_use_frame->rect.width = EUI_FRAME_MIN_WIDTH;
+        //     if (ctx.active_use_frame->rect.height < EUI_FRAME_MIN_HEIGHT) ctx.active_use_frame->rect.height = EUI_FRAME_MIN_HEIGHT;
+        // }
 
         // DEBUG_UI_BUFFER_UPDATE //
         enum { BUFFER_MAX = 64 };
