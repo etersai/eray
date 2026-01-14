@@ -436,24 +436,24 @@ int main(void)
         ctx.input_data.is_left_released = input_is_left_released;
 
         // drop frame if releaased and holding something 
-        //if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
-        if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_DRAG)
-        { ctx.interaction_type = EUI_INTERACTION_NONE; }
-        //if (input_is_left_released && ctx.active_frame) { ctx.active_frame = NULL; }
-        ctx.active_frame = NULL;
+        if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_DRAG) {
+            ctx.interaction_type = EUI_INTERACTION_NONE; ctx.active_frame = NULL;
+        }
         ctx.hovered_frame = NULL;
 
         ctx.draw_calls.count = 0;
         ctx.draw_calls.count_rect_pile = 0;
         ctx.draw_calls.count_text_pile = 0;
 
-        // WE OPEN FRAM
-        Rect DEFAULT_RECT = (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}; 
-        if (eui_open_frame(&ctx, DEFAULT_RECT, "eray")) {
+        // OPEN FRAMES.
+        if (eui_open_frame(&ctx, (Rect){300, 300, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}, "eray")) {
             // do your stuff here.
         }
-
-#if 1   
+#if 0
+        if (eui_open_frame(&ctx, (Rect){200, 200, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT}, "mino")) {
+            // second frame.
+        }
+#endif
         // Eeach frame scan for hoovering.
         for (int i = ctx.frame_count-1; i >= 0; i--) {
             if (rect_point_collision(ctx.frame_buffer[i].rect,
@@ -463,17 +463,14 @@ int main(void)
                 break;
             }
         }
-
-
         
-        for (int i = ctx.frame_count-1; i >= 0; i--) {
-
-            // Calculate hitboxes for every single one of frames as we need to pack them for draw calls.
+        if (ctx.hovered_frame) {
+            // check 1 hitbox for active hovered frame.
             eui_Hitbox hitbox = {0};
-            eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
-            ctx.frame_buffer[i].rect = hitbox.master; // not sure if it's the right approach...
-   
-            // if hovered on bar chceck for zoom
+            eui_calculate_hitboxes(&ctx, ctx.hovered_frame, &hitbox);
+            ctx.hovered_frame->rect = hitbox.master;
+
+            // if hovered on bar chceck for scroll and update scale.
             if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y) && ctx.hovered_frame) {
                 const float SCALE_SENSITIVITY = 0.1f;
                 const float SCALE_MIN = 1.0f;
@@ -491,39 +488,45 @@ int main(void)
                 }
             }
 
-
-            if (input_is_left_pressed && ctx.hovered_frame) {
+            if (input_is_left_pressed) {
               
                 ctx.active_frame = ctx.hovered_frame;
 
                 if (rect_point_collision(hitbox.button_close, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("CLOSE!\n");
+                    log_print_n_flush("CLOSE!\n");
                 }
                 else if (rect_point_collision(hitbox.button_zip, mouse_pos.x, mouse_pos.y)) {
-                ctx.active_frame->zipped = !ctx.active_frame->zipped;
-                log_print_n_flush("ZIP!\n");
+                    ctx.active_frame->zipped = !ctx.active_frame->zipped;
+                    log_print_n_flush("ZIP!\n");
                 }
                 else if (rect_point_collision(hitbox.button_resize, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("RESIZE!\n");
+                    log_print_n_flush("RESIZE!\n");
                 }
                 else if (rect_point_collision(hitbox.main, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("MAIN!\n");
+                    log_print_n_flush("MAIN!\n");
                 }
                 else if (rect_point_collision(hitbox.bar, mouse_pos.x, mouse_pos.y)) {
-                //ctx.held_frame = ctx.active_frame;
-                ctx.interaction_type = EUI_INTERACTION_DRAG;
-                log_print_n_flush("BAR!\n");
+                    ctx.interaction_type = EUI_INTERACTION_DRAG;
+                    log_print_n_flush("BAR!\n");
                 }
                 else if (rect_point_collision(hitbox.master, mouse_pos.x, mouse_pos.y)) {
-                log_print_n_flush("MASTER!\n");
+                    log_print_n_flush("MASTER!\n");
                 }
-            } // end hitbox checks.
+            }
+        }
+        
+        // UPDATE (if active frame and switch on interactions??)
+        if (ctx.active_frame && ctx.interaction_type == EUI_INTERACTION_DRAG) {
+            ctx.active_frame->rect.x += ctx.input_data.mouse_delta_x;
+            ctx.active_frame->rect.y += ctx.input_data.mouse_delta_y;
+        }
+
+        for (int i = 0; i < ctx.frame_count; i++) {
             
-            // here goes the packing up??
-            // REMEMBER =>> assert(ctx.draw_calls.count < EUI_MAX_DRAWCALLS);
-            // PACKUP ALL HITBOXES TO DRAWCALLS
-            // frame lag (not sure tho.) but whateever 
-            // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
+            eui_Hitbox hitbox = {0};
+            eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[i], &hitbox);
+
+            // here goes the packing up.
             ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_RECT;
             ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].rect = hitbox.master;
             ctx.draw_calls.rect_pile[ctx.draw_calls.count_rect_pile].color = ctx.theme.color_border;
@@ -550,21 +553,22 @@ int main(void)
             ctx.draw_calls.count_rect_pile++;
 
             ctx.draw_calls.draw_calls_pile[ctx.draw_calls.count++] = EUI_DRAWCALL_TEXT;   /// hacky 
-            strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.frame_buffer[i].name, EUI_MAX_TEXT_LEN);
+            strncpy(ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].text, ctx.frame_buffer[0].name, EUI_MAX_TEXT_LEN);
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].color = ctx.theme.color_text;
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].font_size = hitbox.text_size;
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].x = hitbox.text_pos.x;
             ctx.draw_calls.text_pile[ctx.draw_calls.count_text_pile].y = hitbox.text_pos.y;
             ctx.draw_calls.count_text_pile++;
 
-        } // for loop ends
+        } 
 
-#endif        
-        // UPDATE
-        if (ctx.active_frame && ctx.interaction_type == EUI_INTERACTION_DRAG) { // dunno if this pattern or INTERACTION
-           ctx.active_frame->rect.x += ctx.input_data.mouse_delta_x;
-           ctx.active_frame->rect.y += ctx.input_data.mouse_delta_y;
-        }
+        // MESSY NOTES
+        // here goes the packing up??
+        // REMEMBER =>> assert(ctx.draw_calls.count < EUI_MAX_DRAWCALLS);
+        // PACKUP ALL HITBOXES TO DRAWCALLS
+        // frame lag (not sure tho.) but whateever 
+        // so here i just translate hitboxes to draw calls no second recalulation of hitboxes.       
+
         // else if (ctx.interaction_type == EUI_INTERACTION_RESIZE) {
         //     ctx.active_use_frame->rect.width  += mouse_delta_x;                
         //     ctx.active_use_frame->rect.height += mouse_delta_y;                
