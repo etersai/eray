@@ -439,7 +439,8 @@ int main(void)
         //if (input_is_left_released && ctx.held_frame != NULL) { ctx.held_frame = NULL; }
         if (input_is_left_released && ctx.interaction_type == EUI_INTERACTION_DRAG)
         { ctx.interaction_type = EUI_INTERACTION_NONE; }
-        if (input_is_left_released && ctx.active_frame) { ctx.active_frame = NULL; }
+        //if (input_is_left_released && ctx.active_frame) { ctx.active_frame = NULL; }
+        ctx.active_frame = NULL;
         ctx.hovered_frame = NULL;
 
         ctx.draw_calls.count = 0;
