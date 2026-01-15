@@ -400,8 +400,8 @@ static e_UI_TEXT_DIMS ray_get_text_metrics(const char* text, int font_size)
 
 int main(void)
 {
-    const int screenWidth = 1920/2;
-    const int screenHeight = 1080/2;
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
     InitWindow(screenWidth, screenHeight, "RewriteKinda");
     //SetTargetFPS(120);
 

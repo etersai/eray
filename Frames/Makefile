@@ -8,5 +8,8 @@ game: src/main.c
 test: src/main2.c
 	$(CC) $(CFLAGS) src/main2.c -o test $(LDFLAGS)
 
+imgui: src/main3.c
+	$(CC) $(CFLAGS) src/main3.c -o imgui $(LDFLAGS)
+
 clean:
-	rm -f game test
+	rm -f game test imgui
