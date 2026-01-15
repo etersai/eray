@@ -400,8 +400,8 @@ static e_UI_TEXT_DIMS ray_get_text_metrics(const char* text, int font_size)
 
 int main(void)
 {
-    const int screenWidth = 1280;
-    const int screenHeight = 720;
+    const int screenWidth = 1920;
+    const int screenHeight = 1080;
     InitWindow(screenWidth, screenHeight, "RewriteKinda");
     //SetTargetFPS(120);
 
@@ -571,6 +571,7 @@ int main(void)
                     ctx.active_frame->rect.height = DEFAULT_MIN_HEIGHT;
             }
         }
+
 
         for (int i = 0; i < ctx.frame_count; i++) {
             

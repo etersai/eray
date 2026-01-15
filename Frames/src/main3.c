@@ -19,6 +19,7 @@
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 
 typedef struct { int x; int y; } vec2i; 
+typedef struct { int x; int y; } vec2f; 
 
 #define expect(var) do {                                          \
     if (!(var)) {                                                       \
@@ -212,6 +213,19 @@ typedef struct {
     eui_DrawTextInfo       text_pile[EUI_MAX_DRAWCALLS];
 } eui_SynchronizedOutputData; 
 
+static const int DEFAULT_BORDER_OFFSET = 2;
+static const int DEFAULT_BAR_HEIGHT = 32;
+static const int DEFAULT_FRAME_WIDTH = 420;
+static const int DEFAULT_FRAME_HEIGHT = 300;
+static const int DEFAULT_BUTTON_SIZE = 16; 
+// should probably divide all the defaults by global scale.
+
+typedef struct {
+    int bar_height;
+    int border_offset;
+    int button_size;
+} eui_ScaledDefaults;
+
 typedef struct { 
     Rect master;
     Rect bar; // |-| .,, |& . In memory of our pullup BAR.
@@ -240,6 +254,8 @@ typedef struct {
 } e_UI_INPUT_DATA;
 
 typedef struct {
+    vec2f canvas_size;
+    vec2f canvas_delta;
     Rect rect;
     Rect rect_previous;
     bool opened;
@@ -256,10 +272,11 @@ typedef struct {
     e_UI_THEME   theme;
     float        global_scale;
     int          user_font_size;
+    eui_ScaledDefaults default_sizes;
     e_UI_INPUT_DATA input_data;
+    unsigned int interaction_type;
     e_UI_FRAME*  active_frame;
     e_UI_FRAME*  hovered_frame;
-    unsigned int interaction_type;
     e_UI_TEXT_DIMS (*eui_get_text_metrics)(const char* text, int font_size);
 } e_UI_CTX;
 
@@ -326,13 +343,6 @@ bool eui_open_frame(e_UI_CTX* ctx, Rect rect, const char* name)
     }
 
 }
-
-static const int DEFAULT_BORDER_OFFSET = 2;
-static const int DEFAULT_BAR_HEIGHT = 32;
-static const int DEFAULT_FRAME_WIDTH = 420;
-static const int DEFAULT_FRAME_HEIGHT = 300;
-static const int DEFAULT_BUTTON_SIZE = 16; 
-// should probably divide all the defaults by global scale.
 
 void eui_calculate_hitboxes(e_UI_CTX* ctx, e_UI_FRAME* frame, eui_Hitbox* hitbox)
 {
@@ -415,6 +425,40 @@ void eui_end_frame(e_UI_CTX* ctx)
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(ctx, ctx->hovered_frame, &hitbox);
 
+        bool over_main = rect_point_collision(hitbox.main, ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y);
+        bool over_bar = rect_point_collision(hitbox.bar, ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y);
+
+        
+        if (over_main) {
+            ctx->hovered_frame->canvas_delta.x += ctx->input_data.mouse_scroll_x * 2.0f;
+            ctx->hovered_frame->canvas_delta.y += ctx->input_data.mouse_scroll_y * 2.0f;
+        }
+
+            
+
+        if (over_bar) {
+            log_print_n_flush("OVER BARY\n");
+        }
+
+
+                // const float SCALE_SENSITIVITY = 0.1f;
+                // const float SCALE_MIN = 1.0f;
+                // const float SCALE_MAX = 2.0f;
+                // float scroll = ctx.input_data.mouse_scroll_y;
+                // if (fabsf(scroll) > 0.1f) {
+                //     if (EUI_INVERSE_SCROLL) {
+                //         ctx.hovered_frame->scale += -scroll * SCALE_SENSITIVITY;
+                //     }
+                //     else 
+                //     {
+                //         ctx.hovered_frame->scale += scroll * SCALE_SENSITIVITY;
+                //     }
+                //     ctx.hovered_frame->scale = clamp_me_float(ctx.hovered_frame->scale, SCALE_MIN, SCALE_MAX);
+                // }
+                //
+        
+
+
         if (ctx->input_data.is_left_pressed) {
 
             ctx->active_frame = ctx->hovered_frame;
@@ -461,6 +505,7 @@ void eui_end_frame(e_UI_CTX* ctx)
             ctx->active_frame->rect.y += ctx->input_data.mouse_delta_y;
         }
         else if (ctx->interaction_type == EUI_INTERACTION_RESIZE) {
+            ctx->active_frame->canvas_size.x+= 1;
                 ctx->active_frame->rect.width  += ctx->input_data.mouse_delta_x/ctx->global_scale;                
                 ctx->active_frame->rect.height += ctx->input_data.mouse_delta_y/ctx->global_scale;                
                 if (ctx->active_frame->rect.width < 100) 
@@ -472,6 +517,12 @@ void eui_end_frame(e_UI_CTX* ctx)
     }
 
 
+
+}
+
+
+void eui_update_scale_defaults(e_UI_CTX* ctx)
+{
 
 }
 
@@ -503,6 +554,9 @@ int main(void)
     ctx.user_font_size = 16;
     eui_init(&ctx);
     eui_update_ui_scale(&ctx, screenWidth, screenHeight);
+
+    ctx.frame_buffer[0].canvas_size.x = 500;
+    ctx.frame_buffer[0].canvas_size.y = 500;
 
     // Platform input init
     Vector2 mouse_pos_prev = {0};  
@@ -547,6 +601,14 @@ int main(void)
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[0], &hitbox);
 
+        log_print_n_flush("Acumulated delta: %d, %d\n", ctx.frame_buffer[0].canvas_delta.x, ctx.frame_buffer[0].canvas_delta.y);
+
+        Rect frame_canvas = (Rect){0, 0, ctx.frame_buffer[0].canvas_size.x, ctx.frame_buffer[0].canvas_size.y};
+        frame_canvas.x = hitbox.main.x + ctx.frame_buffer[0].canvas_delta.x;
+        frame_canvas.y = hitbox.main.y + ctx.frame_buffer[0].canvas_delta.y;
+    
+        log_print_n_flush("Acumulated delta: %d, %d\n", frame_canvas.x, frame_canvas.y);
+
         BeginDrawing();
         {
             ClearBackground(BLACK);
@@ -559,6 +621,9 @@ int main(void)
             draw_rect_outline(hitbox.button_close, DEBUG_COLOR);
             draw_rect_outline(hitbox.button_zip, DEBUG_COLOR);
             draw_rect_outline(hitbox.button_resize, DEBUG_COLOR);
+            
+            draw_rect_outline(frame_canvas, MAGENTA);
+
             DrawText(ctx.frame_buffer[0].name, hitbox.text_pos.x, hitbox.text_pos.y, hitbox.text_size, RED);
 #endif
             
