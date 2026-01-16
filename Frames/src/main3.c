@@ -19,7 +19,7 @@
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 
 typedef struct { int x; int y; } vec2i; 
-typedef struct { int x; int y; } vec2f; 
+typedef struct { float x; float y; } vec2f; 
 
 #define expect(var) do {                                          \
     if (!(var)) {                                                       \
@@ -427,11 +427,52 @@ void eui_end_frame(e_UI_CTX* ctx)
 
         bool over_main = rect_point_collision(hitbox.main, ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y);
         bool over_bar = rect_point_collision(hitbox.bar, ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y);
-
         
         if (over_main) {
-            ctx->hovered_frame->canvas_delta.x += ctx->input_data.mouse_scroll_x * 2.0f;
-            ctx->hovered_frame->canvas_delta.y += ctx->input_data.mouse_scroll_y * 2.0f;
+            const float SCROLL_SENS = 6.9f;
+            float scroll_x = ctx->input_data.mouse_scroll_x * SCROLL_SENS;
+            float scroll_y = ctx->input_data.mouse_scroll_y * SCROLL_SENS;
+
+            if (fabsf(scroll_x) > 0.1f || fabsf(scroll_y) > 0.1f) {
+                ctx->hovered_frame->canvas_delta.x += scroll_x;
+                ctx->hovered_frame->canvas_delta.y += scroll_y;
+
+                if (hitbox.main.x < hitbox.main.x + ctx->hovered_frame->canvas_delta.x) {
+                    ctx->hovered_frame->canvas_delta.x = 0.0f;
+                }
+
+                if (hitbox.main.y < hitbox.main.y + ctx->hovered_frame->canvas_delta.y) {
+                    ctx->hovered_frame->canvas_delta.y = 0.0f;
+                } 
+
+                if (hitbox.main.x + hitbox.main.width > hitbox.main.x + ctx->hovered_frame->canvas_delta.x + ctx->hovered_frame->canvas_size.x) {
+                    ctx->hovered_frame->canvas_delta.x = hitbox.main.width - ctx->hovered_frame->canvas_size.x;
+                }
+
+                if (hitbox.main.y + hitbox.main.height > hitbox.main.y + ctx->hovered_frame->canvas_delta.y +ctx->hovered_frame->canvas_size.y ) {
+                    ctx->hovered_frame->canvas_delta.y = hitbox.main.height - ctx->hovered_frame->canvas_size.x;
+                }
+
+                //
+                // if (hitbox.main.x + ctx->hovered_frame->canvas_delta.x < hitbox.main.x + hitbox.main.x) {
+                //     ctx->hovered_frame->canvas_delta.x = -20.f;
+                // }
+                //
+
+                //
+                // if (ctx->hovered_frame->canvas_delta.x < 0.0f) {
+                //     ctx->hovered_frame->canvas_delta.x = 0.0f;
+                // }                
+                //
+                // if (ctx->hovered_frame->canvas_delta.y < 0.0f) {
+                //     ctx->hovered_frame->canvas_delta.y = 0.0f;
+                // }
+                //
+
+
+            }
+
+            log_print_n_flush("*%f, %f*\n", ctx->hovered_frame->canvas_delta.x, ctx->hovered_frame->canvas_delta.y) ;
         }
 
             
@@ -601,13 +642,19 @@ int main(void)
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[0], &hitbox);
 
-        log_print_n_flush("Acumulated delta: %d, %d\n", ctx.frame_buffer[0].canvas_delta.x, ctx.frame_buffer[0].canvas_delta.y);
+
+        // get canvas delta;
+        
+         
+        
+
 
         Rect frame_canvas = (Rect){0, 0, ctx.frame_buffer[0].canvas_size.x, ctx.frame_buffer[0].canvas_size.y};
         frame_canvas.x = hitbox.main.x + ctx.frame_buffer[0].canvas_delta.x;
         frame_canvas.y = hitbox.main.y + ctx.frame_buffer[0].canvas_delta.y;
+
+        log_print_n_flush("[%d, %d]\n", frame_canvas.x, frame_canvas.y);
     
-        log_print_n_flush("Acumulated delta: %d, %d\n", frame_canvas.x, frame_canvas.y);
 
         BeginDrawing();
         {
