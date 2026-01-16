@@ -9,23 +9,9 @@ int main(void)
 
     DisableCursor();                    // Lock mouse to window center
     
-
-                                        
-
-    // Define the camera to look into our 3d world (first person)
-    Camera3D camera = { 0 };
-    camera.position = (Vector3){ -2.0f, 0.0f, -2.0f };  // Camera position at ground level
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector
-    camera.fovy = 45.0f;                                 // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;              // Camera projection type
-
-    // Create a cube model
-    // Mesh cubeMesh = GenMeshCube(1.0f, 1.0f, 1.0f);      // Create a unit cube mesh
-    // Model cubeModel = LoadModelFromMesh(cubeMesh);       // Convert mesh to a model
-    // cubeModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = BEIGE;
-    
     Model my_model = LoadModel("models/bizzare.gltf");
+    Camera2D camera_2d; 
+    camera_2d.offset;
 
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -33,7 +19,7 @@ int main(void)
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        UpdateCamera(&camera, CAMERA_FREE);
+        UpdateCamera(&camera_2d, CAMERA_ORTHOGRAPHIC);
 
         BeginDrawing();
 

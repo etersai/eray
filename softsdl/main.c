@@ -158,6 +158,12 @@ static unsigned int cube_idx[24] = {
     3, 7
 };
 
+typedef struct { float x, y, z; } veci2
+
+typedef struct {
+    
+} CameraOrtho;
+
 int main(int argc, char *argv[])
 {
     UNUSED(argc);
@@ -202,6 +208,8 @@ int main(int argc, char *argv[])
 
         }
 
+
+
         float model[24] = {0};
         memcpy(model, cube, sizeof(cube));
 
@@ -221,10 +229,13 @@ int main(int argc, char *argv[])
             model[i+2] += -4.0f;
         }
 
+        // FLY CAMERA
+         
+
         int points_loop[16] = {0};
         int p = 0;
         for (size_t vertex = 0; vertex < ARRLEN(model); vertex+=3) {
-            if (model[vertex+2] == 0.0f) continue; // clipping XD
+           // if (model[vertex+2] == 0.0f) continue; // clipping XD
             float x_proj = (model[vertex] / -model[vertex+2]) / aspect_ratio;
             float y_proj = model[vertex+1] / -model[vertex+2];
             float x_proj_remap = (x_proj + 1) / 2;

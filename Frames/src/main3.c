@@ -20,6 +20,7 @@
 
 typedef struct { int x; int y; } vec2i; 
 typedef struct { float x; float y; } vec2f; 
+typedef struct { float x; float y; float z; } vec3f; 
 
 #define expect(var) do {                                          \
     if (!(var)) {                                                       \
@@ -255,7 +256,7 @@ typedef struct {
 
 typedef struct {
     vec2f canvas_size;
-    vec2f canvas_delta;
+    vec2f canvas_scroll;
     Rect rect;
     Rect rect_previous;
     bool opened;
@@ -263,7 +264,6 @@ typedef struct {
     const char* name; // it's id for now.
     float scale; // 1.0f default.
 } e_UI_FRAME;
-
 
 typedef struct {
     eui_SynchronizedOutputData draw_calls;
@@ -429,33 +429,20 @@ void eui_end_frame(e_UI_CTX* ctx)
         bool over_bar = rect_point_collision(hitbox.bar, ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y);
         
         if (over_main) {
-            const float SCROLL_SENS = 6.9f;
+            const float SCROLL_SENS = 7.0f;
             float scroll_x = ctx->input_data.mouse_scroll_x * SCROLL_SENS;
             float scroll_y = ctx->input_data.mouse_scroll_y * SCROLL_SENS;
 
             if (fabsf(scroll_x) > 0.1f || fabsf(scroll_y) > 0.1f) {
-                ctx->hovered_frame->canvas_delta.x += scroll_x;
-                ctx->hovered_frame->canvas_delta.y += scroll_y;
+                ctx->hovered_frame->canvas_scroll.x += scroll_x;
+                ctx->hovered_frame->canvas_scroll.y += scroll_y;
+                
+                
 
-                if (hitbox.main.x < hitbox.main.x + ctx->hovered_frame->canvas_delta.x) {
-                    ctx->hovered_frame->canvas_delta.x = 0.0f;
-                }
 
-                if (hitbox.main.y < hitbox.main.y + ctx->hovered_frame->canvas_delta.y) {
-                    ctx->hovered_frame->canvas_delta.y = 0.0f;
-                } 
-
-                if (hitbox.main.x + hitbox.main.width > hitbox.main.x + ctx->hovered_frame->canvas_delta.x + ctx->hovered_frame->canvas_size.x) {
-                    ctx->hovered_frame->canvas_delta.x = hitbox.main.width - ctx->hovered_frame->canvas_size.x;
-                }
-
-                if (hitbox.main.y + hitbox.main.height > hitbox.main.y + ctx->hovered_frame->canvas_delta.y +ctx->hovered_frame->canvas_size.y ) {
-                    ctx->hovered_frame->canvas_delta.y = hitbox.main.height - ctx->hovered_frame->canvas_size.x;
-                }
 
             }
 
-            log_print_n_flush("*%f, %f*\n", ctx->hovered_frame->canvas_delta.x, ctx->hovered_frame->canvas_delta.y) ;
         }
 
             
@@ -489,6 +476,12 @@ void eui_end_frame(e_UI_CTX* ctx)
                 log_print_n_flush("RESIZE!\n");
             }
             else if (rect_point_collision(hitbox.main,ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y)) {
+                
+                // here somehow handle the canvas collisions.
+                
+
+
+
                 log_print_n_flush("MAIN!\n");
             }
             else if (rect_point_collision(hitbox.bar,ctx->input_data.mouse_pos_x, ctx->input_data.mouse_pos_y)) {
@@ -540,6 +533,7 @@ static e_UI_TEXT_DIMS ray_get_text_metrics(const char* text, int font_size)
     Vector2 metrics = MeasureTextEx(font, text, font_size, 0.0f);    
     return (e_UI_TEXT_DIMS){ .width = metrics.x, .height = metrics.y };
 }
+
 
 #define WORK
 int main(void)
@@ -615,17 +609,28 @@ int main(void)
 
 
         Rect frame_canvas = (Rect){0, 0, ctx.frame_buffer[0].canvas_size.x, ctx.frame_buffer[0].canvas_size.y};
-        frame_canvas.x = hitbox.main.x + ctx.frame_buffer[0].canvas_delta.x;
-        frame_canvas.y = hitbox.main.y + ctx.frame_buffer[0].canvas_delta.y;
+        frame_canvas.x = hitbox.main.x + ctx.frame_buffer[0].canvas_scroll.x;
+        frame_canvas.y = hitbox.main.y + ctx.frame_buffer[0].canvas_scroll.y;
 
         log_print_n_flush("[%d, %d]\n", frame_canvas.x, frame_canvas.y);
-    
+            
+
+        // DRAW TRACE
+        float trace_verts[12] = {
+            4.0f, 5.0f, 0.0f,
+            -4.0f, 5.0f, 0.0f,
+            -4.0f, -5.0f, 0.0f,
+            4.0f, -5.0f, 0.0f,
+        };
+
 
         BeginDrawing();
         {
             ClearBackground(BLACK);
 
-#if 1       // Debug hitboxes.
+            
+
+#if 0       // Debug hitboxes.
             Color DEBUG_COLOR = RED;
             draw_rect_outline(hitbox.master, DEBUG_COLOR);
             draw_rect_outline(hitbox.bar, DEBUG_COLOR);
