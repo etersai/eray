@@ -453,51 +453,16 @@ void eui_end_frame(e_UI_CTX* ctx)
                     ctx->hovered_frame->canvas_delta.y = hitbox.main.height - ctx->hovered_frame->canvas_size.x;
                 }
 
-                //
-                // if (hitbox.main.x + ctx->hovered_frame->canvas_delta.x < hitbox.main.x + hitbox.main.x) {
-                //     ctx->hovered_frame->canvas_delta.x = -20.f;
-                // }
-                //
-
-                //
-                // if (ctx->hovered_frame->canvas_delta.x < 0.0f) {
-                //     ctx->hovered_frame->canvas_delta.x = 0.0f;
-                // }                
-                //
-                // if (ctx->hovered_frame->canvas_delta.y < 0.0f) {
-                //     ctx->hovered_frame->canvas_delta.y = 0.0f;
-                // }
-                //
-
-
             }
 
             log_print_n_flush("*%f, %f*\n", ctx->hovered_frame->canvas_delta.x, ctx->hovered_frame->canvas_delta.y) ;
         }
 
             
-
         if (over_bar) {
             log_print_n_flush("OVER BARY\n");
         }
 
-
-                // const float SCALE_SENSITIVITY = 0.1f;
-                // const float SCALE_MIN = 1.0f;
-                // const float SCALE_MAX = 2.0f;
-                // float scroll = ctx.input_data.mouse_scroll_y;
-                // if (fabsf(scroll) > 0.1f) {
-                //     if (EUI_INVERSE_SCROLL) {
-                //         ctx.hovered_frame->scale += -scroll * SCALE_SENSITIVITY;
-                //     }
-                //     else 
-                //     {
-                //         ctx.hovered_frame->scale += scroll * SCALE_SENSITIVITY;
-                //     }
-                //     ctx.hovered_frame->scale = clamp_me_float(ctx.hovered_frame->scale, SCALE_MIN, SCALE_MAX);
-                // }
-                //
-        
 
 
         if (ctx->input_data.is_left_pressed) {
