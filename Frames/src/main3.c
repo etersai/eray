@@ -19,6 +19,7 @@
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 
 typedef struct { int x; int y; } vec2i; 
+typedef struct { int x; int y; } vec3i;
 typedef struct { float x; float y; } vec2f; 
 typedef struct { float x; float y; float z; } vec3f; 
 
@@ -601,11 +602,6 @@ int main(void)
         eui_Hitbox hitbox = {0};
         eui_calculate_hitboxes(&ctx, &ctx.frame_buffer[0], &hitbox);
 
-
-        // get canvas delta;
-        
-         
-        
 
 
         Rect frame_canvas = (Rect){0, 0, ctx.frame_buffer[0].canvas_size.x, ctx.frame_buffer[0].canvas_size.y};
