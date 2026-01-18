@@ -1,11 +1,14 @@
 #include <stdio.h>
+#include <math.h>
 typedef struct { float x; float y; float z; } vecf3;
 typedef struct { float data[4][4]; } matf4x4;
 
-static void matf4x4_print(const matf4x4* matrix);
-static vecf3 vecf3_norm(const vecf3 vec);
-static float vecf3_len(const vecf3 vec);
-static void vecf3_print(vecf3 vec);
+static inline float vecf3_len(vecf3 vec) { return sqrtf(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z); }
+static inline vecf3 vecf3_norm(vecf3 vec);
+static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
+static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
+static inline vecf3 vecf3_mul(vecf3 a, vecf3 b);
+
 static inline void matf4x4_identity(matf4x4* matrix);
 static inline void matf4x4_test(matf4x4* matrix);
 static inline void matf4x4_multiply(const matf4x4* matrix_a, const matf4x4* matrix_b, matf4x4* result);
@@ -16,6 +19,9 @@ static inline void matf4x4_scale(matf4x4* matrix, float sx, float sy, float sz);
 static inline void matf4x4_transpose_to_new(const matf4x4* matrix, matf4x4* result);
 static inline void matf4x4_transpose_in_place(matf4x4* matrix);
 static inline vecf3 transformPoint(const vecf3* point, const matf4x4* matrix);
+
+static void matf4x4_print(const matf4x4* matrix);
+static void vecf3_print(vecf3 vec);
 
 // MY RETARDED MATH
 #define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
