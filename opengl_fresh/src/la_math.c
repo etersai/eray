@@ -3,11 +3,11 @@
 typedef struct { float x; float y; float z; } vecf3;
 typedef struct { float data[4][4]; } matf4x4;
 
-static inline float vecf3_len(vecf3 vec) { return sqrtf(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z); }
-static inline vecf3 vecf3_norm(vecf3 vec);
+static inline float vecf3_len(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
-static inline vecf3 vecf3_mul(vecf3 a, vecf3 b);
+static inline vecf3 vecf3_scale(float factor, vecf3 vec);
+static inline vecf3 vecf3_norm(vecf3 vec);
 
 static inline void matf4x4_identity(matf4x4* matrix);
 static inline void matf4x4_test(matf4x4* matrix);
@@ -24,6 +24,32 @@ static void matf4x4_print(const matf4x4* matrix);
 static void vecf3_print(vecf3 vec);
 
 // MY RETARDED MATH
+static inline float vecf3_len(vecf3 vec) 
+{ 
+    return sqrtf(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z);
+}
+static inline vecf3 vecf3_add(vecf3 a, vecf3 b)
+{
+    return (vecf3){a.x+b.x, a.y+b.y, a.z+b.z};
+}
+static inline vecf3 vecf3_sub(vecf3 a, vecf3 b)
+{
+    return (vecf3){a.x-b.x, a.y-b.y, a.z-b.z};
+}
+static inline vecf3 vecf3_scale(float factor, vecf3 vec)
+{
+    return (vecf3){factor*vec.x, factor*vec.y, factor*vec.z};
+}
+static inline vecf3 vecf3_norm(vecf3 vec)
+{
+    float len = vecf3_len(vec);
+    if (len != 0.0f) {
+        return (vecf3){vec.x/len, vec.y/len, vec.z/len};
+    }
+    return (vecf3){0.0f, 0.0f, 0.0f};
+}
+
+
 #define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
 #define VECF3_PRINT_FORMAT "[%.2f, %.2f, %.2f]\n"
 static void matf4x4_print(const matf4x4* matrix)

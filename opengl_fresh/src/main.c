@@ -5,16 +5,17 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "math.h"
+#include <math.h>
 
 #include "la_math.c"
+#include "camerka.c"
 #include "shaders.c"
 
 const unsigned int SCR_WIDTH = 1280; // 16:9
 const unsigned int SCR_HEIGHT = 720; 
 
 #define LOG_MATRIX(matrix) do { matf4x4_print(&(matrix)); } while(0)
-#define LOG_VEC(vector) do { vecf3_print(&(vector)); } while(0)
+#define LOG_VEC(vector) do { vecf3_print((vector)); } while(0)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
 void processInput(GLFWwindow *window)
@@ -50,11 +51,6 @@ void make_projection_matrix(const float angleOfView, const float aspect, const f
     projection->data[3][3] = 0.0f;
 }
 
-typedef struct {
-    vecf3 camera_pos_from;
-    vecf3 camera_aim_to;
-} Camerka;
-
 GLuint  shader_program;
 Camerka camera;
 
@@ -81,7 +77,6 @@ int main(void)
         return 1;
     }    
 
-    
     float vertices[] = { 
         -0.5f, -0.5f, 0.0f,
          0.5f, -0.5f, 0.0f,
@@ -91,6 +86,9 @@ int main(void)
     GLuint vao_triangle;
     shader_program = create_program(vertex_shader_src, fragment_shader_src);
     vao_triangle = load_triangle(vertices, sizeof(vertices));
+
+    camerka_update_pos(&camera, (vecf3){0.0f, -5.0f, 5.0f});
+    camerka_update_aim(&camera, (vecf3){0.0f, 0.0f, 0.0f});
 
     matf4x4 projection;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
