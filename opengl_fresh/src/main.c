@@ -13,14 +13,21 @@
 const unsigned int SCR_WIDTH = 1280; // 16:9
 const unsigned int SCR_HEIGHT = 720; 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
-void processInput(GLFWwindow *window);
 #define LOG_MATRIX(matrix) do { matf4x4_print(&(matrix)); } while(0)
 #define LOG_VEC(vector) do { vecf3_print(&(vector)); } while(0)
 
-GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
+void processInput(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
 GLuint load_triangle(const float* vertices, size_t size);
+GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
 void shader_set_transform(const matf4x4* transform);
+void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
 
 // HIGH LEVEL MATH
@@ -43,7 +50,13 @@ void make_projection_matrix(const float angleOfView, const float aspect, const f
     projection->data[3][3] = 0.0f;
 }
 
-GLuint shader_program;
+typedef struct {
+    vecf3 camera_pos_from;
+    vecf3 camera_aim_to;
+} Camerka;
+
+GLuint  shader_program;
+Camerka camera;
 
 int main(void)
 {
@@ -81,27 +94,33 @@ int main(void)
 
     matf4x4 projection;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
-    make_projection_matrix(120.0f, aspect, 0.1f, 100.0f, &projection);
+    make_projection_matrix(90.0f, aspect, 0.1f, 100.0f, &projection);
     shader_set_projection(&projection);
-    
+
+    matf4x4 view;
+    matf4x4_identity(&view);
+    matf4x4_translate_set(&view, 0.0f, 0.0f, 0.0f);
+    LOG_MATRIX(view);
+    shader_set_view(&view);
 
     while (!glfwWindowShouldClose(window)) {
 
         processInput(window);
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.5f, 1.0f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        matf4x4 move_tiny_bit_to_left;
-        matf4x4_identity(&move_tiny_bit_to_left);
-        matf4x4_translate_set(&move_tiny_bit_to_left, -0.9f, 0.0f, -1.0f);
-        shader_set_transform(&move_tiny_bit_to_left);
+        matf4x4 left;
+        matf4x4_identity(&left);
+        matf4x4_translate_set(&left, -1.0f, 0.0f, -1.0f); // calculate on paper location of new pointss
+        shader_set_transform(&left);
         glBindVertexArray(vao_triangle); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
            
-        matf4x4 i;
-        matf4x4_identity(&i);
-        shader_set_transform(&i);
+        matf4x4 right;
+        matf4x4_identity(&right);
+        matf4x4_translate_set(&right, 0.0f, 0.0f, -10.0f);
+        shader_set_transform(&right);
         glBindVertexArray(vao_triangle);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -118,12 +137,6 @@ int main(void)
     return 0;
 }
 
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
 
 
 GLuint load_triangle(const float* vertices, size_t size)
@@ -178,15 +191,22 @@ GLuint create_program(const char* vertex_shader_src, const char* fragment_shader
 void shader_set_transform(const matf4x4* transform)
 {
     glUseProgram(shader_program);
-    GLint trans_loc = glGetUniformLocation(shader_program, "transform");
-    glUniformMatrix4fv(trans_loc, 1, GL_FALSE, &transform->data[0][0]);
+    GLint loc = glGetUniformLocation(shader_program, "transform");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &transform->data[0][0]);
 }
 
 void shader_set_projection(const matf4x4* projection)
 {
     glUseProgram(shader_program);
-    GLint trans_loc = glGetUniformLocation(shader_program, "projection");
-    glUniformMatrix4fv(trans_loc, 1, GL_FALSE, &projection->data[0][0]);
+    GLint loc = glGetUniformLocation(shader_program, "projection");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &projection->data[0][0]);
+}
+
+void shader_set_view(const matf4x4* view)
+{
+    glUseProgram(shader_program);
+    GLint loc = glGetUniformLocation(shader_program, "view");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &view->data[0][0]);
 }
 
     

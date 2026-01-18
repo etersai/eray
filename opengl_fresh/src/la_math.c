@@ -3,6 +3,8 @@ typedef struct { float x; float y; float z; } vecf3;
 typedef struct { float data[4][4]; } matf4x4;
 
 static void matf4x4_print(const matf4x4* matrix);
+static vecf3 vecf3_norm(const vecf3 vec);
+static float vecf3_len(const vecf3 vec);
 static void vecf3_print(vecf3 vec);
 static inline void matf4x4_identity(matf4x4* matrix);
 static inline void matf4x4_test(matf4x4* matrix);
