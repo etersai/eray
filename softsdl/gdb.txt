@@ -1,0 +1,4 @@
+0x7fffffffe510:	1	0	0	0
+0x7fffffffe520:	0	1	0	0
+0x7fffffffe530:	0	0	1	0
+0x7fffffffe540:	0.5	1.5	0	1
