@@ -1,0 +1,17 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/cc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-I./include",
+      "-o",
+      "bin/prog",
+      "src/main.c"
+    ],
+    "directory": "/home/eter/CGFS/eray/opengl_fresh",
+    "file": "/home/eter/CGFS/eray/opengl_fresh/src/main.c",
+    "output": "/home/eter/CGFS/eray/opengl_fresh/bin/prog"
+  }
+]
