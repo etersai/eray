@@ -49,24 +49,6 @@ void make_projection_matrix(const float angleOfView, const float aspect, const f
     *matrix = proj;
 }
 
-// void make_lookat_matrix(vecf3 from, vecf3 to, vecf3 arbitraryUp, matf4x4* matrix) 
-// { 
-//     vecf3 forward = vecf3_norm(vecf3_sub(from, to)); 
-//     vecf3 right = vecf3_norm(vecf3_cross(arbitraryUp, forward)); 
-//     vecf3 up = vecf3_cross(forward, right); 
-//
-//     matf4x4 look_at;
-//     matf4x4_identity(&look_at);
-//
-//     look_at.data[0][0] = right.x,   look_at.data[0][1] = right.y,   look_at.data[0][2] = right.z; 
-//     look_at.data[1][0] = up.x,      look_at.data[1][1] = up.y,      look_at.data[1][2] = up.z; 
-//     look_at.data[2][0] = -forward.x, look_at.data[2][1] = -forward.y, look_at.data[2][2] = -forward.z;
-//     look_at.data[3][0] = from.x,    look_at.data[3][1] = from.y,    look_at.data[3][2] = from.z; 
-//
-//     *matrix = look_at;
-// } 
-//
-
 void make_lookat_matrix(vecf3 from, vecf3 to, vecf3 arbitraryUp, matf4x4* matrix)
 {
 
@@ -113,13 +95,40 @@ int main(void)
     make_projection_matrix(90.0f, aspect, 0.1f, 100.0f, &projection);
     shader_set_projection(&projection);
 
-    camerka_update_pos(&camera, (vecf3){-5.0f, 4.0f, 2.0f});
-    camerka_update_aim(&camera, (vecf3){0.0f, 0.0f, 0.0f});
+    camerka_update_pos(&camera, (vecf3){-4.0f, 15.0f, 2.0f});
+    camerka_update_aim(&camera, (vecf3){0.0f, -2.0f, -4.0f});
 
-    matf4x4 view;
-    matf4x4_identity(&view);
-    LOG_MATRIX(view);
-    shader_set_view(&view);
+    vecf3 camera_up = {0.0f, 1.0f, 0.0f};
+    vecf3 forward = vecf3_norm(vecf3_sub(camera.pos, camera.target));
+    LOG_VEC(forward);
+    vecf3 right = vecf3_norm(vecf3_cross(forward, camera_up));
+    LOG_VEC(right);
+    vecf3 up = vecf3_cross(forward, right);
+    LOG_VEC(up);
+
+    assert(fabs(vecf3_dot(right, up)) < 1e-5);
+    assert(fabs(vecf3_dot(right, forward)) < 1e-5);
+    assert(fabs(vecf3_dot(up, forward)) < 1e-5);
+
+    matf4x4 rotation;
+    matf4x4_identity(&rotation);
+    
+    rotation.data[0][0] = right.x;
+    rotation.data[1][0] = right.y;
+    rotation.data[2][0] = right.z;
+    rotation.data[3][0] = -vecf3_dot(right, camera.pos); 
+
+    rotation.data[0][1] = up.x;
+    rotation.data[1][1] = up.y;
+    rotation.data[2][1] = up.z;
+    rotation.data[3][1] = -vecf3_dot(up, camera.pos); 
+
+    rotation.data[0][2] = forward.x;
+    rotation.data[1][2] = forward.y;
+    rotation.data[2][2] = forward.z;
+    rotation.data[3][2] = -vecf3_dot(forward, camera.pos); 
+
+    shader_set_view(&rotation);
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -130,14 +139,14 @@ int main(void)
 
         matf4x4 left;
         matf4x4_identity(&left);
-        matf4x4_translate_set(&left, -1.0f, 0.0f, -1.0f); // calculate on paper location of new pointss
+        matf4x4_translate_set(&left, 0.0f, 0.0f, -1.0f); // calculate on paper location of new pointss
         shader_set_transform(&left);
         glBindVertexArray(vao_triangle); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
            
         matf4x4 right;
         matf4x4_identity(&right);
-        matf4x4_translate_set(&right, 0.0f, 0.0f, -2.0f);
+        matf4x4_translate_set(&right, 0.0f, -2.0f, -4.0f);
         shader_set_transform(&right);
         glBindVertexArray(vao_triangle);
         glDrawArrays(GL_TRIANGLES, 0, 3);

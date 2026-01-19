@@ -1,17 +1,17 @@
 #include <assert.h>
 typedef struct {
-    vecf3 camera_pos_from;
-    vecf3 camera_aim_to;
+    vecf3 pos;
+    vecf3 target;
 } Camerka;
 
 static inline void camerka_update_pos(Camerka* cam, vecf3 vec)
 {
     assert(cam);
-    cam->camera_pos_from = vec;
+    cam->pos = vec;
 }
 
 static inline void camerka_update_aim(Camerka* cam, vecf3 vec)
 {
     assert(cam);
-    cam->camera_aim_to = vec;
+    cam->target = vec;
 }
