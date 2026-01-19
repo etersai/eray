@@ -1,14 +1,19 @@
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+
 typedef struct { float x; float y; float z; } vecf3;
 typedef struct { float data[4][4]; } matf4x4;
 
+// VECTOR
 static inline float vecf3_len(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_scale(float factor, vecf3 vec);
+static inline vecf3 vecf3_cross(vecf3 a, vecf3 b);
+static inline float vecf3_dot(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_norm(vecf3 vec);
 
+// MATRIX
 static inline void matf4x4_identity(matf4x4* matrix);
 static inline void matf4x4_test(matf4x4* matrix);
 static inline void matf4x4_multiply(const matf4x4* matrix_a, const matf4x4* matrix_b, matf4x4* result);
@@ -20,8 +25,25 @@ static inline void matf4x4_transpose_to_new(const matf4x4* matrix, matf4x4* resu
 static inline void matf4x4_transpose_in_place(matf4x4* matrix);
 static inline vecf3 transformPoint(const vecf3* point, const matf4x4* matrix);
 
+// DEBUG
 static void matf4x4_print(const matf4x4* matrix);
 static void vecf3_print(vecf3 vec);
+#define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
+#define VECF3_PRINT_FORMAT "[%f, %f, %f]\n"
+static void matf4x4_print(const matf4x4* matrix)
+{
+    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[0][0], matrix->data[0][1], matrix->data[0][2], matrix->data[0][3]);
+    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[1][0], matrix->data[1][1], matrix->data[1][2], matrix->data[1][3]);
+    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[2][0], matrix->data[2][1], matrix->data[2][2], matrix->data[2][3]);
+    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[3][0], matrix->data[3][1], matrix->data[3][2], matrix->data[3][3]);
+    fflush(stdout);
+}
+
+static void vecf3_print(vecf3 vec)
+{
+    fprintf(stdout, VECF3_PRINT_FORMAT, vec.x, vec.y, vec.z);
+    fflush(stdout);
+}
 
 // MY RETARDED MATH
 static inline float vecf3_len(vecf3 vec) 
@@ -48,24 +70,17 @@ static inline vecf3 vecf3_norm(vecf3 vec)
     }
     return (vecf3){0.0f, 0.0f, 0.0f};
 }
-
-
-#define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
-#define VECF3_PRINT_FORMAT "[%.2f, %.2f, %.2f]\n"
-static void matf4x4_print(const matf4x4* matrix)
+static inline float vecf3_dot(vecf3 a, vecf3 b)
 {
-    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[0][0], matrix->data[0][1], matrix->data[0][2], matrix->data[0][3]);
-    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[1][0], matrix->data[1][1], matrix->data[1][2], matrix->data[1][3]);
-    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[2][0], matrix->data[2][1], matrix->data[2][2], matrix->data[2][3]);
-    fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->data[3][0], matrix->data[3][1], matrix->data[3][2], matrix->data[3][3]);
-    fflush(stdout);
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+static inline vecf3 vecf3_cross(vecf3 a, vecf3 b)
+{
+    return (vecf3){a.y * b.z - a.z * b.y,
+                   a.z * b.x - a.x * b.z,
+                   a.x * b.y - a.y * b.x};
 }
 
-static void vecf3_print(vecf3 vec)
-{
-    fprintf(stdout, VECF3_PRINT_FORMAT, vec.x, vec.y, vec.z);
-    fflush(stdout);
-}
 
 static inline void matf4x4_identity(matf4x4* matrix)
 {

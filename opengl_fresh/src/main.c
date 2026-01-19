@@ -32,23 +32,44 @@ void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
 
 // HIGH LEVEL MATH
-void make_projection_matrix(const float angleOfView, const float aspect, const float near, const float far, matf4x4* projection)
+void make_projection_matrix(const float angleOfView, const float aspect, const float near, const float far, matf4x4* matrix)
 { 
-    // Initialize all to zero first
-    for(int i = 0; i < 4; i++) {
-        for(int j = 0; j < 4; j++) {
-            projection->data[i][j] = 0.0f;
-        }
-    }
+    matf4x4 proj;
+    matf4x4_identity(&proj);
     
     float scale = 1.0f / tanf(angleOfView * 0.5f * M_PI / 180.0f); 
     
-    projection->data[0][0] = scale / aspect;  // scale x with aspect ratio
-    projection->data[1][1] = scale;           // scale y
-    projection->data[2][2] = -far / (far - near);
-    projection->data[2][3] = -1.0f;           // set w = -z
-    projection->data[3][2] = -far * near / (far - near);
-    projection->data[3][3] = 0.0f;
+    proj.data[0][0] = scale / aspect;  // scale x with aspect ratio
+    proj.data[1][1] = scale;           // scale y
+    proj.data[2][2] = -far / (far - near);
+    proj.data[2][3] = -1.0f;           // set w = -z
+    proj.data[3][2] = -far * near / (far - near);
+    proj.data[3][3] = 0.0f;
+
+    *matrix = proj;
+}
+
+// void make_lookat_matrix(vecf3 from, vecf3 to, vecf3 arbitraryUp, matf4x4* matrix) 
+// { 
+//     vecf3 forward = vecf3_norm(vecf3_sub(from, to)); 
+//     vecf3 right = vecf3_norm(vecf3_cross(arbitraryUp, forward)); 
+//     vecf3 up = vecf3_cross(forward, right); 
+//
+//     matf4x4 look_at;
+//     matf4x4_identity(&look_at);
+//
+//     look_at.data[0][0] = right.x,   look_at.data[0][1] = right.y,   look_at.data[0][2] = right.z; 
+//     look_at.data[1][0] = up.x,      look_at.data[1][1] = up.y,      look_at.data[1][2] = up.z; 
+//     look_at.data[2][0] = -forward.x, look_at.data[2][1] = -forward.y, look_at.data[2][2] = -forward.z;
+//     look_at.data[3][0] = from.x,    look_at.data[3][1] = from.y,    look_at.data[3][2] = from.z; 
+//
+//     *matrix = look_at;
+// } 
+//
+
+void make_lookat_matrix(vecf3 from, vecf3 to, vecf3 arbitraryUp, matf4x4* matrix)
+{
+
 }
 
 GLuint  shader_program;
@@ -87,17 +108,16 @@ int main(void)
     shader_program = create_program(vertex_shader_src, fragment_shader_src);
     vao_triangle = load_triangle(vertices, sizeof(vertices));
 
-    camerka_update_pos(&camera, (vecf3){0.0f, -5.0f, 5.0f});
-    camerka_update_aim(&camera, (vecf3){0.0f, 0.0f, 0.0f});
-
     matf4x4 projection;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     make_projection_matrix(90.0f, aspect, 0.1f, 100.0f, &projection);
     shader_set_projection(&projection);
 
+    camerka_update_pos(&camera, (vecf3){-5.0f, 4.0f, 2.0f});
+    camerka_update_aim(&camera, (vecf3){0.0f, 0.0f, 0.0f});
+
     matf4x4 view;
     matf4x4_identity(&view);
-    matf4x4_translate_set(&view, 0.0f, 0.0f, 0.0f);
     LOG_MATRIX(view);
     shader_set_view(&view);
 
@@ -117,7 +137,7 @@ int main(void)
            
         matf4x4 right;
         matf4x4_identity(&right);
-        matf4x4_translate_set(&right, 0.0f, 0.0f, -10.0f);
+        matf4x4_translate_set(&right, 0.0f, 0.0f, -2.0f);
         shader_set_transform(&right);
         glBindVertexArray(vao_triangle);
         glDrawArrays(GL_TRIANGLES, 0, 3);
