@@ -1,5 +1,7 @@
 #include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #define eray_norm(value, min, max) (((value) - (min)) / ((max) - (min)))
 #define eray_lerp(norm, min, max) (((max) - (min)) * (norm) + (min))
@@ -8,6 +10,19 @@
 #define eray_max(a, b) ((a) > (b) ? (a) : (b))
 #define eray_clamp(val, lo, hi) (eray_min(eray_max((val), (lo)), (hi)))
 #define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
+
+#define expect(var) do {                                                \
+    if (!(var)) {                                                       \
+        fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n", \
+        __FILE__, __LINE__, #var);                                      \
+        abort();                                                        \
+    }                                                                   \
+} while (0)
+
+#define unreachable() do {                                                  \
+    fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__); \
+    abort();                                                                \
+} while (0)
 
 typedef struct {
     float x;
@@ -28,6 +43,12 @@ typedef struct {
     vecf4 col3;
     vecf4 col4;
 } matf4x4;
+
+typedef enum {
+    AXIS_X = 0,
+    AXIS_Y = 0,
+    AXIS_Z = 0,
+} axis_t;
 
 // DEBUG
 static void matf4x4_print(const matf4x4* matrix);
@@ -54,7 +75,8 @@ static inline void matf4x4_rot_y(matf4x4* m, float angle);
 static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z);
-static inline void matf4x4_translate_set(matf4x4* m, const vecf3 translate);
+static inline void matf4x4_scale_one_axis(matf4x4* m, float scale, axis_t axis);
+static inline void matf4x4_translate_make(matf4x4* m, vecf3 translate);
 
 // CONVERSIONS
 static inline float rad_to_deg(float radians) { return 180.0f/M_PI*radians; }
@@ -143,8 +165,38 @@ static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z)
     m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
 }
 
-static inline void matf4x4_translate_set(matf4x4* m, const vecf3 translate)
+static inline void matf4x4_scale_one_axis(matf4x4* m, float scale, axis_t axis)
 {
+    if (axis == AXIS_X) {
+        m->col1 = (vecf4){scale,0.0f, 0.0f, 0.0f};
+        m->col2 = (vecf4){0.0f, 1.0f, 0.0f, 0.0f};
+        m->col3 = (vecf4){0.0f, 0.0f, 1.0f, 0.0f};
+        m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
+    }
+    else if (axis == AXIS_Y)
+    {
+        m->col1 = (vecf4){1.0f, 0.0f, 0.0f, 0.0f};
+        m->col2 = (vecf4){0.0f, scale, 0.0f, 0.0f};
+        m->col3 = (vecf4){0.0f, 0.0f, 1.0f, 0.0f};
+        m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
+    }
+    else if (axis == AXIS_Z)
+    {
+        m->col1 = (vecf4){1.0f, 0.0f, 0.0f, 0.0f};
+        m->col2 = (vecf4){0.0f, 1.0f, 0.0f, 0.0f};
+        m->col3 = (vecf4){0.0f, 0.0f, scale, 0.0f};
+        m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
+    }
+    else
+    {
+        unreachable();
+    }
+}
+
+
+static inline void matf4x4_translate_make(matf4x4* m, vecf3 translate)
+{
+    matf4x4_I(m);
     m->col4 = (vecf4){translate.x, translate.y, translate.z, 1.0f};
 }
 
@@ -253,8 +305,7 @@ static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4*
     *result = m;
 }
 
-
-// DEBUG
+// DEBUG MATH
 #define VECF4_PRINT_FORMAT "[%f, %f, %f, %f]\n"
 #define VECF3_PRINT_FORMAT "[%f, %f, %f]\n"
 #define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
@@ -276,3 +327,48 @@ static void vecf3_print(vecf3 vec)
     fprintf(stdout, VECF3_PRINT_FORMAT, vec.x, vec.y, vec.z);
     fflush(stdout);
 }
+
+//
+// LOG 
+//
+#define LAMATH_LOG_MAX_PREFIX 64
+void log_print_beautify(const char* prefix, const char* format, ...)
+{
+    expect(prefix);
+    expect(format);
+
+    int idx = 0;
+    char buffer[LAMATH_LOG_MAX_PREFIX] = {0};
+    while (*prefix) {
+        if (idx >= LAMATH_LOG_MAX_PREFIX) {
+            break; 
+        }
+        if (*prefix >= 'a' && *prefix <= 'z') {
+            buffer[idx] = *prefix^(1 << 5); // toggle case bit with xor voodoo.
+        } 
+        else
+        {
+            buffer[idx] = *prefix;
+        }
+        prefix++; idx++;
+    } 
+
+    FILE* out_target = stderr; 
+    fprintf(out_target, "[%s]: ", buffer);
+    va_list args;
+    va_start(args, format);
+    vfprintf(out_target, format, args);
+    va_end(args);
+}
+
+void log_print_n_flush(const char* format, ...)
+{
+    FILE* out_target = stdout; 
+    va_list args;
+    va_start(args, format);
+    vfprintf(out_target, format, args);
+    va_end(args);
+    fflush(out_target);
+}
+
+

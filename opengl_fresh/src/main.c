@@ -32,7 +32,7 @@ typedef unsigned int cpu_side_id;
 typedef struct {
     GLuint VBO; 
     GLuint VAO; 
-} video_card_data;
+} video_card_data; // gpu_mesh ??
 
 typedef struct {
     matf4x4 transform;
@@ -42,14 +42,14 @@ typedef struct {
 typedef struct {
     matf4x4 transform;
     cpu_side_id id;
-} tri;
+} triangle;
 
 #define MAX_TRIANGLES  1024*512
 #define MAX_QUADS 1024*512
-tri cpu_triangles[MAX_TRIANGLES];
+triangle cpu_triangles[MAX_TRIANGLES];
 quad cpu_quads[MAX_QUADS];
-size_t cpu_triangle_count;
-size_t cpu_quad_count;
+size_t triangle_count;
+size_t quad_count;
 
 cpu_side_id id_pool_triangle;// (each time)++
 cpu_side_id id_pool_quad;
@@ -114,8 +114,6 @@ Camerka camera;
 
 int main(void)
 {
-    assert(id_pool_quad == 0);
-    assert(id_pool_triangle == 0);
     // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -144,7 +142,6 @@ int main(void)
     };
 
     float quad_verts[] = {
-        // pos.x, pos.y, pos.z,  tex.u, tex.v
        -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,  // bottom-left
         0.5f, -0.5f, 0.0f,    1.0f, 0.0f,  // bottom-right
        -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,  // top-left
@@ -160,9 +157,21 @@ int main(void)
 
 
     // add triangle
-    matf4x4 transform;
-    cpu_side_id cpu_id_triangle;
-    tri xd = {transform, };
+    triangle triangle; 
+    // make transform
+    matf4x4 scale; 
+    matf4x4 translate; 
+    matf4x4_scale_one_axis(&scale, 20.0f, AXIS_X);
+    matf4x4_translate_make(&translate, (vecf3){5.0f, 0.0f, -20.0f});
+    matf4x4_mul(&triangle.transform, &translate, &scale);
+    // register
+    triangle.id = id_pool_triangle;
+    cpu_triangles[triangle_count] = triangle;
+    id_pool_triangle++;
+    triangle_count++;
+
+
+    
     
 
 
