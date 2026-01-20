@@ -36,20 +36,23 @@ typedef struct {
 
 typedef struct {
     matf4x4 transform;
-    vecf3 pos;
+    cpu_side_id id;
 } quad;
 
 typedef struct {
     matf4x4 transform;
-    vecf3 pos;
+    cpu_side_id id;
 } tri;
 
-#define MAX_TRIS  1024*512
+#define MAX_TRIANGLES  1024*512
 #define MAX_QUADS 1024*512
-tri  cpu_tris[MAX_TRIS];
+tri cpu_triangles[MAX_TRIANGLES];
 quad cpu_quads[MAX_QUADS];
-size_t cpu_tris_count;
+size_t cpu_triangle_count;
 size_t cpu_quad_count;
+
+cpu_side_id id_pool_triangle;// (each time)++
+cpu_side_id id_pool_quad;
 
 video_card_data gpu_load_quad(const float* vert, size_t size);
 video_card_data gpu_load_triangle(const float* vertices, size_t size);
@@ -111,6 +114,8 @@ Camerka camera;
 
 int main(void)
 {
+    assert(id_pool_quad == 0);
+    assert(id_pool_triangle == 0);
     // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -151,10 +156,13 @@ int main(void)
     shader_program = create_program(vertex_shader_src, fragment_shader_src);
 
     
+    
+
+
     // add triangle
     matf4x4 transform;
-    tri xd = {transform};
-    cpu_tris[0] = xd;
+    cpu_side_id cpu_id_triangle;
+    tri xd = {transform, };
     
 
 
