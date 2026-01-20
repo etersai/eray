@@ -29,6 +29,7 @@ static void vecf3_printf(vecf3 vec);
 static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v);
 // VECTORS
 static inline float vecf3_len(vecf3 vec);
+static inline float vecf3_len_no_sqrt(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_scale(float factor, vecf3 vec);
@@ -37,7 +38,7 @@ static inline float vecf3_dot(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_norm(vecf3 vec);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
-static inline void matf4x4_mul(const matf4x4* a, const matf4x4* b, matf4x4* result);
+static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z);
 
 // COMMON
@@ -80,6 +81,10 @@ static inline float vecf3_len(vecf3 vec)
 { 
     return sqrtf(vecf3_dot(vec, vec));
 }
+static inline float vecf3_len_no_sqrt(vecf3 vec) 
+{ 
+    return vecf3_dot(vec, vec);
+}
 static inline vecf3 vecf3_cross(vecf3 a, vecf3 b)
 {
     return (vecf3){a.y * b.z - a.z * b.y,
@@ -119,10 +124,31 @@ static inline void matf4x4_scale_set_uniform(matf4x4* m, float x, float y, float
     m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
 }
 
-static inline void matf4x4_mul(const matf4x4* a, const matf4x4* b, matf4x4* result)
+static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b)
 {
     matf4x4 m;
 
+    m.col1.x = a->col1.x * b->col1.x + a->col2.x * b->col1.y + a->col3.x * b->col1.z + a->col4.x * b->col1.w; 
+    m.col2.x = a->col1.x * b->col2.x + a->col2.x * b->col2.y + a->col3.x * b->col2.z + a->col4.x * b->col2.w;
+    m.col3.x = a->col1.x * b->col3.x + a->col2.x * b->col3.y + a->col3.x * b->col3.z + a->col4.x * b->col3.w;
+    m.col4.x = a->col1.x * b->col4.x + a->col2.x * b->col4.y + a->col3.x * b->col4.z + a->col4.x * b->col4.w; 
+
+    m.col1.y = a->col1.y * b->col1.x + a->col2.y * b->col1.y + a->col3.y * b->col1.z + a->col4.y * b->col1.w;
+    m.col2.y = a->col1.y * b->col2.x + a->col2.y * b->col2.y + a->col3.y * b->col2.z + a->col4.y * b->col2.w;
+    m.col3.y = a->col1.y * b->col3.x + a->col2.y * b->col3.y + a->col3.y * b->col3.z + a->col4.y * b->col3.w;
+    m.col4.y = a->col1.y * b->col4.x + a->col2.y * b->col4.y + a->col3.y * b->col4.z + a->col4.y * b->col4.w;
+
+    m.col1.z = a->col1.z * b->col1.x + a->col2.z * b->col1.y + a->col3.z * b->col1.z + a->col4.z * b->col1.w;
+    m.col2.z = a->col1.z * b->col2.x + a->col2.z * b->col2.y + a->col3.z * b->col2.z + a->col4.z * b->col2.w;
+    m.col3.z = a->col1.z * b->col3.x + a->col2.z * b->col3.y + a->col3.z * b->col3.z + a->col4.z * b->col3.w;
+    m.col4.z = a->col1.z * b->col4.x + a->col2.z * b->col4.y + a->col3.z * b->col4.z + a->col4.z * b->col4.w;
+
+    m.col1.w = a->col1.w * b->col1.x + a->col2.w * b->col1.y + a->col3.w * b->col1.z + a->col4.w * b->col1.w;
+    m.col2.w = a->col1.w * b->col2.x + a->col2.w * b->col2.y + a->col3.w * b->col2.z + a->col4.w * b->col2.w;
+    m.col3.w = a->col1.w * b->col3.x + a->col2.w * b->col3.y + a->col3.w * b->col3.z + a->col4.w * b->col3.w;
+    m.col4.w = a->col1.w * b->col4.x + a->col2.w * b->col4.y + a->col3.w * b->col4.z + a->col4.w * b->col4.w;
+
+    *result = m;
 }
 
 
