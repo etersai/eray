@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -22,9 +23,6 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
     }
 }
-
-#define LOG_MATRIX(matrix) do { matf4x4_print(&(matrix)); } while(0)
-#define LOG_VEC(vector) do { vecf3_print((vector)); } while(0)
 //////////////////////////////////////////
 
 typedef unsigned int cpu_side_id;
@@ -53,6 +51,9 @@ size_t quad_count;
 
 cpu_side_id id_pool_triangle;// (each time)++
 cpu_side_id id_pool_quad;
+
+video_card_data video_card_triangle;
+video_card_data video_card_quad; 
 
 video_card_data gpu_load_quad(const float* vert, size_t size);
 video_card_data gpu_load_triangle(const float* vertices, size_t size);
@@ -148,89 +149,60 @@ int main(void)
         0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
     };
 
-    video_card_data video_card_triangle = gpu_load_triangle(tri_vertices, sizeof(tri_vertices));
-    video_card_data video_card_quad = gpu_load_quad(quad_verts, sizeof(quad_verts));
+    video_card_triangle = gpu_load_triangle(tri_vertices, sizeof(tri_vertices));
+    video_card_quad = gpu_load_quad(quad_verts, sizeof(quad_verts));
     shader_program = create_program(vertex_shader_src, fragment_shader_src);
 
     
-    
-
 
     // add triangle
     triangle triangle; 
     // make transform
     matf4x4 scale; 
+    matf4x4 rotate;
     matf4x4 translate; 
-    matf4x4_scale_one_axis(&scale, 20.0f, AXIS_X);
-    matf4x4_translate_make(&translate, (vecf3){5.0f, 0.0f, -20.0f});
+    matf4x4_scale_uniform(&scale, 0.5, 1.0f, 1.0f); // TODO: change the namingsss.
+    matf4x4_translate_make(&translate, (vecf3){0.0f, 0.0f, -1.0f});
     matf4x4_mul(&triangle.transform, &translate, &scale);
+    LOG_MATRIX(triangle.transform);
     // register
     triangle.id = id_pool_triangle;
     cpu_triangles[triangle_count] = triangle;
     id_pool_triangle++;
     triangle_count++;
-
+    log_print_n_flush("[TRIANGLE COUNT: %d]", triangle_count);
+    log_print_n_flush("[TRIANGLE NEXT ID: %d]", id_pool_triangle);
 
     
     
-
-
-
     // camera setup
     matf4x4 projection;
+    float camera_fov = 75.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
-    make_projection_matrix(&projection, 90.0f, aspect, 0.1f, 100.0);
+    make_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_projection(&projection);
-
-    camerka_update_pos(&camera, (vecf3){-4.0f, 15.0f, 2.0f});
-    camerka_update_aim(&camera, (vecf3){0.0f, -2.0f, -4.0f});
 
     matf4x4 view;
     matf4x4_I(&view);
-    make_lookat_matrix(&view, (vecf3){0.0f, 0.0f, -5.0f}, (vecf3){0.0f, 0.0f, 0.0f}, (vecf3){0.0f, 1.0f, 0.0f});
+    make_lookat_matrix(&view, (vecf3){0.0f, 0.0f, 0.0f}, (vecf3){0.0f, 0.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     shader_set_view(&view);
 
 
-
-
-
-    float rotacja = 0.0f;
     glUseProgram(shader_program);
     while (!glfwWindowShouldClose(window)) {
 
         processInput(window);
-        rotacja += 10.0f;
 
         glClearColor(0.5f, 1.0f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
-
-        matf4x4 lt;
-        matf4x4_I(&lt);
-        matf4x4 rot_y;
-        matf4x4_rot_y(&rot_y, deg_to_rad(rotacja));
-        vecf3 t1 = {0.0f, 0.0f, -0.90f};
-        matf4x4_translate_set(&lt, t1); // calculate on paper location of new points
-        matf4x4 res;
-        matf4x4_mul(&res, &lt, &rot_y);
-        shader_set_transform(&res);
-        glBindVertexArray(vao_triangle); 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        // batch rendering.
+        for (size_t i = 0; i < triangle_count; i++) {
+            shader_set_transform(&cpu_triangles[i].transform);
+            glBindVertexArray(video_card_triangle.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+        }
            
-        matf4x4 rt;
-        matf4x4_I(&rt);
-        vecf3 t2 = {2.0f, 0.0f, -2.5f};
-        matf4x4_translate_set(&rt, t2);
-        shader_set_transform(&rt);
-        glBindVertexArray(vao_triangle);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        matf4x4 translate_quad;
-
-
-
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -247,7 +219,8 @@ int main(void)
 
 video_card_data gpu_load_quad(const float* vert, size_t size)
 {
-    unsigned int VBO, VAO;
+    GLuint VBO;
+    GLuint VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s),
@@ -266,11 +239,13 @@ video_card_data gpu_load_quad(const float* vert, size_t size)
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
      
+    return (video_card_data){VBO, VAO};
 }
 
 video_card_data gpu_load_triangle(const float* vertices, size_t size)
 {   
-    unsigned int VBO, VAO;
+    GLuint VBO;
+    GLuint VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s),
@@ -288,7 +263,8 @@ video_card_data gpu_load_triangle(const float* vertices, size_t size)
     // VAOs requires a call to glBindVertexArray anyways so we generally
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
-        
+    
+    return (video_card_data){VBO, VAO};
 }
 
 GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src)

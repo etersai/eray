@@ -19,9 +19,9 @@
     }                                                                   \
 } while (0)
 
-#define unreachable() do {                                                  \
-    fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__); \
-    abort();                                                                \
+#define la_unreachable() do {                                                  \
+    fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__);    \
+    abort();                                                                   \
 } while (0)
 
 typedef struct {
@@ -189,7 +189,7 @@ static inline void matf4x4_scale_one_axis(matf4x4* m, float scale, axis_t axis)
     }
     else
     {
-        unreachable();
+        la_unreachable();
     }
 }
 
@@ -332,6 +332,8 @@ static void vecf3_print(vecf3 vec)
 // LOG 
 //
 #define LAMATH_LOG_MAX_PREFIX 64
+#define LOG_MATRIX(matrix) do { matf4x4_print(&(matrix)); } while(0)
+#define LOG_VEC(vector) do { vecf3_print((vector)); } while(0)
 void log_print_beautify(const char* prefix, const char* format, ...)
 {
     expect(prefix);
