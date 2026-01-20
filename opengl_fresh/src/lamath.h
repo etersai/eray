@@ -50,8 +50,11 @@ static inline vecf3 vecf3_norm(vecf3 vec);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
 static inline void matf4x4_rot_x(matf4x4* m, float angle);
+static inline void matf4x4_rot_y(matf4x4* m, float angle);
+static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z);
+static inline void matf4x4_translate_set(matf4x4* m, const vecf3 translate);
 
 // CONVERSIONS
 static inline float rad_to_deg(float radians) { return 180.0f/M_PI*radians; }
@@ -132,12 +135,17 @@ static inline void matf4x4_I(matf4x4* matrix)
     matrix->col4.w = 1.0f;
 }
 
-static inline void matf4x4_scale_set_uniform(matf4x4* m, float x, float y, float z)
+static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z)
 {
     m->col1 = (vecf4){x,    0.0f, 0.0f, 0.0f};
     m->col2 = (vecf4){0.0f, y,    0.0f, 0.0f};
     m->col3 = (vecf4){0.0f, 0.0f, z,    0.0f};
     m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
+}
+
+static inline void matf4x4_translate_set(matf4x4* m, const vecf3 translate)
+{
+    m->col4 = (vecf4){translate.x, translate.y, translate.z, 1.0f};
 }
 
 static inline void matf4x4_rot_x(matf4x4* m, float angle)
