@@ -23,7 +23,10 @@ typedef struct {
 
 // DEBUG
 static void matf4x4_print(const matf4x4* matrix);
+static void vecf4_print(vecf4 vec);
 static void vecf3_printf(vecf3 vec);
+// COMMON
+static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v);
 // VECTORS
 static inline float vecf3_len(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
@@ -35,7 +38,18 @@ static inline vecf3 vecf3_norm(vecf3 vec);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
 static inline void matf4x4_mul(const matf4x4* a, const matf4x4* b, matf4x4* result);
+static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z);
 
+// COMMON
+static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v)
+{
+    vecf4 result;
+    result.x = m->col1.x * v.x + m->col2.x * v.y + m->col3.x * v.z + m->col4.x * v.w;
+    result.y = m->col1.y * v.x + m->col2.y * v.y + m->col3.y * v.z + m->col4.y * v.w;
+    result.z = m->col1.z * v.x + m->col2.z * v.y + m->col3.z * v.z + m->col4.z * v.w;
+    result.w = m->col1.w * v.x + m->col2.w * v.y + m->col3.w * v.z + m->col4.w * v.w;
+    return result;
+}
 
 // VECTORS
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b)
@@ -97,12 +111,23 @@ static inline void matf4x4_I(matf4x4* matrix)
     matrix->col4.w = 1.0f;
 }
 
+static inline void matf4x4_scale_set_uniform(matf4x4* m, float x, float y, float z)
+{
+    m->col1 = (vecf4){x,    0.0f, 0.0f, 0.0f};
+    m->col2 = (vecf4){0.0f, y,    0.0f, 0.0f};
+    m->col3 = (vecf4){0.0f, 0.0f, z,    0.0f};
+    m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
+}
+
 static inline void matf4x4_mul(const matf4x4* a, const matf4x4* b, matf4x4* result)
 {
+    matf4x4 m;
 
 }
 
+
 // DEBUG
+#define VECF4_PRINT_FORMAT "[%f, %f, %f, %f]\n"
 #define VECF3_PRINT_FORMAT "[%f, %f, %f]\n"
 #define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
 static void matf4x4_print(const matf4x4* matrix)
@@ -111,6 +136,11 @@ static void matf4x4_print(const matf4x4* matrix)
     fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->col1.y, matrix->col2.y, matrix->col3.y, matrix->col4.y); 
     fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->col1.z, matrix->col2.z, matrix->col3.z, matrix->col4.z); 
     fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->col1.w, matrix->col2.w, matrix->col3.w, matrix->col4.w); 
+    fflush(stdout);
+}
+static void vecf4_print(vecf4 vec)
+{
+    fprintf(stdout, VECF4_PRINT_FORMAT, vec.x, vec.y, vec.z, vec.w);
     fflush(stdout);
 }
 static void vecf3_print(vecf3 vec)
