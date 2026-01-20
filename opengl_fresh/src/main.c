@@ -123,9 +123,9 @@ int main(void)
     rotation.data[2][1] = up.z;
     rotation.data[3][1] = -vecf3_dot(up, camera.pos); 
 
-    rotation.data[0][2] = forward.x;
-    rotation.data[1][2] = forward.y;
-    rotation.data[2][2] = forward.z;
+    rotation.data[0][2] = -forward.x;
+    rotation.data[1][2] = -forward.y;
+    rotation.data[2][2] = -forward.z;
     rotation.data[3][2] = -vecf3_dot(forward, camera.pos); 
 
     shader_set_view(&rotation);
@@ -144,10 +144,10 @@ int main(void)
         glBindVertexArray(vao_triangle); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
            
-        matf4x4 right;
-        matf4x4_identity(&right);
-        matf4x4_translate_set(&right, 0.0f, -2.0f, -4.0f);
-        shader_set_transform(&right);
+        matf4x4 r;
+        matf4x4_identity(&r);
+        matf4x4_translate_set(&r, 0.0f, -2.0f, -4.0f);
+        shader_set_transform(&r);
         glBindVertexArray(vao_triangle);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
