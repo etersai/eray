@@ -28,7 +28,7 @@ typedef unsigned int cpu_side_id;
 typedef struct {
     GLuint VBO; 
     GLuint VAO; 
-} video_card_data; // not sure about this yet. 
+} gpu_mesh; 
 
 typedef struct {
     matf4x4 transform;
@@ -50,18 +50,13 @@ size_t quad_count;
 cpu_side_id id_pool_triangle;// (each time)++
 cpu_side_id id_pool_quad;
 
-video_card_data video_card_triangle;
-video_card_data video_card_quad; 
-
-video_card_data gpu_load_quad(const float* vert, size_t size);
-video_card_data gpu_load_triangle(const float* vertices, size_t size);
+gpu_mesh gpu_load_mesh(const float* vertices, size_t size);
 GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
 void shader_set_transform(const matf4x4* transform);
 void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
 
-GLuint  shader_program;
-
+GLuint shader_program;
 int main(void)
 {
     // Setup GLFW and OpenGL Context
@@ -85,21 +80,20 @@ int main(void)
         return 1;
     }    
 
-    float tri_vertices[] = { 
+    float triangle_verts[] = { 
         -0.5f, -0.5f, 0.0f,
          0.5f, -0.5f, 0.0f,
          0.0f,  0.5f, 0.0f
     };
 
-    float quad_verts[] = {
+    float quad_verts[] = { // USE GL_TRIANGLE_STRIP
        -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,  // bottom-left
         0.5f, -0.5f, 0.0f,    1.0f, 0.0f,  // bottom-right
        -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,  // top-left
         0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
     };
 
-    video_card_triangle = gpu_load_triangle(tri_vertices, sizeof(tri_vertices));
-    video_card_quad = gpu_load_quad(quad_verts, sizeof(quad_verts));
+    gpu_mesh mesh_triangle = gpu_load_mesh(triangle_verts, sizeof(triangle_verts)); 
     shader_program = create_program(vertex_shader_src, fragment_shader_src);
 
     
@@ -110,7 +104,7 @@ int main(void)
     matf4x4 scale; 
     matf4x4 rotate;
     matf4x4 translate; 
-    matf4x4_scale_set(&scale, 0.5, 1.0f, 1.0f); // TODO: change the namingsss // TODO: change the namingsss..
+    matf4x4_scale_set(&scale, 0.5, 1.0f, 1.0f); 
     matf4x4_rot_y(&rotate, 0.2f);
     matf4x4_translate_make(&translate, (vecf3){0.0f, 0.0f, -2.0f});
 
@@ -181,36 +175,11 @@ int main(void)
     return 0;
 }
 
-
-video_card_data gpu_load_quad(const float* vert, size_t size)
+gpu_mesh gpu_load_mesh(const float* vertices, size_t size)
 {
     GLuint VBO;
     GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, size, vert, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
-    // the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO,
-    // but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally
-    // don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0); 
-     
-    return (video_card_data){VBO, VAO};
-}
 
-video_card_data gpu_load_triangle(const float* vertices, size_t size)
-{   
-    GLuint VBO;
-    GLuint VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s),
@@ -229,8 +198,9 @@ video_card_data gpu_load_triangle(const float* vertices, size_t size)
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
     
-    return (video_card_data){VBO, VAO};
+    return (gpu_mesh){VBO, VAO};
 }
+
 
 GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src)
 {
