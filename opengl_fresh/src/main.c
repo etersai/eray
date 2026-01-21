@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <math.h>
 
 #include "lamath.h"
 #include "camerka.c"
@@ -30,7 +29,7 @@ typedef unsigned int cpu_side_id;
 typedef struct {
     GLuint VBO; 
     GLuint VAO; 
-} video_card_data; // gpu_mesh ??
+} video_card_data; // not sure about this yet. 
 
 typedef struct {
     matf4x4 transform;
@@ -61,54 +60,6 @@ GLuint create_program(const char* vertex_shader_src, const char* fragment_shader
 void shader_set_transform(const matf4x4* transform);
 void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
-
-// HIGH LEVEL MATH
-void make_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far)
-{
-    float f = 1.0f / tanf(fov * 0.5f * M_PI / 180.0f);
-
-    matf4x4 proj = {0};
-
-    proj.col1.x = f / aspect;
-    proj.col2.y = f;
-    proj.col3.z = -(far + near) / (far - near);
-    proj.col3.w = -1.0f;
-    proj.col4.z = -(2.0f * far * near) / (far - near);
-
-    *m = proj;
-}
-
-void make_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up)
-{ 
-    vecf3 f = vecf3_norm(vecf3_sub(center, eye));
-    vecf3 s = vecf3_norm(vecf3_cross(f, up));
-    vecf3 t = vecf3_cross(s, f);
-
-    lookat->col1.x = s.x;
-    lookat->col1.y = t.x;
-    lookat->col1.z = -f.x;
-    lookat->col1.w = 0.0f;
-    
-    lookat->col2.x = s.y; 
-    lookat->col2.y = t.y;
-    lookat->col2.z = -f.y;
-    lookat->col2.w = 0.0f;
-    
-    lookat->col3.x = s.z;
-    lookat->col3.y = t.z;
-    lookat->col3.z = -f.z;
-    lookat->col3.w = 0.0f;
-    
-    lookat->col4.x = 0.0f;
-    lookat->col4.y = 0.0f;
-    lookat->col4.z = 0.0f;
-    lookat->col4.w = 1.0f;
-
-    lookat->col4.x = -vecf3_dot(s, eye);
-    lookat->col4.y = -vecf3_dot(t, eye);
-    lookat->col4.z =  vecf3_dot(f, eye);
-    lookat->col4.w = 1.0f;
-}
 
 GLuint  shader_program;
 Camerka camera;
@@ -161,43 +112,59 @@ int main(void)
     matf4x4 scale; 
     matf4x4 rotate;
     matf4x4 translate; 
-    matf4x4_scale_uniform(&scale, 0.5, 1.0f, 1.0f); // TODO: change the namingsss.
-    matf4x4_translate_make(&translate, (vecf3){0.0f, 0.0f, -1.0f});
-    matf4x4_mul(&triangle.transform, &translate, &scale);
+    matf4x4_scale_set(&scale, 0.5, 1.0f, 1.0f); // TODO: change the namingsss // TODO: change the namingsss..
+    matf4x4_rot_y(&rotate, 0.2f);
+    matf4x4_translate_make(&translate, (vecf3){0.0f, 0.0f, -2.0f});
+
+    matf4x4 temp;
+    matf4x4_mul(&temp, &rotate, &scale);
+    matf4x4_mul(&triangle.transform, &translate, &temp);
+
     LOG_MATRIX(triangle.transform);
     // register
     triangle.id = id_pool_triangle;
     cpu_triangles[triangle_count] = triangle;
     id_pool_triangle++;
     triangle_count++;
-    log_print_n_flush("[TRIANGLE COUNT: %d]", triangle_count);
-    log_print_n_flush("[TRIANGLE NEXT ID: %d]", id_pool_triangle);
 
-    
-    
+    log_print_n_flush("[TRIANGLE COUNT: %d]\n", triangle_count);
+    log_print_n_flush("[CREATED TRIAGLE ID: %d]\n", id_pool_triangle-1);
+
     // camera setup
     matf4x4 projection;
     float camera_fov = 75.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
-    make_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
+    lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_projection(&projection);
-
     matf4x4 view;
     matf4x4_I(&view);
-    make_lookat_matrix(&view, (vecf3){0.0f, 0.0f, 0.0f}, (vecf3){0.0f, 0.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
+    lamath_lookat_matrix(&view, (vecf3){0.0f, 0.0f, 0.0f}, (vecf3){0.0f, 0.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     shader_set_view(&view);
 
-
     glUseProgram(shader_program);
+    float rotacja = 0.0f;
     while (!glfwWindowShouldClose(window)) {
 
         processInput(window);
+        rotacja += 0.01f;
 
         glClearColor(0.5f, 1.0f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // batch rendering.
         for (size_t i = 0; i < triangle_count; i++) {
+
+            matf4x4 scl; 
+            matf4x4 rot;
+            matf4x4 trans; 
+            matf4x4_scale_set(&scl, 1.0f, 1.0f, 1.0f); // TODO: change the namingsss
+            matf4x4_rot_x(&rot, rotacja);
+            matf4x4_translate_make(&trans, (vecf3){0.0f, 0.0f, -4.0f});
+
+            matf4x4 temp;
+            matf4x4_mul(&temp, &rot, &scl);
+            matf4x4_mul(&cpu_triangles[i].transform, &trans, &temp);
+
             shader_set_transform(&cpu_triangles[i].transform);
             glBindVertexArray(video_card_triangle.VAO);
             glDrawArrays(GL_TRIANGLES, 0, 3);

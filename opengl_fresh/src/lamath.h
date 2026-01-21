@@ -1,22 +1,25 @@
+#ifndef LA_MATH_H_
+#define LA_MATH_H_
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 
-#define eray_norm(value, min, max) (((value) - (min)) / ((max) - (min)))
-#define eray_lerp(norm, min, max) (((max) - (min)) * (norm) + (min))
-// MAP is the combianation of norm and lerp. (MAP ONE RANGE TO ANOTHER ONE)
-#define eray_min(a, b) ((a) < (b) ? (a) : (b))
-#define eray_max(a, b) ((a) > (b) ? (a) : (b))
-#define eray_clamp(val, lo, hi) (eray_min(eray_max((val), (lo)), (hi)))
-#define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
+#define la_norm(value, min, max) (((value) - (min)) / ((max) - (min)))
+#define la_lerp(norm, min, max) (((max) - (min)) * (norm) + (min))
+#define la_min(a, b) ((a) < (b) ? (a) : (b))
+#define la_max(a, b) ((a) > (b) ? (a) : (b))
+#define la_clamp(val, lo, hi) (la_min(la_max((val), (lo)), (hi)))
+// NOTE: MAP is the combianation of norm and lerp. (MAP ONE RANGE TO ANOTHER ONE)
+//#define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 
-#define expect(var) do {                                                \
-    if (!(var)) {                                                       \
-        fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n", \
-        __FILE__, __LINE__, #var);                                      \
-        abort();                                                        \
-    }                                                                   \
+#define la_expect(var) do {                                                \
+    if (!(var)) {                                                          \
+        fprintf(stderr, "Perma assert: %s:%d: assertion '%s' failed\n",    \
+        __FILE__, __LINE__, #var);                                         \
+        abort();                                                           \
+    }                                                                      \
 } while (0)
 
 #define la_unreachable() do {                                                  \
@@ -44,20 +47,18 @@ typedef struct {
     vecf4 col4;
 } matf4x4;
 
-typedef enum {
-    AXIS_X = 0,
-    AXIS_Y = 0,
-    AXIS_Z = 0,
-} axis_t;
-
 // DEBUG
 static void matf4x4_print(const matf4x4* matrix);
 static void vecf4_print(vecf4 vec);
 static void vecf3_printf(vecf3 vec);
+static void log_print_n_flush(const char* format, ...);
+static void log_print_beautify(const char* prefix, const char* format, ...);
 // CONVERSIONS
 static inline float rad_to_deg(float radians);
 static inline float deg_to_rad(float degrees);
 // COMMON
+static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far);
+static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up);
 static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v);
 // VECTORS
 static inline float vecf3_len(vecf3 vec);
@@ -74,9 +75,12 @@ static inline void matf4x4_rot_x(matf4x4* m, float angle);
 static inline void matf4x4_rot_y(matf4x4* m, float angle);
 static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
-static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z);
-static inline void matf4x4_scale_one_axis(matf4x4* m, float scale, axis_t axis);
+static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
 static inline void matf4x4_translate_make(matf4x4* m, vecf3 translate);
+
+/*
+** IMPLEMENTATION
+*/
 
 // CONVERSIONS
 static inline float rad_to_deg(float radians) { return 180.0f/M_PI*radians; }
@@ -91,6 +95,53 @@ static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v)
     result.z = m->col1.z * v.x + m->col2.z * v.y + m->col3.z * v.z + m->col4.z * v.w;
     result.w = m->col1.w * v.x + m->col2.w * v.y + m->col3.w * v.z + m->col4.w * v.w;
     return result;
+}
+
+static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far)
+{ // TODO: UNDERSTAND THIS!
+    float f = 1.0f / tanf(fov * 0.5f * M_PI / 180.0f);
+
+    matf4x4 proj = {0};
+
+    proj.col1.x = f / aspect;
+    proj.col2.y = f;
+    proj.col3.z = -(far + near) / (far - near);
+    proj.col3.w = -1.0f;
+    proj.col4.z = -(2.0f * far * near) / (far - near);
+
+    *m = proj;
+}
+
+static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up)
+{ 
+    vecf3 f = vecf3_norm(vecf3_sub(center, eye));
+    vecf3 s = vecf3_norm(vecf3_cross(f, up));
+    vecf3 t = vecf3_cross(s, f);
+
+    lookat->col1.x = s.x;
+    lookat->col1.y = t.x;
+    lookat->col1.z = -f.x;
+    lookat->col1.w = 0.0f;
+    
+    lookat->col2.x = s.y; 
+    lookat->col2.y = t.y;
+    lookat->col2.z = -f.y;
+    lookat->col2.w = 0.0f;
+    
+    lookat->col3.x = s.z;
+    lookat->col3.y = t.z;
+    lookat->col3.z = -f.z;
+    lookat->col3.w = 0.0f;
+    
+    lookat->col4.x = 0.0f;
+    lookat->col4.y = 0.0f;
+    lookat->col4.z = 0.0f;
+    lookat->col4.w = 1.0f;
+
+    lookat->col4.x = -vecf3_dot(s, eye);
+    lookat->col4.y = -vecf3_dot(t, eye);
+    lookat->col4.z =  vecf3_dot(f, eye);
+    lookat->col4.w = 1.0f;
 }
 
 // VECTORS
@@ -157,40 +208,12 @@ static inline void matf4x4_I(matf4x4* matrix)
     matrix->col4.w = 1.0f;
 }
 
-static inline void matf4x4_scale_uniform(matf4x4* m, float x, float y, float z)
+static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z)
 {
     m->col1 = (vecf4){x,    0.0f, 0.0f, 0.0f};
     m->col2 = (vecf4){0.0f, y,    0.0f, 0.0f};
     m->col3 = (vecf4){0.0f, 0.0f, z,    0.0f};
     m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
-}
-
-static inline void matf4x4_scale_one_axis(matf4x4* m, float scale, axis_t axis)
-{
-    if (axis == AXIS_X) {
-        m->col1 = (vecf4){scale,0.0f, 0.0f, 0.0f};
-        m->col2 = (vecf4){0.0f, 1.0f, 0.0f, 0.0f};
-        m->col3 = (vecf4){0.0f, 0.0f, 1.0f, 0.0f};
-        m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
-    }
-    else if (axis == AXIS_Y)
-    {
-        m->col1 = (vecf4){1.0f, 0.0f, 0.0f, 0.0f};
-        m->col2 = (vecf4){0.0f, scale, 0.0f, 0.0f};
-        m->col3 = (vecf4){0.0f, 0.0f, 1.0f, 0.0f};
-        m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
-    }
-    else if (axis == AXIS_Z)
-    {
-        m->col1 = (vecf4){1.0f, 0.0f, 0.0f, 0.0f};
-        m->col2 = (vecf4){0.0f, 1.0f, 0.0f, 0.0f};
-        m->col3 = (vecf4){0.0f, 0.0f, scale, 0.0f};
-        m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
-    }
-    else
-    {
-        la_unreachable();
-    }
 }
 
 
@@ -334,10 +357,10 @@ static void vecf3_print(vecf3 vec)
 #define LAMATH_LOG_MAX_PREFIX 64
 #define LOG_MATRIX(matrix) do { matf4x4_print(&(matrix)); } while(0)
 #define LOG_VEC(vector) do { vecf3_print((vector)); } while(0)
-void log_print_beautify(const char* prefix, const char* format, ...)
+static void log_print_beautify(const char* prefix, const char* format, ...)
 {
-    expect(prefix);
-    expect(format);
+    la_expect(prefix);
+    la_expect(format);
 
     int idx = 0;
     char buffer[LAMATH_LOG_MAX_PREFIX] = {0};
@@ -363,7 +386,7 @@ void log_print_beautify(const char* prefix, const char* format, ...)
     va_end(args);
 }
 
-void log_print_n_flush(const char* format, ...)
+static void log_print_n_flush(const char* format, ...)
 {
     FILE* out_target = stdout; 
     va_list args;
@@ -372,5 +395,4 @@ void log_print_n_flush(const char* format, ...)
     va_end(args);
     fflush(out_target);
 }
-
-
+#endif /* LA_MATH_H_ */
