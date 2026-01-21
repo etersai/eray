@@ -4,7 +4,8 @@ main: generate_bin src/main.c
 
 generate_bin:
 	@rm -rf bin
-	@mkdir bin
+	@mkdir -p bin/assets
+	@cp assets/* bin/assets/
 
 clean:
 	@rm -rf bin

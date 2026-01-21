@@ -36,7 +36,9 @@ void shader_set_model(const matf4x4* model);
 void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
 
+// globals
 GLuint shader_program;
+
 int main(void)
 {
     // Setup GLFW and OpenGL Context
