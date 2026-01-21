@@ -85,6 +85,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    stbi_set_flip_vertically_on_load(true);  
     unsigned char *data = stbi_load(asset_grass_texture_path, &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -99,6 +100,7 @@ int main(void)
         abort(); // abort for now
     }
     stbi_image_free(data);
+
 
     // TODO: Do some fucking basic error checking.
     gpu_mesh mesh_quad = gpu_load_mesh_quad(quad_verts, sizeof(quad_verts));
