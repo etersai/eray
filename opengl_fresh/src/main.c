@@ -8,7 +8,6 @@
 #include <assert.h>
 
 #include "lamath.h"
-#include "camerka.c"
 #include "shaders.c"
 
 /////////////////////////////////////////////
@@ -62,7 +61,6 @@ void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
 
 GLuint  shader_program;
-Camerka camera;
 
 int main(void)
 {

@@ -14,5 +14,3 @@ const char* fragment_shader_src = "#version 460 core\n"
     "{\n"
     "   final_color = vec4(1.0f, 0.5f, 0.8f, 1.0f);\n"
     "}\0";
-
-

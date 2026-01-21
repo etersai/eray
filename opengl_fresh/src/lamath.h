@@ -81,7 +81,6 @@ static inline void matf4x4_translate_make(matf4x4* m, vecf3 translate);
 /*
 ** IMPLEMENTATION
 */
-
 // CONVERSIONS
 static inline float rad_to_deg(float radians) { return 180.0f/M_PI*radians; }
 static inline float deg_to_rad(float degrees) { return M_PI/180.0f*degrees; }
