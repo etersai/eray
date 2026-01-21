@@ -90,22 +90,24 @@ int main(void)
     matf4x4 transform = matf4x4_I_give();
     matf4x4 scale = matf4x4_I_give();
     matf4x4 rotate = matf4x4_I_give();
-    matf4x4 translate = matf4x4_I_give();
-
     matf4x4_scale_set(&scale, 5.0f, 5.0f, 1.0f);
+    matf4x4_rot_x(&rotate, deg_to_rad(-45.0f));
+    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -5.0f}); 
+    matf4x4 temp = matf4x4_I_give();
+    matf4x4_mul(&temp, &rotate, &scale);
+    matf4x4_mul(&transform, &translate, &temp);
+    shader_set_model(&transform);
 
 
 
     glUseProgram(shader_program);
+    glClearColor(0.32f, 0.32f, 0.32f, 1.0f);
     float rotacja = 0.0f;
     while (!glfwWindowShouldClose(window)) {
-
         processInput(window);
         rotacja += 0.01f;
 
-        glClearColor(0.5f, 1.0f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
           
         glfwSwapBuffers(window);
         glfwPollEvents();

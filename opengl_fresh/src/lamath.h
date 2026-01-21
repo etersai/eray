@@ -77,7 +77,7 @@ static inline void matf4x4_rot_y(matf4x4* m, float angle);
 static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
-static inline void matf4x4_translate_make(matf4x4* m, vecf3 translate);
+static inline matf4x4 matf4x4_translate_give(vecf3 translate);
 
 /*
 ** IMPLEMENTATION
@@ -225,10 +225,12 @@ static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z)
 }
 
 
-static inline void matf4x4_translate_make(matf4x4* m, vecf3 translate)
+static inline matf4x4 matf4x4_translate_give(vecf3 translate)
 {
-    matf4x4_I(m);
-    m->col4 = (vecf4){translate.x, translate.y, translate.z, 1.0f};
+    return (matf4x4){.col1.x = 1.0f, .col2.x = 0.0f, .col3.x = 0.0f, .col4.x = translate.x,
+                     .col1.y = 0.0f, .col2.y = 1.0f, .col3.y = 0.0f, .col4.y = translate.y,
+                     .col1.z = 0.0f, .col2.z = 0.0f, .col3.z = 1.0f, .col4.z = translate.z,
+                     .col1.w = 0.0f, .col2.w = 0.0f, .col3.w = 0.0f, .col4.w = 1.0f,};
 }
 
 static inline void matf4x4_rot_x(matf4x4* m, float angle)
