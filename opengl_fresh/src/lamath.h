@@ -52,7 +52,7 @@ static void matf4x4_print(const matf4x4* matrix);
 static void vecf4_print(vecf4 vec);
 static void vecf3_printf(vecf3 vec);
 static void log_print_n_flush(const char* format, ...);
-static void log_print_beautify(const char* prefix, const char* format, ...);
+static void log_print_prefix(const char* prefix, const char* format, ...);
 // CONVERSIONS
 static inline float rad_to_deg(float radians);
 static inline float deg_to_rad(float degrees);
@@ -367,7 +367,7 @@ static void vecf3_print(vecf3 vec)
 #define LAMATH_LOG_MAX_PREFIX 64
 #define LOG_MATRIX(matrix) do { matf4x4_print(&(matrix)); } while(0)
 #define LOG_VEC(vector) do { vecf3_print((vector)); } while(0)
-static void log_print_beautify(const char* prefix, const char* format, ...)
+static void log_print_prefix(const char* prefix, const char* format, ...)
 {
     la_expect(prefix);
     la_expect(format);

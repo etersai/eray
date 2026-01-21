@@ -1,5 +1,5 @@
-main: generate_bin src/main.c
-	cc -Wall -Wextra src/main.c src/glad.c -I./include -L./lib -o bin/prog \
+main: generate_bin
+	cc -Wall -Wextra src/main.c src/platform.c src/glad.c -I./include -L./lib -o bin/prog \
 	   -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm 
 
 generate_bin:
