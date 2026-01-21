@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "STB/stb_image.h" 
 #include "lamath.h"
 #include "shaders.c"
 
@@ -91,7 +93,7 @@ int main(void)
     matf4x4 scale = matf4x4_I_give();
     matf4x4 rotate = matf4x4_I_give();
     matf4x4_scale_set(&scale, 5.0f, 5.0f, 1.0f);
-    matf4x4_rot_x(&rotate, deg_to_rad(-45.0f));
+    matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
     matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -5.0f}); 
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
@@ -99,15 +101,14 @@ int main(void)
     shader_set_model(&transform);
 
 
-
     glUseProgram(shader_program);
     glClearColor(0.32f, 0.32f, 0.32f, 1.0f);
-    float rotacja = 0.0f;
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
-        rotacja += 0.01f;
 
         glClear(GL_COLOR_BUFFER_BIT);
+        glBindVertexArray(mesh_quad.VAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
           
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -120,6 +121,33 @@ int main(void)
 
     glfwTerminate();
     return 0;
+}
+
+gpu_mesh gpu_load_mesh_quad(const float* vertices, size_t size)
+{
+    GLuint VBO;
+    GLuint VAO;
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
+    // and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
+    // the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO,
+    // but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally
+    // don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    glBindVertexArray(0); 
+    
+    return (gpu_mesh){VBO, VAO};
+
 }
 
 gpu_mesh gpu_load_mesh(const float* vertices, size_t size)
