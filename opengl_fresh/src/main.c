@@ -130,7 +130,7 @@ int main(void)
 
     gpu_mesh_indexed mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     log_print_n_flush("%d\n", mesh_quad.index_count);
-    shader_program = create_program(vertex_shader_src, fragment_shader_src);
+    shader_program = create_program(vertex_shader_instance_src, fragment_shader_src);
 
     // camera setup
     matf4x4 projection;
@@ -140,7 +140,7 @@ int main(void)
     shader_set_projection(&projection);
     matf4x4 view;
     matf4x4_I(&view);
-    lamath_lookat_matrix(&view, (vecf3){0.0f, 0.0f, 0.0f}, (vecf3){0.0f, 0.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
+    lamath_lookat_matrix(&view, (vecf3){0.0f, 3.0f, 10.0f}, (vecf3){0.0f, 3.0f, 9.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     shader_set_view(&view);
 
     // prepare quad transform
@@ -148,8 +148,8 @@ int main(void)
     matf4x4 scale = matf4x4_I_give();
     matf4x4 rotate = matf4x4_I_give();
     matf4x4_scale_set(&scale, 1.0f, 1.0f, 1.0f);
-    //matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
-    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -1.0f}); 
+    matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
+    matf4x4 translate = matf4x4_I_give();
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
@@ -165,17 +165,33 @@ int main(void)
             curr++;
         }
     }
-
-
+    
+    // send to gpu.
     glUseProgram(shader_program);
+    GLint shader_loc = glGetUniformLocation(shader_program, "offsets");
+    glUniform3fv(shader_loc, 400, &translations[0].x);
+
     glClearColor(0.32f, 0.32f, 0.32f, 1.0f);
+    float rotacja = 0.0f;
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
+        rotacja += 1.0f;
+
+        
+        matf4x4 rot = matf4x4_I_give();
+        matf4x4 rot2 = matf4x4_I_give();
+        matf4x4_rot_y(&rot, deg_to_rad(-rotacja));
+        matf4x4_rot_z(&rot2, deg_to_rad(rotacja));
+        matf4x4 res = matf4x4_I_give();
+        matf4x4_mul(&res, &rot2, &rot);
+        shader_set_model(&rot);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(mesh_quad.VAO);
-        glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
+        glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 400);
+        //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
+       // glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
           
         glfwSwapBuffers(window);
         glfwPollEvents();
