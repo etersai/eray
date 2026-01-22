@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <assert.h>
 
+/* internal error checking */
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);
 
@@ -22,6 +23,14 @@ void shader_uniform_set_by_name_matrix4x4(ShaderProgram program, const char* nam
     GLint loc = glGetUniformLocation(program.id, name);
     if (loc == -1) { assert(0 && "[SHADER]: Uniform name probably invalid."); }
     glUniformMatrix4fv(loc, 1, GL_FALSE, matrix);
+}
+
+uniform shader_get_uniform_location(ShaderProgram program, const char* name)
+{
+    glUseProgram(program.id);
+    GLint loc = glGetUniformLocation(program.id, name);
+    if (loc == -1) { assert(0 && "[SHADER]: Uniform name probably invalid."); }
+    return loc;
 }
 
 void shader_uniform_set_matrix4x4(ShaderProgram program, uniform uniform, const float* matrix)

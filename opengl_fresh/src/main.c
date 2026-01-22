@@ -61,6 +61,8 @@ gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_si
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 
+VoxelRenderer vox;
+
 int main(void)
 {
     // Setup GLFW and OpenGL Context
@@ -84,8 +86,8 @@ int main(void)
         return 1;
     }    
 
-
     /* TEXTURE START */
+    stbi_set_flip_vertically_on_load(true);  
     const char* asset_grass_texture_path = "assets/grass.jpg";
     GLuint texture;
     int width, height, nrChannels;
@@ -96,7 +98,6 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    stbi_set_flip_vertically_on_load(true);  
     unsigned char *data = stbi_load(asset_grass_texture_path, &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -113,19 +114,22 @@ int main(void)
     stbi_image_free(data);
     /* TEXTURE END */
 
-    gpu_mesh_indexed mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
-    shader_program = create_program(vertex_shader_instance_src, fragment_shader_src);
+    vox.instance_shader.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
+    vox.instance_shader.model = shader_get_uniform_location(vox.instance_shader.program, "model");
+    vox.instance_shader.view = shader_get_uniform_location(vox.instance_shader.program, "view");
+    vox.instance_shader.projection = shader_get_uniform_location(vox.instance_shader.program, "projection");
+    vox.instance_shader.offsets = shader_get_uniform_location(vox.instance_shader.program, "offsets");
+    vox.mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
 
     // camera setup
+    matf4x4 view;
     matf4x4 projection;
     float camera_fov = 60.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
-    lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
-    shader_set_projection(&projection);
-    matf4x4 view;
-    matf4x4_I(&view);
     lamath_lookat_matrix(&view, (vecf3){0.0f, 1.0f, 0.0f}, (vecf3){0.0f, 1.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
-    shader_set_view(&view);
+    lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
+    shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.projection, &projection.col1.x);
+    shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -137,7 +141,7 @@ int main(void)
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
-    shader_set_model(&transform);
+    shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.model, &transform.col1.x);
 
     // precalculate planes positionsss.
     const int area_size = 10;
@@ -151,9 +155,8 @@ int main(void)
     }
     
     // send to gpu.
-    glUseProgram(shader_program);
-    GLint shader_loc = glGetUniformLocation(shader_program, "offsets");
-    glUniform3fv(shader_loc, 400, &translations[0].x);
+    glUseProgram(vox.instance_shader.program.id);
+    glUniform3fv(vox.instance_shader.offsets, 400, &translations[0].x);
 
     glClearColor(0.32f, 0.32f, 0.32f, 1.0f);
     float rotacja = 0.0f;
@@ -171,8 +174,8 @@ int main(void)
 
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glBindVertexArray(mesh_quad.VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 400);
+        glBindVertexArray(vox.mesh_quad.VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 400);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
        // glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
           
