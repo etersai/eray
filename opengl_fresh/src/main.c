@@ -11,7 +11,7 @@
 #include "lamath.h"
 #include "shader.h"
 #include "vertex_data.c"
-#include "shaders.c"
+#include "shaders_src.c"
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
@@ -124,7 +124,7 @@ int main(void)
     // camera setup
     matf4x4 view;
     matf4x4 projection;
-    float camera_fov = 60.0f;
+    float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_lookat_matrix(&view, (vecf3){0.0f, 1.0f, 0.0f}, (vecf3){0.0f, 1.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
@@ -154,30 +154,26 @@ int main(void)
         }
     }
     
-    // send to gpu.
+    // send to gpu. // hackyy
     glUseProgram(vox.instance_shader.program.id);
     glUniform3fv(vox.instance_shader.offsets, 400, &translations[0].x);
 
-    glClearColor(0.32f, 0.32f, 0.32f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     float rotacja = 0.0f;
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
         rotacja += 1.0f;
 
-        // matf4x4 rot = matf4x4_I_give();
-        // matf4x4 rot2 = matf4x4_I_give();
-        // matf4x4_rot_y(&rot, deg_to_rad(-rotacja));
-        // matf4x4_rot_z(&rot2, deg_to_rad(rotacja));
-        // matf4x4 res = matf4x4_I_give();
-        // matf4x4_mul(&res, &rot2, &rot);
-        // shader_set_model(&rot);
+        matf4x4 rot = matf4x4_I_give();
+        matf4x4_rot_y(&rot, deg_to_rad(-rotacja));
+        shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.model, &rot.col1.x);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 400);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
-       // glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
           
         glfwSwapBuffers(window);
         glfwPollEvents();
