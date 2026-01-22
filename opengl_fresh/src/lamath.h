@@ -11,6 +11,8 @@
 #define la_min(a, b) ((a) < (b) ? (a) : (b))
 #define la_max(a, b) ((a) > (b) ? (a) : (b))
 #define la_clamp(val, lo, hi) (la_min(la_max((val), (lo)), (hi)))
+// this trick is amazing! flipped_value = max + min - original_value
+//TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
 // NOTE: MAP is the combianation of norm and lerp. (MAP ONE RANGE TO ANOTHER ONE)
 //#define arrlen(arr) (sizeof(arr) / sizeof(arr[0]))
 

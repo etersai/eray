@@ -9,6 +9,7 @@
 
 #include "platform.h"
 #include "lamath.h"
+#include "shader.h"
 #include "shaders.c"
 
 /////////////////////////////////////////////
@@ -24,6 +25,16 @@ void processInput(GLFWwindow *window)
 }
 //////////////////////////////////////////
 
+typedef GLint uniform;
+
+typedef struct {
+    ShaderProgram program;
+    uniform model;
+    uniform view;
+    uniform projection;
+    uniform offsets;
+} ShaderInstanced;
+
 typedef struct {
     GLuint VAO; 
     GLuint VBO; 
@@ -37,18 +48,19 @@ typedef struct {
     GLsizei index_count;
 } gpu_mesh_indexed;
 
-// this trick is amazing! flipped_value = max + min - original_value
-//TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+typedef struct {
+    ShaderInstanced instance_shader;
+    gpu_mesh_indexed mesh_quad;
+} VoxelRenderer;
 
 gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
+
 GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
 void shader_set_model(const matf4x4* model);
 void shader_set_view(const matf4x4* view);
 void shader_set_projection(const matf4x4* projection);
 
-// globals
-GLuint shader_program;
 
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
@@ -102,6 +114,8 @@ int main(void)
     //     0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
     // };
 
+
+    /* TEXTURE START */
     const char* asset_grass_texture_path = "assets/grass.jpg";
     GLuint texture;
     int width, height, nrChannels;
@@ -127,20 +141,20 @@ int main(void)
         abort(); // abort for now
     }
     stbi_image_free(data);
+    /* TEXTURE END */
 
     gpu_mesh_indexed mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
-    log_print_n_flush("%d\n", mesh_quad.index_count);
     shader_program = create_program(vertex_shader_instance_src, fragment_shader_src);
 
     // camera setup
     matf4x4 projection;
-    float camera_fov = 90.0f;
+    float camera_fov = 60.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_projection(&projection);
     matf4x4 view;
     matf4x4_I(&view);
-    lamath_lookat_matrix(&view, (vecf3){0.0f, 3.0f, 10.0f}, (vecf3){0.0f, 3.0f, 9.0f}, (vecf3){0.0f, 1.0f, 0.0f});
+    lamath_lookat_matrix(&view, (vecf3){0.0f, 1.0f, 0.0f}, (vecf3){0.0f, 1.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     shader_set_view(&view);
 
     // prepare quad transform
@@ -177,14 +191,13 @@ int main(void)
         processInput(window);
         rotacja += 1.0f;
 
-        
-        matf4x4 rot = matf4x4_I_give();
-        matf4x4 rot2 = matf4x4_I_give();
-        matf4x4_rot_y(&rot, deg_to_rad(-rotacja));
-        matf4x4_rot_z(&rot2, deg_to_rad(rotacja));
-        matf4x4 res = matf4x4_I_give();
-        matf4x4_mul(&res, &rot2, &rot);
-        shader_set_model(&rot);
+        // matf4x4 rot = matf4x4_I_give();
+        // matf4x4 rot2 = matf4x4_I_give();
+        // matf4x4_rot_y(&rot, deg_to_rad(-rotacja));
+        // matf4x4_rot_z(&rot2, deg_to_rad(rotacja));
+        // matf4x4 res = matf4x4_I_give();
+        // matf4x4_mul(&res, &rot2, &rot);
+        // shader_set_model(&rot);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -261,32 +274,6 @@ gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_si
     glBindVertexArray(0); 
     
     return (gpu_mesh_simple){VAO, VBO, vertices_size/(sizeof(float)*3)};
-}
-
-
-GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src)
-{
-    // PREPARE PROGRAM
-    unsigned int vertex_shader;
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_src, NULL);
-    glCompileShader(vertex_shader);
-
-    unsigned int fragment_shader;
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_src, NULL);
-    glCompileShader(fragment_shader);
-
-    unsigned int shader_program;
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-    
-    return shader_program;
 }
 
 void shader_set_model(const matf4x4* model)
