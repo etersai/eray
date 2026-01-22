@@ -16,6 +16,20 @@ inline void shader_bind(ShaderProgram program)
     glUseProgram(program.id);
 }
 
+void shader_uniform_set_by_name_matrix4x4(ShaderProgram program, const char* name, const float* matrix)
+{
+    glUseProgram(program.id); 
+    GLint loc = glGetUniformLocation(program.id, name);
+    if (loc == -1) { assert(0 && "[SHADER]: Uniform name probably invalid."); }
+    glUniformMatrix4fv(loc, 1, GL_FALSE, matrix);
+}
+
+void shader_uniform_set_matrix4x4(ShaderProgram program, uniform uniform, const float* matrix)
+{
+    glUseProgram(program.id);
+    glUniformMatrix4fv(uniform, 1, GL_FALSE, matrix);
+}
+
 ShaderProgram shader_create_from_memory(const char* vertex_shader_src, const char* fragment_shader_src)
 {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);

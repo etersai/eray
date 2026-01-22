@@ -10,6 +10,7 @@
 #include "platform.h"
 #include "lamath.h"
 #include "shader.h"
+#include "vertex_data.c"
 #include "shaders.c"
 
 /////////////////////////////////////////////
@@ -56,12 +57,6 @@ typedef struct {
 gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
 
-GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
-void shader_set_model(const matf4x4* model);
-void shader_set_view(const matf4x4* view);
-void shader_set_projection(const matf4x4* projection);
-
-
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
@@ -88,31 +83,6 @@ int main(void)
         fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
     }    
-
-    float triangle_verts[] = { 
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
-    };
-
-    float quad_verts[] = {
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // P1
-         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // P2
-         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // P3
-        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f, // P4
-    };
-
-    unsigned int quad_indices[] = {
-        0, 1, 2,
-        2, 3, 0,
-    };
-
-    // float quad_verts[] = { // USE GL_TRIANGLE_STRIP
-    //    -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,  // bottom-left
-    //     0.5f, -0.5f, 0.0f,    1.0f, 0.0f,  // bottom-right
-    //    -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,  // top-left
-    //     0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
-    // };
 
 
     /* TEXTURE START */
@@ -274,25 +244,4 @@ gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_si
     glBindVertexArray(0); 
     
     return (gpu_mesh_simple){VAO, VBO, vertices_size/(sizeof(float)*3)};
-}
-
-void shader_set_model(const matf4x4* model)
-{
-    glUseProgram(shader_program);
-    GLint loc = glGetUniformLocation(shader_program, "model");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &model->col1.x);
-}
-
-void shader_set_projection(const matf4x4* projection)
-{
-    glUseProgram(shader_program);
-    GLint loc = glGetUniformLocation(shader_program, "projection");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &projection->col1.x);
-}
-
-void shader_set_view(const matf4x4* view)
-{
-    glUseProgram(shader_program);
-    GLint loc = glGetUniformLocation(shader_program, "view");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &view->col1.x);
 }
