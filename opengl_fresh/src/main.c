@@ -25,12 +25,23 @@ void processInput(GLFWwindow *window)
 //////////////////////////////////////////
 
 typedef struct {
-    GLuint VBO; 
     GLuint VAO; 
-} gpu_mesh;                 // this trick is amazing! flipped_value = max + min - original_value
+    GLuint VBO; 
+    GLsizei vertex_count;
+} gpu_mesh_simple;
+
+typedef struct {
+    GLuint VAO; 
+    GLuint VBO; 
+    GLuint EBO;
+    GLsizei index_count;
+} gpu_mesh_indexed;
+
+// this trick is amazing! flipped_value = max + min - original_value
 //TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
-gpu_mesh gpu_load_mesh_triangle(const float* vertices, size_t size);
-gpu_mesh gpu_load_mesh_quad(const float* vertices, size_t size);
+
+gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
+gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
 GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
 void shader_set_model(const matf4x4* model);
 void shader_set_view(const matf4x4* view);
@@ -38,6 +49,10 @@ void shader_set_projection(const matf4x4* projection);
 
 // globals
 GLuint shader_program;
+
+// VERY IMPORTANT TODOS //
+// TODO: ADD ERROR CHECKS FOR GL STUFF.
+// TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 
 int main(void)
 {
@@ -68,12 +83,24 @@ int main(void)
          0.0f,  0.5f, 0.0f
     };
 
-    float quad_verts[] = { // USE GL_TRIANGLE_STRIP
-       -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,  // bottom-left
-        0.5f, -0.5f, 0.0f,    1.0f, 0.0f,  // bottom-right
-       -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,  // top-left
-        0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
+    float quad_verts[] = {
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f,
     };
+
+    unsigned int quad_indices[] = {
+        0, 1, 2,
+        2, 3, 0,
+    };
+
+    // float quad_verts[] = { // USE GL_TRIANGLE_STRIP
+    //    -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,  // bottom-left
+    //     0.5f, -0.5f, 0.0f,    1.0f, 0.0f,  // bottom-right
+    //    -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,  // top-left
+    //     0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
+    // };
 
     const char* asset_grass_texture_path = "assets/grass.jpg";
     GLuint texture;
@@ -101,9 +128,8 @@ int main(void)
     }
     stbi_image_free(data);
 
-
-    // TODO: Do some fucking basic error checking.
-    gpu_mesh mesh_quad = gpu_load_mesh_quad(quad_verts, sizeof(quad_verts));
+    gpu_mesh_indexed mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
+    log_print_n_flush("%d\n", mesh_quad.index_count);
     shader_program = create_program(vertex_shader_src, fragment_shader_src);
 
     // camera setup
@@ -117,13 +143,13 @@ int main(void)
     lamath_lookat_matrix(&view, (vecf3){0.0f, 0.0f, 0.0f}, (vecf3){0.0f, 0.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     shader_set_view(&view);
 
-    // prepare cube transform
+    // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
     matf4x4 scale = matf4x4_I_give();
     matf4x4 rotate = matf4x4_I_give();
-    matf4x4_scale_set(&scale, 5.0f, 5.0f, 1.0f);
-    matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
-    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, -1.0f, -5.0f}); 
+    matf4x4_scale_set(&scale, 4.0f, 4.0f, 1.0f);
+    //matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
+    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -5.0f}); 
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
@@ -137,7 +163,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(mesh_quad.VAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
           
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -152,36 +178,38 @@ int main(void)
     return 0;
 }
 
-gpu_mesh gpu_load_mesh_quad(const float* vertices, size_t size)
+gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {
-    GLuint VBO;
     GLuint VAO;
+    GLuint VBO;
+    GLuint EBO;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s),
     // and then configure vertex attributes(s).
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
-    // the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO,
-    // but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally
-    // don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0); 
-    
-    return (gpu_mesh){VBO, VAO};
 
+    // this is unnecesary but for now i leave it.
+    glBindVertexArray(0); 
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return (gpu_mesh_indexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
 
-gpu_mesh gpu_load_mesh_triangle(const float* vertices, size_t size)
+gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size)
 {
     GLuint VBO;
     GLuint VAO;
@@ -192,7 +220,7 @@ gpu_mesh gpu_load_mesh_triangle(const float* vertices, size_t size)
     // and then configure vertex attributes(s).
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
@@ -204,7 +232,7 @@ gpu_mesh gpu_load_mesh_triangle(const float* vertices, size_t size)
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
     
-    return (gpu_mesh){VBO, VAO};
+    return (gpu_mesh_simple){VAO, VBO, vertices_size/(sizeof(float)*3)};
 }
 
 
