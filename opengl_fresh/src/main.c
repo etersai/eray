@@ -27,9 +27,9 @@ void processInput(GLFWwindow *window)
 typedef struct {
     GLuint VBO; 
     GLuint VAO; 
-} gpu_mesh;                   // this trick is amazing! 
+} gpu_mesh;                 // this trick is amazing! flipped_value = max + min - original_value
 //TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
-gpu_mesh gpu_load_mesh(const float* vertices, size_t size);
+gpu_mesh gpu_load_mesh_triangle(const float* vertices, size_t size);
 gpu_mesh gpu_load_mesh_quad(const float* vertices, size_t size);
 GLuint create_program(const char* vertex_shader_src, const char* fragment_shader_src);
 void shader_set_model(const matf4x4* model);
@@ -108,7 +108,7 @@ int main(void)
 
     // camera setup
     matf4x4 projection;
-    float camera_fov = 75.0f;
+    float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_projection(&projection);
@@ -122,8 +122,8 @@ int main(void)
     matf4x4 scale = matf4x4_I_give();
     matf4x4 rotate = matf4x4_I_give();
     matf4x4_scale_set(&scale, 5.0f, 5.0f, 1.0f);
-    //matf4x4_rot_x(&rotate, deg_to_rad(-45.0f));
-    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -5.0f}); 
+    matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
+    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, -1.0f, -5.0f}); 
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
@@ -181,7 +181,7 @@ gpu_mesh gpu_load_mesh_quad(const float* vertices, size_t size)
 
 }
 
-gpu_mesh gpu_load_mesh(const float* vertices, size_t size)
+gpu_mesh gpu_load_mesh_triangle(const float* vertices, size_t size)
 {
     GLuint VBO;
     GLuint VAO;
@@ -253,5 +253,3 @@ void shader_set_view(const matf4x4* view)
     GLint loc = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(loc, 1, GL_FALSE, &view->col1.x);
 }
-
-    
