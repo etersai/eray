@@ -11,6 +11,18 @@ const char* vertex_shader_src = "#version 460 core\n"
     "   TexCoord = aTexCoord;\n"
     "}\0";
 
+const char* vertex_shader_instance_src = "#version 460 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "uniform vec2 offsets[400];\n"
+    "{\n"
+    "   gl_Position = projection * view * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   TexCoord = aTexCoord;\n"
+    "}\0";
+
 const char* fragment_shader_src = "#version 460 core\n"
     "out vec4 final_color;\n"
     "in vec2 TexCoord;\n"

@@ -84,10 +84,10 @@ int main(void)
     };
 
     float quad_verts[] = {
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,
-         0.5f, -0.5f, 0.0f,   1.0f, 0.0f,
-         0.5f,  0.5f, 0.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f,
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // P1
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // P2
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // P3
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f, // P4
     };
 
     unsigned int quad_indices[] = {
@@ -147,13 +147,25 @@ int main(void)
     matf4x4 transform = matf4x4_I_give();
     matf4x4 scale = matf4x4_I_give();
     matf4x4 rotate = matf4x4_I_give();
-    matf4x4_scale_set(&scale, 4.0f, 4.0f, 1.0f);
+    matf4x4_scale_set(&scale, 1.0f, 1.0f, 1.0f);
     //matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
-    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -5.0f}); 
+    matf4x4 translate = matf4x4_translate_give((vecf3){0.0f, 0.0f, -1.0f}); 
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
     shader_set_model(&transform);
+
+    // precalculate planes positionsss.
+    const int area_size = 10;
+    vecf3 translations[400];
+    int curr = 0;
+    for (int z = -area_size; z < area_size; z++) {
+        for (int x = -area_size; x < area_size; x++) {
+            translations[curr] = (vecf3){(float)x+0.5f, 0.0f, (float)z+0.5f};
+            curr++;
+        }
+    }
+
 
     glUseProgram(shader_program);
     glClearColor(0.32f, 0.32f, 0.32f, 1.0f);
