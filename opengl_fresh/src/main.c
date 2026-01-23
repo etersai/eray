@@ -20,6 +20,11 @@
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
 
+bool move_w;
+bool move_s;
+bool move_a;
+bool move_d;
+
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
 const unsigned int SCR_WIDTH = 1280; // 16:9
@@ -30,22 +35,12 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        log_print_n_flush("W\n");
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        log_print_n_flush("S\n");
-    }
+    // hackyy
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { move_w = true; }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { move_s = true; }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
     
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        log_print_n_flush("A\n");
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        log_print_n_flush("D\n");
-    }
 }
 //////////////////////////////////////////
 
@@ -185,6 +180,9 @@ int main(void)
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    vecf3 playa_pos = {0.0f, 0.0f, 0.0f};
+    vecf3 playa_vel = {0.0f, 0.0f, 0.0f};
+
     unsigned int frames = 0;
     double delta_time;
     double curr_time;
@@ -204,15 +202,24 @@ int main(void)
 
         processInput(window);
 
+        if (move_w) { log_print_n_flush("W\n"); }
+        if (move_s) { log_print_n_flush("S\n"); }
+        if (move_a) { log_print_n_flush("A\n"); }
+        if (move_d) { log_print_n_flush("D\n"); }
+
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
-          
+
         glfwSwapBuffers(window);
         glfwPollEvents();
+        move_w = false;
+        move_s = false;
+        move_a = false;
+        move_d = false;
     }
     
    // optional 
