@@ -13,6 +13,10 @@
 #include "vertex_data.c"
 #include "shaders_src.c"
 
+// VERY IMPORTANT TODOS //
+// TODO: ADD ERROR CHECKS FOR GL STUFF.
+// TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
+
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
 const unsigned int SCR_WIDTH = 1280; // 16:9
@@ -56,10 +60,6 @@ typedef struct {
 
 gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
-
-// VERY IMPORTANT TODOS //
-// TODO: ADD ERROR CHECKS FOR GL STUFF.
-// TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 
 VoxelRenderer vox;
 
