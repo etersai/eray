@@ -144,8 +144,8 @@ int main(void)
     shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.model, &transform.col1.x);
 
     // precalculate planes positionsss.
-    const int area_size = 10;
-    vecf3 translations[400];
+    const int area_size = 20;
+    vecf3 translations[1600];
     int curr = 0;
     for (int z = -area_size; z < area_size; z++) {
         for (int x = -area_size; x < area_size; x++) {
@@ -156,22 +156,16 @@ int main(void)
     
     // send to gpu. // hackyy
     glUseProgram(vox.instance_shader.program.id);
-    glUniform3fv(vox.instance_shader.offsets, 400, &translations[0].x);
+    glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    float rotacja = 0.0f;
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
-        rotacja += 1.0f;
-
-        matf4x4 rot = matf4x4_I_give();
-        matf4x4_rot_y(&rot, deg_to_rad(-rotacja));
-        shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.model, &rot.col1.x);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vox.mesh_quad.VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 400);
+        glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
           
