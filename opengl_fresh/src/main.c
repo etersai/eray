@@ -173,6 +173,7 @@ int main(void)
     glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
     unsigned int frames = 0;
     double delta_time;
     double curr_time;
@@ -185,7 +186,7 @@ int main(void)
 
         frames++;
         if (curr_time - prev_frame_time >= 1.0) {
-            log_print_n_flush("[%d]\n", frames);
+            log_print_n_flush("[FPS: %d]\n", frames);
             frames = 0;
             prev_frame_time = curr_time;
         }
