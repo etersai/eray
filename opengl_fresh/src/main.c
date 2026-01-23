@@ -128,8 +128,8 @@ int main(void)
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_lookat_matrix(&view, (vecf3){0.0f, 1.0f, 0.0f}, (vecf3){0.0f, 1.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
-    shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.projection, &projection.col1.x);
-    shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
+    shader_set_mat4(vox.instance_shader.program, vox.instance_shader.projection, &projection.col1.x);
+    shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -141,7 +141,7 @@ int main(void)
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
-    shader_uniform_set_matrix4x4(vox.instance_shader.program, vox.instance_shader.model, &transform.col1.x);
+    shader_set_mat4(vox.instance_shader.program, vox.instance_shader.model, &transform.col1.x);
 
     // precalculate planes positionsss.
     const int area_size = 20;

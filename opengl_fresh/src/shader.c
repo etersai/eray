@@ -17,7 +17,7 @@ inline void shader_bind(ShaderProgram program)
     glUseProgram(program.id);
 }
 
-void shader_uniform_set_by_name_matrix4x4(ShaderProgram program, const char* name, const float* matrix)
+void shade_set_mat4_by_name(ShaderProgram program, const char* name, const float* matrix)
 {
     glUseProgram(program.id); 
     GLint loc = glGetUniformLocation(program.id, name);
@@ -33,7 +33,7 @@ uniform shader_get_uniform_location(ShaderProgram program, const char* name)
     return loc;
 }
 
-void shader_uniform_set_matrix4x4(ShaderProgram program, uniform uniform, const float* matrix)
+void shader_set_mat4(ShaderProgram program, uniform uniform, const float* matrix)
 {
     glUseProgram(program.id);
     glUniformMatrix4fv(uniform, 1, GL_FALSE, matrix);
