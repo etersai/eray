@@ -34,7 +34,18 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         log_print_n_flush("W\n");
     }
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        log_print_n_flush("S\n");
+    }
     
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        log_print_n_flush("A\n");
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        log_print_n_flush("D\n");
+    }
 }
 //////////////////////////////////////////
 
@@ -186,7 +197,7 @@ int main(void)
 
         frames++;
         if (curr_time - prev_frame_time >= 1.0) {
-            log_print_n_flush("[FPS: %d]\n", frames);
+            log_print_n_flush("[FPS: %d | DELTA TIME: %f]\n", frames, delta_time);
             frames = 0;
             prev_frame_time = curr_time;
         }
