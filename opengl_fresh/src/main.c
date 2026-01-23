@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -16,6 +17,8 @@
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
+// TODO: PROPER LOGGING FUNCTIONALITY
+// TODO: SEPERATE PLATFORM LAYER
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
@@ -27,6 +30,11 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        log_print_n_flush("W\n");
+    }
+    
 }
 //////////////////////////////////////////
 
@@ -61,6 +69,7 @@ typedef struct {
 gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
 
+// globals
 VoxelRenderer vox;
 
 int main(void)
@@ -80,6 +89,11 @@ int main(void)
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    glfwSwapInterval(0); // 1 VSYNC ON / 0 OFF
+    if (glfwRawMouseMotionSupported()) {
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Failed to initialize GLAD\n");
@@ -159,7 +173,23 @@ int main(void)
     glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    unsigned int frames = 0;
+    double delta_time;
+    double curr_time;
+    double prev_time = glfwGetTime();
+    double prev_frame_time = prev_time;
     while (!glfwWindowShouldClose(window)) {
+        curr_time = glfwGetTime();
+        delta_time = curr_time - prev_time;
+        prev_time = curr_time;
+
+        frames++;
+        if (curr_time - prev_frame_time >= 1.0) {
+            log_print_n_flush("[%d]\n", frames);
+            frames = 0;
+            prev_frame_time = curr_time;
+        }
+
         processInput(window);
 
         glClear(GL_COLOR_BUFFER_BIT);
