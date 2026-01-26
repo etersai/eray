@@ -120,7 +120,7 @@ Camerka camera;
 int main(void)
 {
     vecf3 v = {0.0f, 1.0f, 0.0f};
-    v = vecf3_scale(0.25f, (vecf3){0.0f, 1.0f, 0.0f});
+    vecf3_scale(0.25f, (vecf3){0.0f, 1.0f, 0.0f});
     LOG_VEC(v);
     abort();
     // Setup GLFW and OpenGL Context
