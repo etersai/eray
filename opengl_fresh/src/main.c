@@ -81,6 +81,13 @@ typedef struct {
 } ShaderInstanced;
 
 typedef struct {
+    ShaderProgram program;
+    uniform model;
+    uniform view;
+    uniform projection;
+} ShaderBasic;
+
+typedef struct {
     GLuint id; 
     int width;
     int height;
@@ -115,6 +122,7 @@ Texture texture_load_from_path(const char* path);
 // globals
 const float mouse_sens = 0.1f;
 VoxelRenderer vox;
+ShaderBasic shader_basic;
 Texture texture_grass;
 GpuMeshIndexed mesh_anchor;
 Camerka camera;
@@ -124,7 +132,6 @@ int main(void)
     vecf3 v = {0.0f, 1.0f, 0.0f};
     vecf3_scale(0.25f, (vecf3){0.0f, 1.0f, 0.0f});
     LOG_VEC(v);
-    abort();
     // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -164,8 +171,20 @@ int main(void)
         abort();
     }
     
-    // this shoudl probably also error out.
+    shader_basic.program = shader_create_from_memory(vertex_shader_basic_src, fragment_shader_basic_src);
+    if (shader_basic.program.id == 0) {
+        log_print_n_flush("SHADER COMPILATION FAILED!\n");
+        abort();
+    }
+    shader_basic.model = shader_get_uniform_location(shader_basic.program, "model");
+    shader_basic.view = shader_get_uniform_location(shader_basic.program, "view");
+    shader_basic.projection = shader_get_uniform_location(shader_basic.program, "projection");
+
     vox.instance_shader.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
+    if (vox.instance_shader.program.id == 0) {
+        log_print_n_flush("SHADER COMPILATION FAILED!\n");
+        abort();
+    }
     vox.instance_shader.model = shader_get_uniform_location(vox.instance_shader.program, "model");
     vox.instance_shader.view = shader_get_uniform_location(vox.instance_shader.program, "view");
     vox.instance_shader.projection = shader_get_uniform_location(vox.instance_shader.program, "projection");
@@ -181,6 +200,7 @@ int main(void)
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_mat4(vox.instance_shader.program, vox.instance_shader.projection, &projection.col1.x);
+    shader_set_mat4(shader_basic.program, shader_basic.projection, &projection.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -248,7 +268,8 @@ int main(void)
         mouse_dy = 0.0;
 
         vecf3 orient = camerka_orientation(&camera);
-        orient = vecf3_norm(orient);
+        // hacky
+        orient = vecf3_scale(0.25f, orient);
         vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
         if (move_w) {
             camera.pos = vecf3_add(camera.pos, orient);
@@ -270,15 +291,23 @@ int main(void)
         // update stuff.
         matf4x4 view = camerka_view_matrix(&camera); // remenber you can use shader uniforms that can be shadred across multiple shaders.
         shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
+        shader_set_mat4(shader_basic.program, shader_basic.view, &view.col1.x);
 
         // render shit.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        glUseProgram(vox.instance_shader.program.id);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
-
+        
+        // gl use program here also.
+        glUseProgram(shader_basic.program.id);
+        matf4x4 i = matf4x4_I_give();
+        shader_set_mat4(shader_basic.program, shader_basic.model, &i.col1.x);
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 
