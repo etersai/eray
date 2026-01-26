@@ -5,7 +5,7 @@
 typedef struct {
     float yaw;   // azimuth (left/right)
     float pitch; // polar   (up/down)
-    vecf3 camera_direction_hmm;
+    vecf3 orientation;
     vecf3 pos;
 } Camerka;
 

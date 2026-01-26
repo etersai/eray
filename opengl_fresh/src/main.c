@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <iso646.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -129,9 +130,6 @@ Camerka camera;
 
 int main(void)
 {
-    vecf3 v = {0.0f, 1.0f, 0.0f};
-    vecf3_scale(0.25f, (vecf3){0.0f, 1.0f, 0.0f});
-    LOG_VEC(v);
     // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -253,6 +251,7 @@ int main(void)
         if (curr_time - prev_frame_time >= 1.0) {
             log_print_n_flush("[FPS: %d | DELTA TIME: %f]\n", frames, delta_time);
             log_print_n_flush("[CAMERA POS] X: %f, Y: %f, Z: %f\n", camera.pos.x, camera.pos.y, camera.pos.z);
+            log_print_n_flush("[CAMERA DIR] X: %f, Y: %f, Z: %f\n", camera.orientation.x, camera.orientation.y, camera.orientation.z);
             frames = 0;
             prev_frame_time = curr_time;
         }
@@ -268,6 +267,7 @@ int main(void)
         mouse_dy = 0.0;
 
         vecf3 orient = camerka_orientation(&camera);
+        camera.orientation = orient; // cache it.
         // hacky
         orient = vecf3_scale(0.25f, orient);
         vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
