@@ -77,7 +77,7 @@ static inline float vecf3_dot(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_norm(vecf3 vec);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
-static inline matf4x4 matf4x4_I_give(void); // plain return by value.
+static inline matf4x4 matf4x4_I_give(void);
 static inline void matf4x4_rot_x(matf4x4* m, float angle);
 static inline void matf4x4_rot_y(matf4x4* m, float angle);
 static inline void matf4x4_rot_z(matf4x4* m, float angle);
