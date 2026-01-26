@@ -21,13 +21,12 @@
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
 
+/////////////////////////////////////////////
+// THIS GOES TO PLATFORM
 bool move_w;
 bool move_s;
 bool move_a;
 bool move_d;
-
-/////////////////////////////////////////////
-// THIS GOES TO PLATFORM
 const unsigned int SCR_WIDTH = 1280; // 16:9
 const unsigned int SCR_HEIGHT = 720; 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
@@ -45,8 +44,9 @@ void processInput(GLFWwindow *window)
 }
 double last_x;
 double last_y;
+double mouse_dx;
+double mouse_dy;
 static bool first_mouse = true;
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (first_mouse) {
@@ -56,13 +56,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         return;
     }
 
-    double dx = xpos - last_x;
-    double dy = ypos - last_y;
+    mouse_dx = xpos - last_x;
+    mouse_dy = ypos - last_y;
 
     last_x = xpos;
     last_y = ypos;
 
-    log_print_n_flush("[%f, %f]\n", dx, dy);
 }
 //////////////////////////////////////////
 
@@ -77,31 +76,38 @@ typedef struct {
 } ShaderInstanced;
 
 typedef struct {
+    GLuint id; 
+    int width;
+    int height;
+    int color_channels;
+} Texture;
+
+typedef struct {
     GLuint VAO; 
     GLuint VBO; 
     GLsizei vertex_count;
-} gpu_mesh_simple;
+} GpuMeshSimple;
 
 typedef struct {
     GLuint VAO; 
     GLuint VBO; 
     GLuint EBO;
     GLsizei index_count;
-} gpu_mesh_indexed;
+} GpuMeshIndexed;
 
 typedef struct {
     ShaderInstanced instance_shader;
-    gpu_mesh_indexed mesh_quad;
+    GpuMeshIndexed mesh_quad;
 } VoxelRenderer;
 
-gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
-gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
+GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
+GpuMeshSimple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
+Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
 
 // globals
 VoxelRenderer vox;
+Texture texture_grass;
 Camerka camera;
-
-
 
 int main(void)
 {
@@ -134,24 +140,16 @@ int main(void)
         return 1;
     }    
 
-    /* TEXTURE START */
     stbi_set_flip_vertically_on_load(true);  
     const char* asset_grass_texture_path = "assets/grass.jpg";
-    GLuint texture;
-    int width, height, nrChannels;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // (S, T = X, Y = U, V)	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    int width;
+    int height;
+    int nrChannels;
     unsigned char *data = stbi_load(asset_grass_texture_path, &width, &height, &nrChannels, 0);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);       
         log_print_prefix("asset_load_success", "'%s' Width: %d, Height: %d, nrChannels: %d\n",
                  asset_grass_texture_path, width, height, nrChannels);
+        texture_grass = texture_create_from_memory(data, width, height, nrChannels);
     }
     else
     {
@@ -160,7 +158,6 @@ int main(void)
         abort(); // abort for now
     }
     stbi_image_free(data);
-    /* TEXTURE END */
 
     vox.instance_shader.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
     vox.instance_shader.model = shader_get_uniform_location(vox.instance_shader.program, "model");
@@ -226,20 +223,18 @@ int main(void)
 
         processInput(window);
 
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-
         if (move_w) { log_print_n_flush("W\n"); }
         if (move_s) { log_print_n_flush("S\n"); }
         if (move_a) { log_print_n_flush("A\n"); }
         if (move_d) { log_print_n_flush("D\n"); }
 
         glClear(GL_COLOR_BUFFER_BIT);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -249,7 +244,7 @@ int main(void)
         move_d = false;
     }
     
-   // optional 
+   // optional cleanup for now at least. 
    // glDeleteVertexArrays(1, &VAO);
    // glDeleteBuffers(1, &VBO);
    // glDeleteProgram(shader_program);
@@ -258,7 +253,7 @@ int main(void)
     return 0;
 }
 
-gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
+GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {
     GLuint VAO;
     GLuint VBO;
@@ -286,10 +281,10 @@ gpu_mesh_indexed gpu_load_mesh_quad(const float* vertices, const unsigned int* i
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    return (gpu_mesh_indexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
+    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
 
-gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size)
+GpuMeshSimple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size)
 {
     GLuint VBO;
     GLuint VAO;
@@ -312,5 +307,26 @@ gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_si
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
     
-    return (gpu_mesh_simple){VAO, VBO, vertices_size/(sizeof(float)*3)};
+    return (GpuMeshSimple){VAO, VBO, vertices_size/(sizeof(float)*3)};
+}
+
+Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)
+{
+    assert(data);
+    assert(color_channels == 3 && "Texture loading ony supports 3 channgels for now!");
+
+    Texture texture = {0};
+
+    glGenTextures(1, &texture.id);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // (S, T = X, Y = U, V)	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Generate gl texutre with picked options.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);       
+
+    return texture;
 }
