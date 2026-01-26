@@ -49,6 +49,13 @@ typedef struct {
     vecf4 col4;
 } matf4x4;
 
+// SHORTCUTS
+#define VECF3_ZERO (vecf3){0.0f, 0.0f, 0.0f}
+
+
+            move_vec = vecf3_add(move_vec, camerka_forward);
+#define VECF3_APPLY_ADD(vec) 
+
 // DEBUG
 static void matf4x4_print(const matf4x4* matrix);
 static void vecf4_print(vecf4 vec);

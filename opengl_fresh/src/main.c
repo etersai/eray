@@ -12,6 +12,7 @@
 #include "platform.h"
 #include "lamath.h"
 #include "shader.h"
+#include "font.c"
 #include "vertex_data.c"
 #include "shaders_src.c"
 
@@ -56,12 +57,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         return;
     }
 
-    mouse_dx = xpos - last_x;
-    mouse_dy = ypos - last_y;
+    mouse_dx += xpos - last_x;
+    mouse_dy += last_y - ypos; // inverse here.
 
     last_x = xpos;
     last_y = ypos;
-
 }
 //////////////////////////////////////////
 
@@ -105,6 +105,7 @@ GpuMeshSimple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
 
 // globals
+const float mouse_sens = 0.1f;
 VoxelRenderer vox;
 Texture texture_grass;
 Camerka camera;
@@ -167,14 +168,11 @@ int main(void)
     vox.mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
 
     // camera setup
-    matf4x4 view;
     matf4x4 projection;
     float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
-    lamath_lookat_matrix(&view, (vecf3){0.0f, 1.0f, 0.0f}, (vecf3){0.0f, 1.0f, -1.0f}, (vecf3){0.0f, 1.0f, 0.0f});
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_mat4(vox.instance_shader.program, vox.instance_shader.projection, &projection.col1.x);
-    shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -203,6 +201,15 @@ int main(void)
     glUseProgram(vox.instance_shader.program.id);
     glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
 
+    //glEnable(GL_CULL_FACE);
+   // glCullFace(GL_BACK);
+   // glFrontFace(GL_CCW);
+   //
+//glEnable(GL_CULL_FACE);
+//glCullFace(GL_FRONT); 
+//
+    camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     unsigned int frames = 0;
     double delta_time;
@@ -210,6 +217,8 @@ int main(void)
     double prev_time = glfwGetTime();
     double prev_frame_time = prev_time;
     while (!glfwWindowShouldClose(window)) {
+
+        // frames and delta time.
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
         prev_time = curr_time;
@@ -221,20 +230,58 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
+        // handle input.
         processInput(window);
 
-        if (move_w) { log_print_n_flush("W\n"); }
-        if (move_s) { log_print_n_flush("S\n"); }
-        if (move_a) { log_print_n_flush("A\n"); }
-        if (move_d) { log_print_n_flush("D\n"); }
+        camera.yaw   += mouse_dx * mouse_sens;
+        camera.pitch += mouse_dy * mouse_sens;
+        if (camera.pitch > 89.0f)  camera.pitch = 89.0f;
+        if (camera.pitch < -89.0f) camera.pitch = -89.0f;
+        mouse_dx = 0.0; // does platform reset, dunno if here?
+        mouse_dy = 0.0;
 
+        vecf3 move_vec = VECF3_ZERO;
+        vecf3 camerka_forward = camerka_direction(&camera);
+        camerka_forward = vecf3_norm(camerka_forward);
+        bool moved = false;
+        if (move_w) { 
+            move_vec = vecf3_add(move_vec, camerka_forward);
+            moved = true;
+        }
+        if (move_s) { 
+            dir = vecf3_add(camera.pos, camerka_forward);
+            moved = true;
+        }
+        if (move_a) { 
+            dir = vecf3_add(camera.pos, camerka_forward);
+            moved = true;
+        }
+        if (move_d) {
+            dir = vecf3_add(camera.pos, camerka_forward);
+            moved = true;
+        }
+
+        vecf3_add(move_vec, camerka_forward);
+        dir = vecf3_add(camera.pos, camerka_forward);
+
+        dir = vecf3_norm(dir);
+
+        
+        if (moved) {
+            camera.pos = vecf3_norm(vecf3_add(camera.pos, dir));
+        } 
+
+        // update stuff.
+        matf4x4 view = camerka_view_matrix(&camera); // remenber you can use shader uniforms that can be shadred across multiple shaders.
+        shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
+
+        // render shit.
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
-
 
         glfwSwapBuffers(window);
         glfwPollEvents();
