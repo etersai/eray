@@ -22,3 +22,18 @@ unsigned int quad_indices[] = {
 //   -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,  // top-left
 //    0.5f,  0.5f, 0.0f,    1.0f, 1.0f   // top-right
 //};
+
+float anchor_vertices[] = {
+    // xquad
+    0.0f, 0.0f, 0.0f,
+    10.0f, 0.0f, 0.0f,
+    10.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    // yquad
+    0.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f,
+    1.0f, 10.0f, 0.0f,
+    0.0f, 10.0f, 0.0f,
+    // zquad
+
+}
