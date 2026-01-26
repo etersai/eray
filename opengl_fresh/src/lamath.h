@@ -52,10 +52,6 @@ typedef struct {
 // SHORTCUTS
 #define VECF3_ZERO (vecf3){0.0f, 0.0f, 0.0f}
 
-
-            move_vec = vecf3_add(move_vec, camerka_forward);
-#define VECF3_APPLY_ADD(vec) 
-
 // DEBUG
 static void matf4x4_print(const matf4x4* matrix);
 static void vecf4_print(vecf4 vec);
@@ -87,6 +83,25 @@ static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
 static inline matf4x4 matf4x4_translate_give(vecf3 translate);
+
+
+static inline void vecf3_apply_add(vecf3* a, vecf3 b)
+{
+    vecf3 temp;
+    temp.x = a->x;
+    temp.y = a->y;
+    temp.z = a->z;
+    *a = vecf3_add(temp, b);
+}
+
+static inline vecf3 vecf3_negation(vecf3 v)
+{
+    vecf3 neg;
+    neg.x = -v.x;
+    neg.y = -v.y;
+    neg.z = -v.z;
+    return neg;
+}
 
 /*
 ** IMPLEMENTATION

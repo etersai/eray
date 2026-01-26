@@ -48,6 +48,7 @@ double last_y;
 double mouse_dx;
 double mouse_dy;
 static bool first_mouse = true;
+//#define MOUSE_FLIP_Y
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (first_mouse) {
@@ -58,7 +59,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     }
 
     mouse_dx += xpos - last_x;
-    mouse_dy += last_y - ypos; // inverse here.
+#ifdef MOUSE_FLIP_Y
+    mouse_dy += ypos - last_y;
+#else
+    mouse_dy += last_y - ypos;
+#endif /* INVERSE_MOUSE */
 
     last_x = xpos;
     last_y = ypos;
@@ -79,7 +84,7 @@ typedef struct {
     GLuint id; 
     int width;
     int height;
-    int color_channels;
+    int num_color_channels;
 } Texture;
 
 typedef struct {
@@ -104,6 +109,8 @@ GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* ind
 GpuMeshSimple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
 
+Texture texture_load_from_path(const char* path);
+
 // globals
 const float mouse_sens = 0.1f;
 VoxelRenderer vox;
@@ -112,6 +119,10 @@ Camerka camera;
 
 int main(void)
 {
+    vecf3 v = {0.0f, 1.0f, 0.0f};
+    v = vecf3_scale(0.25f, (vecf3){0.0f, 1.0f, 0.0f});
+    LOG_VEC(v);
+    abort();
     // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -141,33 +152,27 @@ int main(void)
         return 1;
     }    
 
+    // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
-    const char* asset_grass_texture_path = "assets/grass.jpg";
-    int width;
-    int height;
-    int nrChannels;
-    unsigned char *data = stbi_load(asset_grass_texture_path, &width, &height, &nrChannels, 0);
-    if (data) {
-        log_print_prefix("asset_load_success", "'%s' Width: %d, Height: %d, nrChannels: %d\n",
-                 asset_grass_texture_path, width, height, nrChannels);
-        texture_grass = texture_create_from_memory(data, width, height, nrChannels);
-    }
-    else
-    {
+    const char* asset_path = "assets/grass.jpg";
+    texture_grass = texture_load_from_path(asset_path);
+    if (texture_grass.id == 0) {
         // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
-        log_print_prefix("asset_load_error", "failed to load '%s'\n", asset_grass_texture_path);
-        abort(); // abort for now
+        log_print_prefix("asset_load_error", "failed to load '%s'\n", asset_path);
+        abort();
     }
-    stbi_image_free(data);
-
+    
+    // this shoudl probably also error out.
     vox.instance_shader.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
     vox.instance_shader.model = shader_get_uniform_location(vox.instance_shader.program, "model");
     vox.instance_shader.view = shader_get_uniform_location(vox.instance_shader.program, "view");
     vox.instance_shader.projection = shader_get_uniform_location(vox.instance_shader.program, "projection");
     vox.instance_shader.offsets = shader_get_uniform_location(vox.instance_shader.program, "offsets");
+
     vox.mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
 
     // camera setup
+    camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
     matf4x4 projection;
     float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
@@ -201,16 +206,15 @@ int main(void)
     glUseProgram(vox.instance_shader.program.id);
     glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
 
+    // FISHCARD //
     //glEnable(GL_CULL_FACE);
-   // glCullFace(GL_BACK);
-   // glFrontFace(GL_CCW);
-   //
-//glEnable(GL_CULL_FACE);
-//glCullFace(GL_FRONT); 
-//
-    camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
+    //glCullFace(GL_BACK);
+    //glFrontFace(GL_CCW);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_FRONT); 
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
     unsigned int frames = 0;
     double delta_time;
     double curr_time;
@@ -222,10 +226,10 @@ int main(void)
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
         prev_time = curr_time;
-
         frames++;
         if (curr_time - prev_frame_time >= 1.0) {
             log_print_n_flush("[FPS: %d | DELTA TIME: %f]\n", frames, delta_time);
+            log_print_n_flush("[CAMERA POS] X: %f, Y: %f, Z: %f\n", camera.pos.x, camera.pos.y, camera.pos.z);
             frames = 0;
             prev_frame_time = curr_time;
         }
@@ -240,43 +244,32 @@ int main(void)
         mouse_dx = 0.0; // does platform reset, dunno if here?
         mouse_dy = 0.0;
 
-        vecf3 move_vec = VECF3_ZERO;
-        vecf3 camerka_forward = camerka_direction(&camera);
-        camerka_forward = vecf3_norm(camerka_forward);
-        bool moved = false;
-        if (move_w) { 
-            move_vec = vecf3_add(move_vec, camerka_forward);
-            moved = true;
+        vecf3 orient = camerka_orientation(&camera);
+        orient = vecf3_norm(orient);
+        vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
+        if (move_w) {
+            camera.pos = vecf3_add(camera.pos, orient);
         }
-        if (move_s) { 
-            dir = vecf3_add(camera.pos, camerka_forward);
-            moved = true;
+        if (move_s) {
+            camera.pos = vecf3_sub(camera.pos, orient);
         }
-        if (move_a) { 
-            dir = vecf3_add(camera.pos, camerka_forward);
-            moved = true;
+        if (move_a || move_d) {
+            vecf3 right = vecf3_cross(orient, world_up);
+            right = vecf3_norm(right);
+            if (move_a) {
+                right.x = -right.x;
+                right.y = -right.y;
+                right.z = -right.z;
+            }
+            camera.pos = vecf3_add(camera.pos, right);
         }
-        if (move_d) {
-            dir = vecf3_add(camera.pos, camerka_forward);
-            moved = true;
-        }
-
-        vecf3_add(move_vec, camerka_forward);
-        dir = vecf3_add(camera.pos, camerka_forward);
-
-        dir = vecf3_norm(dir);
-
-        
-        if (moved) {
-            camera.pos = vecf3_norm(vecf3_add(camera.pos, dir));
-        } 
 
         // update stuff.
         matf4x4 view = camerka_view_matrix(&camera); // remenber you can use shader uniforms that can be shadred across multiple shaders.
         shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
 
         // render shit.
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
@@ -375,5 +368,23 @@ Texture texture_create_from_memory(unsigned char* data, int width, int height, i
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);       
 
+    return texture;
+}
+
+
+Texture texture_load_from_path(const char* path)
+{
+    Texture texture = {0};
+    int width;
+    int height;
+    int num_channels;
+    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
+    if (data) {
+        //log_print_prefix("asset_load_success", "'%s' Width: %d, Height: %d, nrChannels: %d\n",
+        //        path, texture.width, texture.height, texture.num_color_channels);
+        texture = texture_create_from_memory(data, width, height, num_channels);
+        stbi_image_free(data);
+        return texture;
+    }
     return texture;
 }

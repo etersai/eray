@@ -16,12 +16,11 @@ matf4x4 camerka_view_matrix(const Camerka* camerka)
     return view;
 }
 
-vecf3 camerka_direction(const Camerka* camerka)
+vecf3 camerka_orientation(const Camerka* camerka)
 {
     vecf3 direction = {0};
     direction.x = cos(deg_to_rad(camerka->yaw)) * cos(deg_to_rad(camerka->pitch));
     direction.y = sin(deg_to_rad(camerka->pitch));
     direction.z = sin(deg_to_rad(camerka->yaw)) * cos(deg_to_rad(camerka->pitch));
     return direction;
-    LOG_VEC(direction);
 }

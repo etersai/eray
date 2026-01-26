@@ -10,6 +10,6 @@ typedef struct {
 } Camerka;
 
 matf4x4 camerka_view_matrix(const Camerka* camerka);
-vecf3 camerka_direction(const Camerka* camerka);
+vecf3 camerka_orientation(const Camerka* camerka);
 
 #endif /* ERAY_CAMERKA_H_ */
