@@ -268,7 +268,7 @@ int main(void)
         vecf3 orient = camerka_orientation(&camera);
         camera.orientation = orient; // cache it.
         // hacky
-        orient = vecf3_scale(0.25f, orient);
+        orient = vecf3_scale(0.1f, orient);
         vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
         if (move_w) {
             camera.pos = vecf3_add(camera.pos, orient);
@@ -279,7 +279,7 @@ int main(void)
         if (move_a || move_d) {
             vecf3 right = vecf3_cross(orient, world_up);
             right = vecf3_norm(right);
-            if (move_a) {
+            if (move_a) { // scale to lenght off orient ???
                 right.x = -right.x;
                 right.y = -right.y;
                 right.z = -right.z;
