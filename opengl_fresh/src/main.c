@@ -307,6 +307,7 @@ int main(void)
         // gl use program here also.
         glUseProgram(shader_basic.program.id);
         matf4x4 i = matf4x4_I_give();
+        matf4x4_scale_set(&i, 0.05f, 0.05f, 0.05f);
         shader_set_mat4(shader_basic.program, shader_basic.model, &i.col1.x);
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);

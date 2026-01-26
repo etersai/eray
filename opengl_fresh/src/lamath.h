@@ -69,6 +69,7 @@ static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v);
 static inline float vecf3_len(vecf3 vec);
 static inline float vecf3_len_no_sqrt(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
+static inline void vecf3_apply_add(vecf3* a, vecf3 b);
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_scale(float factor, vecf3 vec);
 static inline vecf3 vecf3_cross(vecf3 a, vecf3 b);
@@ -83,25 +84,6 @@ static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
 static inline matf4x4 matf4x4_translate_give(vecf3 translate);
-
-
-static inline void vecf3_apply_add(vecf3* a, vecf3 b)
-{
-    vecf3 temp;
-    temp.x = a->x;
-    temp.y = a->y;
-    temp.z = a->z;
-    *a = vecf3_add(temp, b);
-}
-
-static inline vecf3 vecf3_negation(vecf3 v)
-{
-    vecf3 neg;
-    neg.x = -v.x;
-    neg.y = -v.y;
-    neg.z = -v.z;
-    return neg;
-}
 
 /*
 ** IMPLEMENTATION
@@ -172,6 +154,12 @@ static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b)
 {
     return (vecf3){a.x+b.x, a.y+b.y, a.z+b.z};
+}
+static inline void vecf3_apply_add(vecf3* a, vecf3 b)
+{
+    a->x += b.x;
+    a->y += b.y;
+    a->z += b.z;
 }
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b)
 {
