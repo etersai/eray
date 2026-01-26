@@ -1,0 +1,1 @@
+#include "camerka.h"

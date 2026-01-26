@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "camerka.h"
 #include "platform.h"
 #include "lamath.h"
 #include "shader.h"
@@ -41,6 +42,27 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
     
+}
+double last_x;
+double last_y;
+static bool first_mouse = true;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (first_mouse) {
+        last_x = xpos;
+        last_y = ypos;
+        first_mouse = false;
+        return;
+    }
+
+    double dx = xpos - last_x;
+    double dy = ypos - last_y;
+
+    last_x = xpos;
+    last_y = ypos;
+
+    log_print_n_flush("[%f, %f]\n", dx, dy);
 }
 //////////////////////////////////////////
 
@@ -77,6 +99,9 @@ gpu_mesh_simple gpu_load_mesh_triangle(const float* vertices, size_t vertices_si
 
 // globals
 VoxelRenderer vox;
+Camerka camera;
+
+
 
 int main(void)
 {
@@ -93,10 +118,13 @@ int main(void)
         return 1;
     }
 
+    glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    glfwSwapInterval(0); // 1 VSYNC ON / 0 OFF
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
@@ -179,10 +207,6 @@ int main(void)
     glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    vecf3 playa_pos = {0.0f, 0.0f, 0.0f};
-    vecf3 playa_vel = {0.0f, 0.0f, 0.0f};
-
     unsigned int frames = 0;
     double delta_time;
     double curr_time;
@@ -201,6 +225,9 @@ int main(void)
         }
 
         processInput(window);
+
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
 
         if (move_w) { log_print_n_flush("W\n"); }
         if (move_s) { log_print_n_flush("S\n"); }
