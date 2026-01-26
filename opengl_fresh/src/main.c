@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <iso646.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
