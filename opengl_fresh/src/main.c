@@ -309,9 +309,12 @@ int main(void)
        
         // anchor
         glUseProgram(shader_basic.program.id);
-        matf4x4 i = matf4x4_I_give();
-        matf4x4_scale_set(&i, 0.05f, 0.05f, 0.05f);
-        shader_set_mat4(shader_basic.program, shader_basic.model, &i.col1.x);
+        matf4x4 s = matf4x4_I_give();
+        matf4x4 t = matf4x4_I_give();
+        matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
+
+
+        shader_set_mat4(shader_basic.program, shader_basic.model, &s.col1.x);
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 
@@ -350,8 +353,10 @@ GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* i
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     // this is unnecesary but for now i leave it.
     glBindVertexArray(0); 

@@ -1,18 +1,22 @@
 const char* vertex_shader_basic_src = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec3 aColor;\n"
+    "out vec3 out_color;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   out_color = aColor;\n"
     "}\0";
 
 const char* fragment_shader_basic_src = "#version 460 core\n"
+    "in vec3 out_color;\n" // input from vertex (in n out must match)
     "out vec4 final_color;\n"
     "void main()\n"
     "{\n"
-    "   final_color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+    "   final_color = vec4(out_color, 1.0);\n"
     "}\0";
 
 const char* vertex_shader_instance_src = "#version 460 core\n"
