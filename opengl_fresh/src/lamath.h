@@ -43,6 +43,12 @@ typedef struct {
 } vecf4;
 
 typedef struct {
+    vecf3 col1;
+    vecf3 col2;
+    vecf3 col3;
+} matf3x3;
+
+typedef struct {
     vecf4 col1;
     vecf4 col2;
     vecf4 col3;
@@ -51,9 +57,11 @@ typedef struct {
 
 // SHORTCUTS
 #define VECF3_ZERO (vecf3){0.0f, 0.0f, 0.0f}
+#define VECF4_ZERO (vecf4){0.0f, 0.0f, 0.0f, 0.0f}
 
 // DEBUG
 static void matf4x4_print(const matf4x4* matrix);
+static void matf3x3_print(const matf3x3* matrix);
 static void vecf4_print(vecf4 vec);
 static void vecf3_printf(vecf3 vec);
 static void log_print_n_flush(const char* format, ...);
@@ -353,6 +361,7 @@ static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4*
 // DEBUG MATH
 #define VECF4_PRINT_FORMAT "[%f, %f, %f, %f]\n"
 #define VECF3_PRINT_FORMAT "[%f, %f, %f]\n"
+#define MATRIX3X3_PRINT_FORMAT "[%.2f, %.2f, %.2f]\n"
 #define MATRIX4X4_PRINT_FORMAT "[%.2f, %.2f, %.2f, %.2f]\n"
 static void matf4x4_print(const matf4x4* matrix)
 {
@@ -360,6 +369,13 @@ static void matf4x4_print(const matf4x4* matrix)
     fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->col1.y, matrix->col2.y, matrix->col3.y, matrix->col4.y); 
     fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->col1.z, matrix->col2.z, matrix->col3.z, matrix->col4.z); 
     fprintf(stdout, MATRIX4X4_PRINT_FORMAT, matrix->col1.w, matrix->col2.w, matrix->col3.w, matrix->col4.w); 
+    fflush(stdout);
+}
+static void matf3x3_print(const matf3x3* matrix)
+{
+    fprintf(stdout, MATRIX3X3_PRINT_FORMAT, matrix->col1.x, matrix->col2.x, matrix->col3.x); 
+    fprintf(stdout, MATRIX3X3_PRINT_FORMAT, matrix->col1.y, matrix->col2.y, matrix->col3.y); 
+    fprintf(stdout, MATRIX3X3_PRINT_FORMAT, matrix->col1.z, matrix->col2.z, matrix->col3.z); 
     fflush(stdout);
 }
 static void vecf4_print(vecf4 vec)
