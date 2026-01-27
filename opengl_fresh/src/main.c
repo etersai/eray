@@ -265,13 +265,16 @@ int main(void)
         mouse_dx = 0.0; // does platform reset, dunno if here?
         mouse_dy = 0.0;
 
+
+        vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
+        vecf3 movement_vector = VECF3_ZERO;
         vecf3 orient = camerka_orientation(&camera);
         camera.orientation = orient; // cache it.
         // hacky
         orient = vecf3_scale(0.1f, orient);
-        vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
         if (move_w) {
-            camera.pos = vecf3_add(camera.pos, orient);
+            vecf3_apply_add(&movement_vector, orient);
+            //camera.pos = vecf3_add(camera.pos, orient);
         }
         if (move_s) {
             camera.pos = vecf3_sub(camera.pos, orient);
@@ -279,6 +282,7 @@ int main(void)
         if (move_a || move_d) {
             vecf3 right = vecf3_cross(orient, world_up);
             right = vecf3_norm(right);
+            right = vecf3_scale(0.1f, right);
             if (move_a) { // scale to lenght off orient ???
                 right.x = -right.x;
                 right.y = -right.y;
@@ -294,7 +298,6 @@ int main(void)
 
         // render shit.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
         glUseProgram(vox.instance_shader.program.id);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);

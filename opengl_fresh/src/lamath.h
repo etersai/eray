@@ -78,6 +78,7 @@ static inline float vecf3_len(vecf3 vec);
 static inline float vecf3_len_no_sqrt(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
 static inline void vecf3_apply_add(vecf3* a, vecf3 b);
+static inline void vecf3_apply_sub(vecf3* a, vecf3 b);
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_scale(float factor, vecf3 vec);
 static inline vecf3 vecf3_cross(vecf3 a, vecf3 b);
@@ -172,6 +173,12 @@ static inline void vecf3_apply_add(vecf3* a, vecf3 b)
     a->x += b.x;
     a->y += b.y;
     a->z += b.z;
+}
+static inline void vecf3_apply_sub(vecf3* a, vecf3 b)
+{
+    a->x -= b.x;
+    a->y -= b.y;
+    a->z -= b.z;
 }
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b)
 {

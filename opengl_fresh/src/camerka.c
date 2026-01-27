@@ -22,5 +22,5 @@ vecf3 camerka_orientation(const Camerka* camerka)
     direction.x = cos(deg_to_rad(camerka->yaw)) * cos(deg_to_rad(camerka->pitch));
     direction.y = sin(deg_to_rad(camerka->pitch));
     direction.z = sin(deg_to_rad(camerka->yaw)) * cos(deg_to_rad(camerka->pitch));
-    return direction;
+    return vecf3_norm(direction);
 }
