@@ -265,50 +265,49 @@ int main(void)
         mouse_dx = 0.0; // does platform reset, dunno if here?
         mouse_dy = 0.0;
 
-
         vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
         vecf3 movement_vector = VECF3_ZERO;
         vecf3 orient = camerka_orientation(&camera);
         camera.orientation = orient; // cache it.
-        // hacky
-        //orient = vecf3_scale(0.1f, orient);
         if (move_w) {
             vecf3_apply_add(&movement_vector, orient);
-            //camera.pos = vecf3_add(camera.pos, orient);
         }
         if (move_s) {
             vecf3_apply_sub(&movement_vector, orient);
-            //camera.pos = vecf3_sub(camera.pos, orient);
         }
         if (move_a || move_d) {
             vecf3 right = vecf3_cross(orient, world_up);
             right = vecf3_norm(right);
-           // right = vecf3_scale(0.1f, right);
-            if (move_a) { // scale to lenght off orient ???
+            if (move_a) {
                 right.x = -right.x;
                 right.y = -right.y;
                 right.z = -right.z;
             }
             vecf3_apply_add(&movement_vector, right);
-            //camera.pos = vecf3_add(camera.pos, right);
+        }
+        if (vecf3_len(movement_vector) > 0.0f) {
+            movement_vector = vecf3_norm(movement_vector);
+            movement_vector = vecf3_scale(0.1f, movement_vector); // hackyyy
+            vecf3_apply_add(&camera.pos, movement_vector);
         }
 
         // update stuff.
-        matf4x4 view = camerka_view_matrix(&camera); // remenber you can use shader uniforms that can be shadred across multiple shaders.
+        matf4x4 view = camerka_view_matrix(&camera); // you can use shader uniforms that can be shared across multiple shaders.
         shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
         shader_set_mat4(shader_basic.program, shader_basic.view, &view.col1.x);
 
         // render shit.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // ground
         glUseProgram(vox.instance_shader.program.id);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(vox.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
-        
-        // gl use program here also.
+       
+        // anchor
         glUseProgram(shader_basic.program.id);
         matf4x4 i = matf4x4_I_give();
         matf4x4_scale_set(&i, 0.05f, 0.05f, 0.05f);

@@ -39,6 +39,11 @@ float anchor_vertices[] = {
     0.0f, 0.0f, 10.0f,
     0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f,
+    // xquad2
+    0.0f, 0.5f, -0.5f,
+    0.0f, 0.5f, 0.5f,
+    10.0f, 0.5f, 0.5f,
+    10.0f, 0.5f, -0.5f,
 };
 
 unsigned int anchor_indices[] = {
@@ -47,5 +52,7 @@ unsigned int anchor_indices[] = {
     4, 5, 6,
     6, 7, 4,
     8, 9, 10,
-    10, 11,8,
+    10, 11, 8,
+    12, 13, 14,
+    14, 15, 12,
 };
