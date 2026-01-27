@@ -93,6 +93,9 @@ static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4*
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
 static inline matf4x4 matf4x4_translate_give(vecf3 translate);
 
+static inline matf3x3 matf3x3_I_give(void);
+static inline float matf3x3_det(const matf3x3* m);
+
 /*
 ** IMPLEMENTATION
 */
@@ -234,6 +237,20 @@ static inline matf4x4 matf4x4_I_give(void)
                      .col1.y = 0.0f, .col2.y = 1.0f, .col3.y = 0.0f, .col4.y = 0.0f,
                      .col1.z = 0.0f, .col2.z = 0.0f, .col3.z = 1.0f, .col4.z = 0.0f,
                      .col1.w = 0.0f, .col2.w = 0.0f, .col3.w = 0.0f, .col4.w = 1.0f,};
+}
+
+static inline matf3x3 matf3x3_I_give(void)
+{
+    return (matf3x3){.col1.x = 1.0f, .col2.x = 0.0f, .col3.x = 0.0f,
+                     .col1.y = 0.0f, .col2.y = 1.0f, .col3.y = 0.0f,
+                     .col1.z = 0.0f, .col2.z = 0.0f, .col3.z = 1.0f,};
+}
+
+static inline float matf3x3_det(const matf3x3* m)
+{
+    return ((m->col1.x * (m->col2.y * m->col3.z - m->col3.y * m->col2.z)) -
+            (m->col2.x * (m->col1.y * m->col3.z - m->col3.y * m->col1.z)) +
+            (m->col3.x * (m->col1.y * m->col2.z - m->col2.y * m->col1.z))); 
 }
 
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z)
