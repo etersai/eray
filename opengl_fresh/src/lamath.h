@@ -86,6 +86,7 @@ static inline vecf3 vecf3_norm(vecf3 vec);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
 static inline matf4x4 matf4x4_I_give(void);
+static inline float matf4x4_det(const matf4x4* m);
 static inline void matf4x4_rot_x(matf4x4* m, float angle);
 static inline void matf4x4_rot_y(matf4x4* m, float angle);
 static inline void matf4x4_rot_z(matf4x4* m, float angle);
@@ -237,6 +238,34 @@ static inline matf4x4 matf4x4_I_give(void)
                      .col1.y = 0.0f, .col2.y = 1.0f, .col3.y = 0.0f, .col4.y = 0.0f,
                      .col1.z = 0.0f, .col2.z = 0.0f, .col3.z = 1.0f, .col4.z = 0.0f,
                      .col1.w = 0.0f, .col2.w = 0.0f, .col3.w = 0.0f, .col4.w = 1.0f,};
+}
+
+static inline float matf4x4_det(const matf4x4* m)
+{ // for now it takes only row 1 of column matrix and goes from there (check for zeros for faster calculations.)
+    matf3x3 a;
+    a.col1 = (vecf3){m->col2.y, m->col2.z, m->col2.w};
+    a.col2 = (vecf3){m->col3.y, m->col3.z, m->col3.w}; 
+    a.col3 = (vecf3){m->col4.y, m->col4.z, m->col4.w}; 
+
+    matf3x3 b;
+    b.col1 = (vecf3){m->col1.y, m->col1.z, m->col1.w};
+    b.col2 = (vecf3){m->col3.y, m->col3.z, m->col3.w};
+    b.col3 = (vecf3){m->col4.y, m->col4.z, m->col4.w};
+
+    matf3x3 c;
+    c.col1 = (vecf3){m->col1.y, m->col1.z, m->col1.w};
+    c.col2 = (vecf3){m->col2.y, m->col2.z, m->col2.w};
+    c.col3 = (vecf3){m->col4.y, m->col4.z, m->col4.w};
+
+    matf3x3 d;
+    d.col1 = (vecf3){m->col1.y, m->col1.z, m->col1.w};
+    d.col2 = (vecf3){m->col2.y, m->col2.z, m->col2.w};
+    d.col3 = (vecf3){m->col3.y, m->col3.z, m->col3.w};
+
+    return ((m->col1.x * matf3x3_det(&a)) - 
+            (m->col2.x * matf3x3_det(&b)) + 
+            (m->col3.x * matf3x3_det(&c)) - 
+            (m->col4.x * matf3x3_det(&d)));
 }
 
 static inline matf3x3 matf3x3_I_give(void)
