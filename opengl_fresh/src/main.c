@@ -358,7 +358,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         view_no_translation.col4.x = 0.0f; // zero out translation
         view_no_translation.col4.y = 0.0f;
         view_no_translation.col4.z = 0.0f;
-        shader_set_mat4(shader_skybox.program, shader_skybox.view, &view.col1.x);
+        shader_set_mat4(shader_skybox.program, shader_skybox.view, &view_no_translation.col1.x);
 
         // RENDER START
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
