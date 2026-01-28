@@ -11,6 +11,16 @@ const char* vertex_shader_basic_src = "#version 460 core\n"
     "   out_color = aColor;\n"
     "}\0";
 
+// in vec3 textureDir; // direction vector representing a 3D texture coordinate
+// uniform samplerCube cubemap; // cubemap texture sampler
+//
+// void main()
+// {             
+//     FragColor = texture(cubemap, textureDir);
+// }
+
+
+
 const char* fragment_shader_basic_src = "#version 460 core\n"
     "in vec3 out_color;\n" // input from vertex (in n out must match)
     "out vec4 final_color;\n"

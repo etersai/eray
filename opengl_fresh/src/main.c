@@ -170,29 +170,45 @@ int main(void)
    // texture_grass.height
     log_print_n_flush("HEHE HERE: %d\n", texture_grass.height);
     
-    // cubemap stuff.
+    // CUBEMAP //
+    // opengl prep.
     GLuint cubemap_texture;
     glGenTextures(1, &cubemap_texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
-
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
 
-    // int width, height, nrChannels;
-    // unsigned char *data;  
-    // for(unsigned int i = 0; i < textures_faces.size(); i++)
-    // {
-    //     data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 0);
-    //     glTexImage2D(
-    //         GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
-    //         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-    //     );
-    // }
+    const char* cubemap_paths[] = {  // realtionship.
+        "assets/skybox/right.jpg",   // GL_TEXTURE_CUBE_MAP_POSITIVE_X
+        "assets/skybox/left.jpg",    // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+        "assets/skybox/top.jpg",     // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+        "assets/skybox/bottom.jpg",  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+        "assets/skybox/back.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+        "assets/skybox/front.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    };
 
-
+    // data keepers.
+    int width;
+    int height;
+    int nrChannels;
+    unsigned char *data; // f(x). wed jan 28 19:18:33. 2026.
+    // end data keepers.
+    for (unsigned int i = 0; i < sizeof(cubemap_paths) / sizeof(cubemap_paths[0]); i++) {
+        static int times = 0;
+        data = stbi_load(cubemap_paths[i], &width, &height, &nrChannels, 0);
+        log_print_n_flush("[FAIL_CUBEMAP]: %d, %d\n", times, nrChannels);
+        assert(data && "Cubemaps loads failed! RUN");
+        times++;
+glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    }
+    //$ file 'file.img' output:
+    //2048x2048 = dimensions
+    //components 3 = RGB, no alpha
+    //precision 8 = 8-bit per channel = GL_UNSIGNED_BYTE
 
     // cubemap stuff end.
     
