@@ -11,20 +11,6 @@ const char* vertex_shader_basic_src = "#version 460 core\n"
     "   out_color = aColor;\n"
     "}\0";
 
-// in vec3 textureDir; // direction vector representing a 3D texture coordinate
-// uniform samplerCube cubemap; // cubemap texture sampler
-// #version 330 core
-// out vec4 FragColor;
-//
-// in vec3 TexCoords;
-//
-// uniform samplerCube skybox;
-//
-// void main()
-// {    
-//     FragColor = texture(skybox, TexCoords);
-// }
-
 const char* vertex_shader_skybox_src = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "out vec3 TexCoords;\n"

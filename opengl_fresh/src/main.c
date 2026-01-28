@@ -193,8 +193,8 @@ int main(void)
         "assets/skybox/left.jpg",    // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
         "assets/skybox/top.jpg",     // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
         "assets/skybox/bottom.jpg",  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-        "assets/skybox/back.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-        "assets/skybox/front.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+        "assets/skybox/front.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+        "assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
 
  // CREATE CUBEMAP TEXTURE
@@ -213,6 +213,7 @@ int main(void)
     int nrChannels;
     unsigned char *data; // f(x). wed jan 28 19:18:33. 2026.
     // end data keepers.
+    stbi_set_flip_vertically_on_load(false);
     for (unsigned int i = 0; i < sizeof(cubemap_paths) / sizeof(cubemap_paths[0]); i++) {
         static int times = 0;
         data = stbi_load(cubemap_paths[i], &width, &height, &nrChannels, 0);
@@ -246,8 +247,8 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         log_print_n_flush("SHADER COMPILATION FAILED!\n");
         abort();
     }
-    shader_skybox.view = shader_get_uniform_location(shader_basic.program, "view");
-    shader_skybox.projection = shader_get_uniform_location(shader_basic.program, "projection");
+    shader_skybox.view = shader_get_uniform_location(shader_skybox.program, "view");
+    shader_skybox.projection = shader_get_uniform_location(shader_skybox.program, "projection");
 
     // ground shader.
     shader_instanced.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
@@ -265,7 +266,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
 
-    // camera setup
+    // camera setup PROJECTION SET ONCE AT START !!
     camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
     matf4x4 projection;
     float camera_fov = 90.0f;
@@ -273,6 +274,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_mat4(shader_instanced.program, shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(shader_basic.program, shader_basic.projection, &projection.col1.x);
+    shader_set_mat4(shader_skybox.program, shader_skybox.projection, &projection.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -371,21 +373,18 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         shader_set_mat4(shader_instanced.program, shader_instanced.view, &view.col1.x);
         shader_set_mat4(shader_basic.program, shader_basic.view, &view.col1.x);
 
+        matf4x4 view_no_translation = view;
+        view_no_translation.col4.x = 0.0f; // zero out translation
+        view_no_translation.col4.y = 0.0f;
+        view_no_translation.col4.z = 0.0f;
+        shader_set_mat4(shader_skybox.program, shader_skybox.view, &view_no_translation.col1.x);
+
         // RENDER START
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-// Frustum culling solution:
-// CPU-side test: For each quad, check if its bounding box intersects the view frustum.
-// Only send visible quads to GPU.
+        // Frustum culling solution:
+        // CPU-side test: For each quad, check if its bounding box intersects the view frustum.
+        // Only send visible quads to GPU.
 
-// glDepthMask(GL_FALSE);
-// skyboxShader.use();
-// // ... set view and projection matrix
-// glBindVertexArray(skyboxVAO);
-// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-// glDrawArrays(GL_TRIANGLES, 0, 36);
-// glDepthMask(GL_TRUE);
-// // ... draw rest of the scene
-        
         // Depth mask info.
         //Fragments still test against the depth buffer (can still be rejected)
         //But passing fragments don't update the depth buffer
@@ -394,7 +393,8 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         shader_use(shader_skybox.program);
         glBindVertexArray(mesh_skybox.VAO);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
-
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDepthMask(GL_TRUE);
 
         // ground
         shader_use(shader_instanced.program);
