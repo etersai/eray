@@ -120,7 +120,7 @@ typedef struct {
 
 GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
-GpuMeshSimple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size);
+GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size);
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
 
 Texture texture_load_from_path(const char* path);
@@ -187,7 +187,8 @@ int main(void)
         "assets/skybox/front.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
 
-    // opengl prep.
+ // CREATE CUBEMAP TEXTURE
+    // opengl
     GLuint cubemap_texture;
     glGenTextures(1, &cubemap_texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
@@ -253,6 +254,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     // load meshes
     mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
+    mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
 
     // camera setup
     camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
@@ -362,6 +364,9 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
 
         // RENDER START
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// Frustum culling solution:
+// CPU-side test: For each quad, check if its bounding box intersects the view frustum.
+// Only send visible quads to GPU.
 
 // glDepthMask(GL_FALSE);
 // skyboxShader.use();
@@ -372,13 +377,17 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
 // glDepthMask(GL_TRUE);
 // // ... draw rest of the scene
         
-        glDepthMask(GL_FALSE);
+        // Depth mask info.
         //Fragments still test against the depth buffer (can still be rejected)
         //But passing fragments don't update the depth buffer
         //The depth values stay whatever they were before
+        glDepthMask(GL_FALSE);
+        shader_use(shader_skybox.program);
+        glBindVertexArray(mesh_skybox.VAO);
+
 
         // ground
-        glUseProgram(shader_instanced.program.id);
+        shader_use(shader_instanced.program);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
@@ -386,7 +395,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
        
         // anchor
-        glUseProgram(shader_basic.program.id);
+        shader_use(shader_basic.program);
         matf4x4 s = matf4x4_I_give();
         matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
         matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);

@@ -12,7 +12,7 @@ void shader_delete(ShaderProgram program)
     glDeleteProgram(program.id);
 }
 
-void shader_bind(ShaderProgram program)
+void shader_use(ShaderProgram program)
 {
     glUseProgram(program.id);
 }

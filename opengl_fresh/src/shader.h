@@ -9,7 +9,7 @@ typedef struct {
 } ShaderProgram;
 
 ShaderProgram shader_create_from_memory(const char* vertex_shader_src, const char* fragment_shader_src);
-void shader_bind(ShaderProgram program);
+void shader_use(ShaderProgram program);
 void shader_delete(ShaderProgram program);
 uniform shader_get_uniform_location(ShaderProgram program, const char* name);
 void shader_set_mat4_by_name(ShaderProgram program, const char* name, const float* matrix);
