@@ -314,7 +314,6 @@ int main(void)
         matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
         matf4x4 full = matf4x4_I_give();
         matf4x4_mul(&full, &t, &s);
-
         shader_set_mat4(shader_basic.program, shader_basic.model, &full.col1.x);
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
