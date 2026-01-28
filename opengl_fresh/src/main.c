@@ -11,6 +11,7 @@
 #include "camerka.h"
 #include "platform.h"
 #include "lamath.h"
+#include "gl_stuff.h"
 #include "shader.h"
 #include "font.c"
 #include "vertex_data.c"
@@ -68,10 +69,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     last_x = xpos;
     last_y = ypos;
 }
-//////////////////////////////////////////
+// END PLATFORM ////////////////////////////////////////
 
 typedef GLint uniform;
-
 typedef struct {
     ShaderProgram program;
     uniform model;
@@ -93,41 +93,22 @@ typedef struct {
     uniform projection;
 } ShaderSkybox;
 
-typedef struct {
-    GLuint id; 
+Texture texture_load_from_path(const char* path)
+{
+    Texture texture = {0};
     int width;
     int height;
-    int num_color_channels;
-} Texture;
-
-typedef struct {
-    GLuint id;
-} TextureCubemap;
-
-typedef struct {
-    GLuint VAO; 
-    GLuint VBO; 
-    GLsizei vertex_count;
-} GpuMeshSimple;
-
-typedef struct {
-    GLuint VAO; 
-    GLuint VBO; 
-    GLuint EBO;
-    GLsizei index_count;
-} GpuMeshIndexed;
-
-typedef struct {
-    ShaderInstanced instance_shader;
-    GpuMeshIndexed mesh_quad;
-} VoxelRenderer;
-
-GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
-GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
-GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size);
-Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
-
-Texture texture_load_from_path(const char* path);
+    int num_channels;
+    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
+    if (data) {
+        //log_print_prefix("asset_load_success", "'%s' Width: %d, Height: %d, nrChannels: %d\n",
+        //        path, texture.width, texture.height, texture.num_color_channels);
+        texture = texture_create_from_memory(data, width, height, num_channels);
+        stbi_image_free(data);
+        return texture;
+    }
+    return texture;
+}
 
 // globals
 const float mouse_sens = 0.1f;
@@ -143,7 +124,6 @@ GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_grass;
 GLuint cubemap_texture;
 TextureCubemap texture_skybox; // TODOs
-                               //
 Camerka camera;
 
 int main(void)
@@ -179,6 +159,7 @@ int main(void)
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
+
     const char* asset_path = "assets/grass.jpg";
     texture_grass = texture_load_from_path(asset_path);
     if (texture_grass.id == 0) {
@@ -430,135 +411,4 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
 
     glfwTerminate();
     return 0;
-}
-
-GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // this is unnecesary but for now i leave it.
-    // glBindVertexArray(0); 
-    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // this is unnecesary but for now i leave it.
-    glBindVertexArray(0); 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size)
-{
-    GLuint VBO;
-    GLuint VAO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
-    // the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO,
-    // but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally
-    // don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0); 
-    
-    return (GpuMeshSimple){VAO, VBO, vertices_size/(sizeof(float)*3)};
-}
-
-Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)
-{
-    assert(data);
-    assert(color_channels == 3 && "Texture loading ony supports 3 channgels for now!");
-
-    Texture texture = {0};
-
-    glGenTextures(1, &texture.id);
-    glBindTexture(GL_TEXTURE_2D, texture.id);
-    // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // (S, T = X, Y = U, V)	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // Generate gl texutre with picked options.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);       
-
-    texture.width = width;
-    texture.height = height;
-    texture.num_color_channels = color_channels;
-
-    return texture;
-}
-
-
-Texture texture_load_from_path(const char* path)
-{
-    Texture texture = {0};
-    int width;
-    int height;
-    int num_channels;
-    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
-    if (data) {
-        //log_print_prefix("asset_load_success", "'%s' Width: %d, Height: %d, nrChannels: %d\n",
-        //        path, texture.width, texture.height, texture.num_color_channels);
-        texture = texture_create_from_memory(data, width, height, num_channels);
-        stbi_image_free(data);
-        return texture;
-    }
-    return texture;
 }
