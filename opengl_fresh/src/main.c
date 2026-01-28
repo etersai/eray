@@ -101,6 +101,10 @@ typedef struct {
 } Texture;
 
 typedef struct {
+    GLuint id;
+} TextureCubemap;
+
+typedef struct {
     GLuint VAO; 
     GLuint VBO; 
     GLsizei vertex_count;
@@ -127,13 +131,19 @@ Texture texture_load_from_path(const char* path);
 
 // globals
 const float mouse_sens = 0.1f;
+
 ShaderBasic shader_basic;
 ShaderInstanced shader_instanced;
 ShaderSkybox shader_skybox;
+
 GpuMeshIndexed mesh_quad;
 GpuMeshIndexed mesh_anchor;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+                            
 Texture texture_grass;
+GLuint cubemap_texture;
+TextureCubemap texture_skybox; // TODOs
+                               //
 Camerka camera;
 
 int main(void)
@@ -189,7 +199,6 @@ int main(void)
 
  // CREATE CUBEMAP TEXTURE
     // opengl
-    GLuint cubemap_texture;
     glGenTextures(1, &cubemap_texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -384,6 +393,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         glDepthMask(GL_FALSE);
         shader_use(shader_skybox.program);
         glBindVertexArray(mesh_skybox.VAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
 
 
         // ground
