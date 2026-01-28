@@ -168,6 +168,16 @@ int main(void)
         abort();
     }
     
+    // cubemap stuff.
+    GLuint cubemap_texture;
+    glGenTextures(1, &cubemap_texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
+
+
+
+
+    // cubemap stuff end.
+    
     shader_basic.program = shader_create_from_memory(vertex_shader_basic_src, fragment_shader_basic_src);
     if (shader_basic.program.id == 0) {
         log_print_n_flush("SHADER COMPILATION FAILED!\n");

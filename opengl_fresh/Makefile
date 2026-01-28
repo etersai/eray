@@ -4,8 +4,8 @@ main: generate_bin
 
 generate_bin:
 	@rm -rf bin
-	@mkdir -p bin/assets
-	@cp assets/* bin/assets/
+	@mkdir -p bin/assets/skybox
+	@cp -r assets/* bin/assets/
 
 clean:
 	@rm -rf bin
