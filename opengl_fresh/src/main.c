@@ -158,7 +158,6 @@ int main(void)
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
-
     const char* asset_path = "assets/grass.jpg";
     texture_grass = texture_load_from_path(asset_path);
     if (texture_grass.id == 0) {
