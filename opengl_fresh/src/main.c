@@ -8,10 +8,10 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#include "camerka.h"
 #include "platform.h"
 #include "lamath.h"
 #include "gl_stuff.h"
+#include "camerka.h"
 #include "shader.h"
 #include "font.c"
 #include "vertex_data.c"
@@ -96,7 +96,7 @@ typedef struct {
 Texture texture_load_from_path(const char* path)
 {
     Texture texture = {0};
-    int width;
+    int width; // TODO platform extract image data!
     int height;
     int num_channels;
     unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
@@ -112,15 +112,12 @@ Texture texture_load_from_path(const char* path)
 
 // globals
 const float mouse_sens = 0.1f;
-
 ShaderBasic shader_basic;
 ShaderInstanced shader_instanced;
 ShaderSkybox shader_skybox;
-
 GpuMeshIndexed mesh_quad;
 GpuMeshIndexed mesh_anchor;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-                            
 Texture texture_grass;
 TextureCubemap texture_skybox; // TODOs
 Camerka camera;
