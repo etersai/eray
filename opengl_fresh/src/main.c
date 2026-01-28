@@ -88,6 +88,12 @@ typedef struct {
 } ShaderBasic;
 
 typedef struct {
+    ShaderProgram program;
+    uniform view;
+    uniform projection;
+} ShaderSkybox;
+
+typedef struct {
     GLuint id; 
     int width;
     int height;
@@ -121,10 +127,13 @@ Texture texture_load_from_path(const char* path);
 
 // globals
 const float mouse_sens = 0.1f;
-VoxelRenderer vox;
 ShaderBasic shader_basic;
-Texture texture_grass;
+ShaderInstanced shader_instanced;
+ShaderSkybox shader_skybox;
+GpuMeshIndexed mesh_quad;
 GpuMeshIndexed mesh_anchor;
+GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+Texture texture_grass;
 Camerka camera;
 
 int main(void)
@@ -167,10 +176,17 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", asset_path);
         abort();
     }
-   // texture_grass.height
-    log_print_n_flush("HEHE HERE: %d\n", texture_grass.height);
     
     // CUBEMAP //
+    const char* cubemap_paths[] = {  // realtionship.
+        "assets/skybox/right.jpg",   // GL_TEXTURE_CUBE_MAP_POSITIVE_X
+        "assets/skybox/left.jpg",    // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+        "assets/skybox/top.jpg",     // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+        "assets/skybox/bottom.jpg",  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+        "assets/skybox/back.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+        "assets/skybox/front.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    }; 
+
     // opengl prep.
     GLuint cubemap_texture;
     glGenTextures(1, &cubemap_texture);
@@ -181,15 +197,6 @@ int main(void)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
 
-    const char* cubemap_paths[] = {  // realtionship.
-        "assets/skybox/right.jpg",   // GL_TEXTURE_CUBE_MAP_POSITIVE_X
-        "assets/skybox/left.jpg",    // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-        "assets/skybox/top.jpg",     // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-        "assets/skybox/bottom.jpg",  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-        "assets/skybox/back.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-        "assets/skybox/front.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
-    };
-
     // data keepers.
     int width;
     int height;
@@ -199,19 +206,21 @@ int main(void)
     for (unsigned int i = 0; i < sizeof(cubemap_paths) / sizeof(cubemap_paths[0]); i++) {
         static int times = 0;
         data = stbi_load(cubemap_paths[i], &width, &height, &nrChannels, 0);
-        log_print_n_flush("[FAIL_CUBEMAP]: %d, %d\n", times, nrChannels);
+        log_print_n_flush("[LOG CUBEMAP]: %d, %d\n", times, nrChannels);
         assert(data && "Cubemaps loads failed! RUN");
         times++;
 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         stbi_image_free(data);
     }
+    
+    // COOL PROGRAM FISHCARD //
     //$ file 'file.img' output:
     //2048x2048 = dimensions
     //components 3 = RGB, no alpha
     //precision 8 = 8-bit per channel = GL_UNSIGNED_BYTE
 
-    // cubemap stuff end.
-    
+    // SHADERS //
+    // basic shader. 
     shader_basic.program = shader_create_from_memory(vertex_shader_basic_src, fragment_shader_basic_src);
     if (shader_basic.program.id == 0) {
         log_print_n_flush("SHADER COMPILATION FAILED!\n");
@@ -221,17 +230,28 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     shader_basic.view = shader_get_uniform_location(shader_basic.program, "view");
     shader_basic.projection = shader_get_uniform_location(shader_basic.program, "projection");
 
-    vox.instance_shader.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
-    if (vox.instance_shader.program.id == 0) {
+    // skybox shader.
+    shader_skybox.program = shader_create_from_memory(vertex_shader_skybox_src, fragment_shader_skybox_src);
+    if (shader_skybox.program.id == 0) {
         log_print_n_flush("SHADER COMPILATION FAILED!\n");
         abort();
     }
-    vox.instance_shader.model = shader_get_uniform_location(vox.instance_shader.program, "model");
-    vox.instance_shader.view = shader_get_uniform_location(vox.instance_shader.program, "view");
-    vox.instance_shader.projection = shader_get_uniform_location(vox.instance_shader.program, "projection");
-    vox.instance_shader.offsets = shader_get_uniform_location(vox.instance_shader.program, "offsets");
+    shader_skybox.view = shader_get_uniform_location(shader_basic.program, "view");
+    shader_skybox.projection = shader_get_uniform_location(shader_basic.program, "projection");
 
-    vox.mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
+    // ground shader.
+    shader_instanced.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
+    if (shader_instanced.program.id == 0) {
+        log_print_n_flush("SHADER COMPILATION FAILED!\n");
+        abort();
+    }
+    shader_instanced.model = shader_get_uniform_location(shader_instanced.program, "model");
+    shader_instanced.view = shader_get_uniform_location(shader_instanced.program, "view");
+    shader_instanced.projection = shader_get_uniform_location(shader_instanced.program, "projection");
+    shader_instanced.offsets = shader_get_uniform_location(shader_instanced.program, "offsets");
+
+    // load meshes
+    mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
 
     // camera setup
@@ -240,7 +260,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
-    shader_set_mat4(vox.instance_shader.program, vox.instance_shader.projection, &projection.col1.x);
+    shader_set_mat4(shader_instanced.program, shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(shader_basic.program, shader_basic.projection, &projection.col1.x);
 
     // prepare quad transform
@@ -253,7 +273,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
-    shader_set_mat4(vox.instance_shader.program, vox.instance_shader.model, &transform.col1.x);
+    shader_set_mat4(shader_instanced.program, shader_instanced.model, &transform.col1.x);
 
     // precalculate planes positionsss.
     const int area_size = 20;
@@ -267,8 +287,8 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     }
     
     // send to gpu. // hackyy
-    glUseProgram(vox.instance_shader.program.id);
-    glUniform3fv(vox.instance_shader.offsets, 1600, &translations[0].x);
+    glUseProgram(shader_instanced.program.id);
+    glUniform3fv(shader_instanced.offsets, 1600, &translations[0].x);
 
     // FISHCARD //
     //glEnable(GL_CULL_FACE);
@@ -286,7 +306,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
     double prev_frame_time = prev_time;
     while (!glfwWindowShouldClose(window)) {
 
-        // frames and delta time.
+        // TIMING STUFF.
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
         prev_time = curr_time;
@@ -299,7 +319,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
             prev_frame_time = curr_time;
         }
 
-        // handle input.
+        // HANDLE INPUT
         processInput(window);
 
         camera.yaw   += mouse_dx * mouse_sens;
@@ -335,19 +355,33 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
             vecf3_apply_add(&camera.pos, movement_vector);
         }
 
-        // update stuff.
+        // UPDATE THINGS.
         matf4x4 view = camerka_view_matrix(&camera); // you can use shader uniforms that can be shared across multiple shaders.
-        shader_set_mat4(vox.instance_shader.program, vox.instance_shader.view, &view.col1.x);
+        shader_set_mat4(shader_instanced.program, shader_instanced.view, &view.col1.x);
         shader_set_mat4(shader_basic.program, shader_basic.view, &view.col1.x);
 
-        // render shit.
+        // RENDER START
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+// glDepthMask(GL_FALSE);
+// skyboxShader.use();
+// // ... set view and projection matrix
+// glBindVertexArray(skyboxVAO);
+// glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+// glDrawArrays(GL_TRIANGLES, 0, 36);
+// glDepthMask(GL_TRUE);
+// // ... draw rest of the scene
+        
+        glDepthMask(GL_FALSE);
+        //Fragments still test against the depth buffer (can still be rejected)
+        //But passing fragments don't update the depth buffer
+        //The depth values stay whatever they were before
+
         // ground
-        glUseProgram(vox.instance_shader.program.id);
+        glUseProgram(shader_instanced.program.id);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
-        glBindVertexArray(vox.mesh_quad.VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, vox.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
+        glBindVertexArray(mesh_quad.VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
         //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
        
@@ -403,9 +437,9 @@ GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* i
     glEnableVertexAttribArray(1);
 
     // this is unnecesary but for now i leave it.
-    glBindVertexArray(0); 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0); 
+    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
@@ -441,7 +475,7 @@ GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* ind
     return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
 
-GpuMeshSimple gpu_load_mesh_triangle(const float* vertices, size_t vertices_size)
+GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size)
 {
     GLuint VBO;
     GLuint VAO;

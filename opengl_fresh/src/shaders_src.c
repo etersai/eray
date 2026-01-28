@@ -13,11 +13,36 @@ const char* vertex_shader_basic_src = "#version 460 core\n"
 
 // in vec3 textureDir; // direction vector representing a 3D texture coordinate
 // uniform samplerCube cubemap; // cubemap texture sampler
+// #version 330 core
+// out vec4 FragColor;
+//
+// in vec3 TexCoords;
+//
+// uniform samplerCube skybox;
 //
 // void main()
-// {             
-//     FragColor = texture(cubemap, textureDir);
+// {    
+//     FragColor = texture(skybox, TexCoords);
 // }
+
+const char* vertex_shader_skybox_src = "#version 460 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "out vec3 TexCoords;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n"
+    "   TexCoords = aPos;\n"
+    "   gl_Position = projection * view * vec4(aPos, 1.0);\n"
+    "}\0";
+
+const char* fragment_shader_skybox_src = "#version 460 core\n"
+    "out vec4 FragColor;\n"
+    "in vec3 TexCoords;\n"
+    "uniform samplerCube skybox;\n"
+    "void main() {\n"
+    "    FragColor = texture(skybox, TexCoords);\n"
+    "}\n";
 
 
 
