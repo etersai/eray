@@ -122,7 +122,6 @@ GpuMeshIndexed mesh_anchor;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
                             
 Texture texture_grass;
-GLuint cubemap_texture;
 TextureCubemap texture_skybox; // TODOs
 Camerka camera;
 
@@ -177,34 +176,13 @@ int main(void)
         "assets/skybox/front.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
         "assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
-
- // CREATE CUBEMAP TEXTURE
-    // opengl
-    glGenTextures(1, &cubemap_texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
-
-    // data keepers.
-    int width;
-    int height;
-    int nrChannels;
-    unsigned char *data; // f(x). wed jan 28 19:18:33. 2026.
-    // end data keepers.
-    stbi_set_flip_vertically_on_load(false);
-    for (unsigned int i = 0; i < sizeof(cubemap_paths) / sizeof(cubemap_paths[0]); i++) {
-        static int times = 0;
-        data = stbi_load(cubemap_paths[i], &width, &height, &nrChannels, 0);
-        log_print_n_flush("[LOG CUBEMAP]: %d, %d\n", times, nrChannels);
-        assert(data && "Cubemaps loads failed! RUN");
-        times++;
-glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        stbi_image_free(data);
+    texture_skybox = texture_cubemap_create_from_paths(cubemap_paths);
+    if (texture_skybox.id == 0) {
+        // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
+        log_print_prefix("asset_load_error", "failed to load cubemap/skybox\n");
+        abort();
     }
-    
+   
     // COOL PROGRAM FISHCARD //
     //$ file 'file.img' output:
     //2048x2048 = dimensions
@@ -373,7 +351,7 @@ glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL
         glDepthMask(GL_FALSE);
         shader_use(shader_skybox.program);
         glBindVertexArray(mesh_skybox.VAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox.id);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthMask(GL_TRUE);
 

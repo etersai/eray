@@ -1,5 +1,7 @@
 #include "gl_stuff.h"
+#include "platform.h"
 #include <assert.h>
+#include <stdbool.h>
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {
     GLuint VAO;
@@ -111,4 +113,30 @@ Texture texture_create_from_memory(unsigned char* data, int width, int height, i
     texture.num_color_channels = color_channels;
 
     return texture;
+}
+
+TextureCubemap texture_cubemap_create_from_paths(const char** paths)
+{
+    TextureCubemap cubemap = {0};
+    glGenTextures(1, &cubemap.id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
+
+    int width;
+    int height;
+    int nrChannels;
+    unsigned char *data; // f(x). wed jan 28 19:18:33. 2026.
+    stbi_set_flip_vertically_on_load(false);
+    for (unsigned int i = 0; i < 6; i++) { // assert cubemaps 6!!
+        data = stbi_load(paths[i], &width, &height, &nrChannels, 0);
+        assert(data && "Cubemaps loads failed! RUN");
+glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    }
+
+    return cubemap;
 }

@@ -33,6 +33,6 @@ GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* i
 GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size);
 
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
-TextureCubemap texture_cubemap_create_from_paths();
+TextureCubemap texture_cubemap_create_from_paths(const char** paths);
 
 #endif /* GL_STUFF_H_ */
