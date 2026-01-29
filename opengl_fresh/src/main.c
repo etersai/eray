@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <stddef.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -183,9 +184,34 @@ int main(void)
         abort();
     }
     
-    char* ptr;
-    ptr = file;
-    while (*ptr != '\0') {
+    float vertex[3];
+    unsigned int index[3];
+
+    char* ptr = file;
+    char* end = file + size;
+    enum { MAX_BUF = 64 };
+    char buf[MAX_BUF];
+    int i = 0;
+    while (ptr < end) {
+#if 1
+        if (*ptr == '\n') {
+            buf[i] = '\0';
+            if (buf[0] == 'v') {
+                elog_s(buf);
+                abort();
+            }
+            else if (buf[0] == 'f') {
+                elog_s(buf);
+            }
+            i = 0;
+            ptr++;
+
+            //abort();
+        }
+#endif
+        buf[i] = *ptr;
+        i++;
+        assert(i < MAX_BUF);
         putchar(*ptr);
         ptr++;
     }

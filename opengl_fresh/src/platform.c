@@ -39,7 +39,7 @@ char* map_file_into_memory(const char* filename, size_t* out_file_size)
 
     mapped_file = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0); 
     if (mapped_file == MAP_FAILED) {
-        perror("mmap");
+        perror("mmap"); // NOTE: perror not cross platform with windows.
         close(fd);
         return NULL;
     }
@@ -50,16 +50,8 @@ char* map_file_into_memory(const char* filename, size_t* out_file_size)
     return mapped_file;
 }
 
-
-
 char* eray_get_cwd(char* buf, size_t size)
 { // TODO: windows idef
     return getcwd(buf, size);
 }
 
-
-int read_obj(const char* filename)
-{
-(void)filename;
-return 0;
-}
