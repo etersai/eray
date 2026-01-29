@@ -12,6 +12,7 @@
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tinyobj_loader_c/tinyobj_loader_c.h"
 
+
 char* map_file_into_memory(const char* filename, size_t* out_file_size)
 {
     struct stat sb;
@@ -49,10 +50,13 @@ char* map_file_into_memory(const char* filename, size_t* out_file_size)
     return mapped_file;
 }
 
+
+
 char* eray_get_cwd(char* buf, size_t size)
-{ // get windows todo. something like _getcwd but chceck!
+{ // TODO: windows idef
     return getcwd(buf, size);
 }
+
 
 int read_obj(const char* filename)
 {

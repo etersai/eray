@@ -500,4 +500,25 @@ static void log_print_n_flush(const char* format, ...)
     va_end(args);
     fflush(out_target);
 }
+
+// elog_ aka C victorinox.
+static void elog_zu(size_t val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: size_t => %zu\n", val);
+    fflush(out_target);
+}
+static void elog_d(int val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: int => %d\n", val);
+    fflush(out_target);
+}
+static void elog_f(float val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: float => %f\n", val);
+    fflush(out_target);
+}
+
 #endif /* LA_MATH_H_ */

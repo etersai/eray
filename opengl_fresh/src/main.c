@@ -110,7 +110,21 @@ Texture texture_load_from_path(const char* path)
     return texture;
 }
 
-///home/eter/CGFS/eray/opengl_fresh/assets/models
+const int cwd_path_max = 1024;
+void console_post_cwd(void)
+{
+    char buf[cwd_path_max];
+    char* success = eray_get_cwd(buf, sizeof(buf));
+    if (success) {
+        fprintf(stdout, "%s\n", buf);
+    } 
+    else
+    {
+        fprintf(stdout, "%s\n", "[err: getcwd failed]");
+    }
+}
+
+//home/eter/CGFS/eray/opengl_fresh/assets/models
 
 
 
@@ -156,19 +170,25 @@ int main(void)
         fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
     }    
-   
-    char buf[1024];
-    eray_get_cwd(buf, sizeof(buf));
-      printf("[BUFFF]%s\n", buf); 
-//    char cwd[1024];
-// //   if (getcwd(cwd, sizeof(cwd)) != NULL) {
-//        printf("Current working dir: %s\n", cwd);
-//    } else {
-//        perror("getcwd() error");
-//        return 1;
-//    }
-//    return 0;
-// }
+
+    console_post_cwd();
+
+// /home/eter/CGFS/eray/opengl_fresh/assets/models/teapot.obj
+
+    const char* filename = "./assets/models/teapot.obj";
+    size_t size;
+    char* file = map_file_into_memory(filename, &size);  
+    if (file == NULL) {
+        log_print_prefix("asset_load_error", "failed to load '%s'\n", filename);
+        abort();
+    }
+    
+    char* ptr;
+    ptr = file;
+    while (*ptr != '\0') {
+        putchar(*ptr);
+        ptr++;
+    }
 
 
     // prepare gpu resources.
