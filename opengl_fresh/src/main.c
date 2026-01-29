@@ -116,13 +116,8 @@ void console_post_cwd(void)
 {
     char buf[cwd_path_max];
     char* success = eray_get_cwd(buf, sizeof(buf));
-    if (success) {
-        fprintf(stdout, "%s\n", buf);
-    } 
-    else
-    {
-        fprintf(stdout, "%s\n", "[err: getcwd failed]");
-    }
+    if (success) {fprintf(stdout, "%s\n", buf);} 
+    else {fprintf(stdout, "%s\n", "[err: getcwd failed]");}
 }
 
 //home/eter/CGFS/eray/opengl_fresh/assets/models
@@ -144,6 +139,7 @@ Camerka camera;
 int main(void)
 {
     // Setup GLFW and OpenGL Context
+    console_post_cwd();
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -172,8 +168,6 @@ int main(void)
         return 1;
     }    
 
-    console_post_cwd();
-
 // /home/eter/CGFS/eray/opengl_fresh/assets/models/teapot.obj
 
     const char* filename = "./assets/models/teapot.obj";
@@ -183,7 +177,18 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", filename);
         abort();
     }
-    
+
+// #include <string.h>
+//
+// char s[] = "one two three";
+// char *tok;
+//
+// tok = strtok(s, " ");
+// while (tok) {
+//     printf("%s\n", tok);
+//     tok = strtok(NULL, " ");
+// }
+//
     float vertex[3];
     unsigned int index[3];
 
@@ -197,15 +202,45 @@ int main(void)
         if (*ptr == '\n') {
             buf[i] = '\0';
             if (buf[0] == 'v') {
-                elog_s(buf);
-                abort();
+                float temp_buf[3];
+                char* ptr_temp = buf;
+                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
+                char* tok;
+                tok = strtok(ptr_temp, " "); // strtok modifies buffer 
+                int k = 0;
+                while (tok) {
+                    float val;
+                    int result = sscanf(tok, "%f", &val);
+                    if (result == 0) {
+                        abort();
+                    }
+                    temp_buf[k] = val; 
+                    tok = strtok(NULL, " ");
+                    k++;
+                } 
+                elog_f(temp_buf[0]);
+                elog_f(temp_buf[1]);
+                elog_f(temp_buf[2]);
+                //abort();
             }
             else if (buf[0] == 'f') {
-                elog_s(buf);
+                unsigned int temp_buf[3];
+                char* ptr_temp = buf;
+                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
+                char* tok;
+                tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
+                while (tok) {
+                    unsigned int val;
+                    int result = sscanf(tok, "%u", &val);
+                    if (result == 0) {
+                        abort();
+                    }
+                    tok = strtok(NULL, " ");
+                    elog_d(val);
+                }
             }
             i = 0;
             ptr++;
-
             //abort();
         }
 #endif
