@@ -110,6 +110,10 @@ Texture texture_load_from_path(const char* path)
     return texture;
 }
 
+///home/eter/CGFS/eray/opengl_fresh/assets/models
+
+
+
 // globals
 const float mouse_sens = 0.1f;
 ShaderBasic shader_basic;
@@ -138,20 +142,34 @@ int main(void)
     }
 
     glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
-    glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
-
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
 
+    glfwMakeContextCurrent(window);
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
     }    
+   
+    char buf[1024];
+    eray_get_cwd(buf, sizeof(buf));
+      printf("[BUFFF]%s\n", buf); 
+//    char cwd[1024];
+// //   if (getcwd(cwd, sizeof(cwd)) != NULL) {
+//        printf("Current working dir: %s\n", cwd);
+//    } else {
+//        perror("getcwd() error");
+//        return 1;
+//    }
+//    return 0;
+// }
+
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
@@ -175,15 +193,10 @@ int main(void)
     texture_skybox = texture_cubemap_create_from_paths(cubemap_paths);
     if (texture_skybox.id == 0) {
         // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
-        log_print_prefix("asset_load_error", "failed to load cubemap/skybox\n");
+        log_print_prefix("asset_load_error", "failed to load cubemap/skybox!\n");
         abort();
     }
-   
-    // COOL PROGRAM FISHCARD //
-    //$ file 'file.img' output:
-    //2048x2048 = dimensions
-    //components 3 = RGB, no alpha
-    //precision 8 = 8-bit per channel = GL_UNSIGNED_BYTE
+     
 
     // SHADERS //
     // basic shader. 
@@ -216,7 +229,7 @@ int main(void)
     shader_instanced.projection = shader_get_uniform_location(shader_instanced.program, "projection");
     shader_instanced.offsets = shader_get_uniform_location(shader_instanced.program, "offsets");
 
-    // load meshes
+    // LOAD MESHES
     mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
