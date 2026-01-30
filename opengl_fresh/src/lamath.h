@@ -528,7 +528,7 @@ static void log_print_n_flush(const char* format, ...)
 
 // elog_ aka C victorinox.
 // Sometimes i just want to quickly print some value.
-// Basically save yourself some typing wrapper. -eter
+// Basically save yourself some typing wrapper.
 // fflush intentional.
 #ifndef ELOGDEF
 #define ELOGDEF static inline

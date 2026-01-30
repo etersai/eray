@@ -116,7 +116,8 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
     enum { MAX_BUF = 64 };
     char line_buffer[MAX_BUF];
     int line_buffer_count = 0;
-
+    size_t v_count = 0;
+    size_t i_count = 0;
     char* ptr = file;
     char* end = file + size;
     while (ptr < end) {
@@ -126,47 +127,33 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
             line_buffer[line_buffer_count] = '\0';
 
             if (line_buffer[0] == 'v') {
-                float temp_buf[3];
                 char* ptr_temp = line_buffer;
                 ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
-                char* tok;
-                tok = strtok(ptr_temp, " "); // strtok modifies buffer 
-                int k = 0;
+                char* tok = strtok(ptr_temp, " "); // strtok modifies buffer 
                 while (tok) {
                     float val;
                     int result = sscanf(tok, "%f", &val);
                     if (result == 0) {
                         abort();
                     }
-                    temp_buf[k] = val; 
+                    vertices[v_count++] = val; 
                     tok = strtok(NULL, " ");
-                    k++;
                 } 
-                elog_f(temp_buf[0]);
-                elog_f(temp_buf[1]);
-                elog_f(temp_buf[2]);
             }
 
             else if (line_buffer[0] == 'f') {
-                unsigned int temp_buf[3];
                 char* ptr_temp = line_buffer;
                 ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
-                char* tok;
-                tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
-                int k = 0;
+                char* tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
                 while (tok) {
                     unsigned int val;
                     int result = sscanf(tok, "%u", &val);
                     if (result == 0) {
                         abort();
                     }
-                    temp_buf[k] = val; 
+                    indices[i_count++] = val; 
                     tok = strtok(NULL, " ");
-                    k++;
                 }
-                elog_d(temp_buf[0]);
-                elog_d(temp_buf[1]);
-                elog_d(temp_buf[2]);
             }
             // go to next line.
             line_buffer_count = 0;
@@ -180,7 +167,8 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
         putchar(*ptr);
         ptr++;
     }
-
+    (*vert_count) = v_count; 
+    (*index_count) = i_count; 
 }
 
 const int cwd_path_max = 1024;
@@ -245,12 +233,10 @@ int main(void)
         abort();
     }
 
-    elog_zu(sizeof(float));
-    abort();
-
     float vertices[1024*1024];// 1 mib
     unsigned int indices[1024*1024];
 
+#if 0 
     enum { MAX_BUF = 64 };
     char line_buffer[MAX_BUF];
     int line_buffer_count = 0;
@@ -314,6 +300,7 @@ int main(void)
         putchar(*ptr);
         ptr++;
     }
+#endif
 
 
     // prepare gpu resources.
