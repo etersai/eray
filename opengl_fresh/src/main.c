@@ -122,9 +122,8 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
     char* ptr = file;
     char* end = file + size;
     while (ptr < end) {
-#if 1
-        if (*ptr == '\n') {
 
+        if (*ptr == '\n') {
             line_buffer[line_buffer_count] = '\0';
 
             if (line_buffer[0] == 'v') {
@@ -152,7 +151,7 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
                     if (result == 0) {
                         abort();
                     }
-                    indices[i_count++] = val; 
+                    indices[i_count++] = val - 1; 
                     tok = strtok(NULL, " ");
                 }
             }
@@ -161,11 +160,10 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
             ptr++;
             continue;
         }
-#endif
+
         line_buffer[line_buffer_count] = *ptr;
         line_buffer_count++;
         assert(line_buffer_count < MAX_BUF);
-     //   putchar(*ptr);
         ptr++;
     }
     (*vert_count) = v_count; 
@@ -242,7 +240,7 @@ int main(void)
     }    
 
 
-
+    // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
     size_t size = 0;
     char* file = map_file_into_memory(filename, &size);  
@@ -250,19 +248,11 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", filename);
         abort();
     }
-
     float vertices[1024*512];// 1/2 mib
     unsigned int indices[1024*512];
     size_t v = 0;
     size_t in = 0;
     do_some_shit(file, size, vertices, indices, &v, &in);
-    for (size_t i = 0; i < in; i+=3){
-        elog_u(indices[i]);
-        elog_u(indices[i+1]);
-        elog_u(indices[i+2]);
-    }
-
-
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
@@ -482,7 +472,7 @@ int main(void)
         shader_prog_use(shader_basic_wo_color_attr.prog);
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
-        matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 10.0f, 0.0f});
+        matf4x4 t2 = matf4x4_translate_give((vecf3){5.0f, 0.0f, 0.0f});
         matf4x4_scale_set(&s2, 0.5f, 0.5f, 0.5f);
         matf4x4_rot_y(&r, rotacja);
         rotacja += 0.009f;
@@ -492,7 +482,7 @@ int main(void)
         matf4x4_mul(&full2, &temp, &t2);
         shader_set_mat4(shader_basic_wo_color_attr.prog, shader_basic_wo_color_attr.model, &full2.col1.x);
         glPointSize(2.0f);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         glBindVertexArray(mesh_model.VAO);
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
