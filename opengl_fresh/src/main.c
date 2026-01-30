@@ -363,7 +363,7 @@ int main(void)
      
 
     // SHADERS //
-    // basic shader. 
+    // basic shader. // TODO CAHNGE IT BACK XD 
     ShaderBasic shader_basic = make_shader_basic_n_get_unifrom_loc(vertex_shader_basic_src, fragment_shader_basic_src);
     if (!shader_valid(shader_basic)) { elog_abort("ABORT FOR NOW"); }
 
