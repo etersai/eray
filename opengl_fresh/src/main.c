@@ -134,7 +134,7 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
                     float val;
                     int result = sscanf(tok, "%f", &val);
                     if (result == 0) {
-                        abort();
+                        la_unreachable();
                     }
                     vertices[v_count++] = val; 
                     tok = strtok(NULL, " ");
@@ -149,7 +149,7 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
                     unsigned int val;
                     int result = sscanf(tok, "%u", &val);
                     if (result == 0) {
-                        abort();
+                        la_unreachable();
                     }
                     indices[i_count++] = val - 1; 
                     tok = strtok(NULL, " ");
@@ -158,7 +158,7 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
             // go to next line.
             line_buffer_count = 0;
             ptr++;
-            continue;
+            //continue;
         }
 
         line_buffer[line_buffer_count] = *ptr;
