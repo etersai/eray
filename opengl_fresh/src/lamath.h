@@ -533,72 +533,68 @@ static void log_print_n_flush(const char* format, ...)
 #ifndef ELOGDEF
 #define ELOGDEF static inline
 #endif
+#ifndef ELOG_TARGET
+#define ELOG_TARGET stderr
+#endif
+#ifndef ELOG_TAG
+#define ELOG_TAG "[elog]: "
+#endif
 ELOGDEF void elog_zu(size_t val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %zu\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%zu\n", val);
+    fflush(ELOG_TARGET);
 }
 ELOGDEF void elog_d(int val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %d\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%d\n", val);
+    fflush(ELOG_TARGET);
 }
 ELOGDEF void elog_f(float val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %f\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%f\n", val);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_s(const char* str)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %s\n", str);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%s\n", str);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_u(unsigned int val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %u\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%u\n", val);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_llu(unsigned long long val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %llu\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%llu\n", val);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_lld(long long val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %lld\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%lld\n", val);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_p(const void* p)
 {
-    FILE* out_target = stdout;
-    fprintf(out_target, "[elog]: %p\n", p);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%p\n", p);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_lu(unsigned long val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %lu\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%lu\n", val);
+    fflush(ELOG_TARGET);
 }
 
 ELOGDEF void elog_ld(long val)
 {
-    FILE* out_target = stdout; 
-    fprintf(out_target, "[elog]: %ld\n", val);
-    fflush(out_target);
+    fprintf(ELOG_TARGET, ELOG_TAG "%ld\n", val);
+    fflush(ELOG_TARGET);
 }
 
 #endif /* LA_MATH_H_ */

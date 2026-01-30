@@ -245,6 +245,9 @@ int main(void)
         abort();
     }
 
+    elog_zu(sizeof(float));
+    abort();
+
     float vertices[1024*1024];// 1 mib
     unsigned int indices[1024*1024];
 
