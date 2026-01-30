@@ -195,8 +195,6 @@ Texture texture_grass;
 TextureCubemap texture_skybox;
 Camerka camera;
 
-#define shader_valid(shader) ((shader).prog.id != 0)
-
 ShaderBasic make_shader_basic_n_get_unifrom_loc(const char* vert_src, const char* frag_src)
 {
     ShaderBasic s = {0};
@@ -209,8 +207,6 @@ ShaderBasic make_shader_basic_n_get_unifrom_loc(const char* vert_src, const char
 
     return s;
 }
-
-
 
 
 int main(void)
@@ -246,6 +242,7 @@ int main(void)
     }    
 
 
+
     const char* filename = "./assets/models/teapot.obj";
     size_t size = 0;
     char* file = map_file_into_memory(filename, &size);  
@@ -253,86 +250,18 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", filename);
         abort();
     }
-    elog_zu(size);
 
     float vertices[1024*512];// 1/2 mib
     unsigned int indices[1024*512];
     size_t v = 0;
-    size_t i = 0;
-  // abort();
-     do_some_shit(file, size, vertices, indices, &v, &i);
-
-
-
-//(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
-
-
-
-#if 0 
-    enum { MAX_BUF = 64 };
-    char line_buffer[MAX_BUF];
-    int line_buffer_count = 0;
-    char* ptr = file;
-    char* end = file + size;
-    while (ptr < end) {
-#if 1
-        if (*ptr == '\n') {
-            line_buffer[line_buffer_count] = '\0';
-            if (line_buffer[0] == 'v') {
-                float temp_buf[3];
-                char* ptr_temp = line_buffer;
-                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
-                char* tok;
-                tok = strtok(ptr_temp, " "); // strtok modifies buffer 
-                int k = 0;
-                while (tok) {
-                    float val;
-                    int result = sscanf(tok, "%f", &val);
-                    if (result == 0) {
-                        abort();
-                    }
-                    temp_buf[k] = val; 
-                    tok = strtok(NULL, " ");
-                    k++;
-                } 
-                elog_f(temp_buf[0]);
-                elog_f(temp_buf[1]);
-                elog_f(temp_buf[2]);
-            }
-            else if (line_buffer[0] == 'f') {
-                unsigned int temp_buf[3];
-                char* ptr_temp = line_buffer;
-                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
-                char* tok;
-                tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
-                int k = 0;
-                while (tok) {
-                    unsigned int val;
-                    int result = sscanf(tok, "%u", &val);
-                    if (result == 0) {
-                        abort();
-                    }
-                    temp_buf[k] = val; 
-                    tok = strtok(NULL, " ");
-                    k++;
-                }
-                elog_d(temp_buf[0]);
-                elog_d(temp_buf[1]);
-                elog_d(temp_buf[2]);
-            }
-            // go to next line.
-            line_buffer_count = 0;
-            ptr++;
-            continue;
-        }
-#endif
-        line_buffer[line_buffer_count] = *ptr;
-        line_buffer_count++;
-        assert(line_buffer_count < MAX_BUF);
-        putchar(*ptr);
-        ptr++;
+    size_t in = 0;
+    do_some_shit(file, size, vertices, indices, &v, &in);
+    for (size_t i = 0; i < in; i+=3){
+        elog_u(indices[i]);
+        elog_u(indices[i+1]);
+        elog_u(indices[i+2]);
     }
-#endif
+
 
 
     // prepare gpu resources.
@@ -361,7 +290,7 @@ int main(void)
         abort();
     }
      
-
+                    
     // SHADERS //
     // basic shader. // TODO CAHNGE IT BACK XD 
     ShaderBasic shader_basic = make_shader_basic_n_get_unifrom_loc(vertex_shader_basic_src, fragment_shader_basic_src);
@@ -395,7 +324,7 @@ int main(void)
     mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
-    mesh_model = gpu_load_mesh_quad(vertices, indices, v*sizeof(float), i*sizeof(unsigned int));
+    mesh_model = gpu_load_mesh_model(vertices, indices, v*sizeof(float), in*sizeof(unsigned int));
 
     // camera setup PROJECTION SET ONCE AT START !!
     camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
@@ -406,6 +335,7 @@ int main(void)
     shader_set_mat4(shader_instanced.prog, shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(shader_basic.prog, shader_basic.projection, &projection.col1.x);
     shader_set_mat4(shader_skybox.prog, shader_skybox.projection, &projection.col1.x);
+    shader_set_mat4(shader_basic_wo_color_attr.prog, shader_basic_wo_color_attr.projection, &projection.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -503,6 +433,7 @@ int main(void)
         matf4x4 view = camerka_view_matrix(&camera); // you can use shader uniforms that can be shared across multiple shaders.
         shader_set_mat4(shader_instanced.prog, shader_instanced.view, &view.col1.x);
         shader_set_mat4(shader_basic.prog, shader_basic.view, &view.col1.x);
+        shader_set_mat4(shader_basic_wo_color_attr.prog, shader_basic_wo_color_attr.view, &view.col1.x);
 
         matf4x4 view_no_translation = view;
         view_no_translation.col4.x = 0.0f; // zero out translation
@@ -546,15 +477,27 @@ int main(void)
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 
-        shader_prog_use(shader_basic.prog);
+        // teapot
+        static float rotacja = 0.0f;
+        shader_prog_use(shader_basic_wo_color_attr.prog);
         matf4x4 s2 = matf4x4_I_give();
-        matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
-        matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
+        matf4x4 r = matf4x4_I_give();
+        matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 10.0f, 0.0f});
+        matf4x4_scale_set(&s2, 0.5f, 0.5f, 0.5f);
+        matf4x4_rot_y(&r, rotacja);
+        rotacja += 0.009f;
         matf4x4 full2 = matf4x4_I_give();
-        matf4x4_mul(&full2, &t2, &s2);
-        shader_set_mat4(shader_basic.prog, shader_basic.model, &full2.col1.x);
+        matf4x4 temp = matf4x4_I_give();
+        matf4x4_mul(&temp, &r, &s2);
+        matf4x4_mul(&full2, &temp, &t2);
+        shader_set_mat4(shader_basic_wo_color_attr.prog, shader_basic_wo_color_attr.model, &full2.col1.x);
+        glPointSize(2.0f);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+
         glBindVertexArray(mesh_model.VAO);
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

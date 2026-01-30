@@ -8,6 +8,7 @@ typedef struct {
     GLuint id;
 } ShaderProgram;
 
+#define shader_valid(shader) ((shader).prog.id != 0)
 ShaderProgram shader_prog_create_from_memory(const char* vertex_shader_src, const char* fragment_shader_src);
 void shader_prog_use(ShaderProgram program);
 void shader_prog_delete(ShaderProgram program);

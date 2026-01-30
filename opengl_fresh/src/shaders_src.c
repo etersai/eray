@@ -25,7 +25,7 @@ const char* basic_no_color_fragment_src = "#version 460 core\n"
     "out vec4 final_color;\n"
     "void main()\n"
     "{\n"
-    "   final_color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+    "   final_color = vec4(0.5, 0.8, 0.2, 1.0);\n"
     "}\0";
 
 const char* vertex_shader_skybox_src = "#version 460 core\n"
@@ -46,7 +46,6 @@ const char* fragment_shader_skybox_src = "#version 460 core\n"
     "void main() {\n"
     "    FragColor = texture(skybox, TexCoords);\n"
     "}\n";
-
 
 
 const char* fragment_shader_basic_src = "#version 460 core\n"
