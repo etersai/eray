@@ -1,5 +1,30 @@
+// Copyright 2026 etersai
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #ifndef LA_MATH_H_
 #define LA_MATH_H_
+
+// What is lamath? Basically a chug-along header for my personal use.
+// Tailored to my liking and explicitness for learning purposes, so don’t expect much.
+// Feel free to contribute, though. Still learning myself.
 
 #include <math.h>
 #include <stdlib.h>
@@ -502,29 +527,76 @@ static void log_print_n_flush(const char* format, ...)
 }
 
 // elog_ aka C victorinox.
-static void elog_zu(size_t val)
+// Sometimes i just want to quickly print some value.
+// Basically save yourself some typing wrapper. -eter
+// fflush intentional.
+#ifndef ELOGDEF
+#define ELOGDEF static inline
+#endif
+ELOGDEF void elog_zu(size_t val)
 {
     FILE* out_target = stdout; 
     fprintf(out_target, "[elog]: %zu\n", val);
     fflush(out_target);
 }
-static void elog_d(int val)
+ELOGDEF void elog_d(int val)
 {
     FILE* out_target = stdout; 
     fprintf(out_target, "[elog]: %d\n", val);
     fflush(out_target);
 }
-static void elog_f(float val)
+ELOGDEF void elog_f(float val)
 {
     FILE* out_target = stdout; 
     fprintf(out_target, "[elog]: %f\n", val);
     fflush(out_target);
 }
 
-static void elog_s(const char* str)
+ELOGDEF void elog_s(const char* str)
 {
     FILE* out_target = stdout; 
     fprintf(out_target, "[elog]: %s\n", str);
+    fflush(out_target);
+}
+
+ELOGDEF void elog_u(unsigned int val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: %u\n", val);
+    fflush(out_target);
+}
+
+ELOGDEF void elog_llu(unsigned long long val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: %llu\n", val);
+    fflush(out_target);
+}
+
+ELOGDEF void elog_lld(long long val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: %lld\n", val);
+    fflush(out_target);
+}
+
+ELOGDEF void elog_p(const void* p)
+{
+    fprintf(stdout, "[elog]: %p\n", p);
+    fflush(stdout);
+}
+
+ELOGDEF void elog_lu(unsigned long val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: %lu\n", val);
+    fflush(out_target);
+}
+
+ELOGDEF void elog_ld(long val)
+{
+    FILE* out_target = stdout; 
+    fprintf(out_target, "[elog]: %ld\n", val);
     fflush(out_target);
 }
 

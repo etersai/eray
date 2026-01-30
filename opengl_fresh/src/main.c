@@ -120,10 +120,6 @@ void console_post_cwd(void)
     else {fprintf(stdout, "%s\n", "[err: getcwd failed]");}
 }
 
-//home/eter/CGFS/eray/opengl_fresh/assets/models
-
-
-
 // globals
 const float mouse_sens = 0.1f;
 ShaderBasic shader_basic;
@@ -133,7 +129,7 @@ GpuMeshIndexed mesh_quad;
 GpuMeshIndexed mesh_anchor;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_grass;
-TextureCubemap texture_skybox; // TODOs
+TextureCubemap texture_skybox;
 Camerka camera;
 
 int main(void)
@@ -168,7 +164,6 @@ int main(void)
         return 1;
     }    
 
-// /home/eter/CGFS/eray/opengl_fresh/assets/models/teapot.obj
 
     const char* filename = "./assets/models/teapot.obj";
     size_t size;
@@ -178,19 +173,8 @@ int main(void)
         abort();
     }
 
-// #include <string.h>
-//
-// char s[] = "one two three";
-// char *tok;
-//
-// tok = strtok(s, " ");
-// while (tok) {
-//     printf("%s\n", tok);
-//     tok = strtok(NULL, " ");
-// }
-//
-    float vertex[3];
-    unsigned int index[3];
+    float vertices[1024*1024];// 1 mib
+    unsigned int indices[1024*1024];
 
     char* ptr = file;
     char* end = file + size;
@@ -202,6 +186,7 @@ int main(void)
         if (*ptr == '\n') {
             buf[i] = '\0';
             if (buf[0] == 'v') {
+                putchar('\n');
                 float temp_buf[3];
                 char* ptr_temp = buf;
                 ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
@@ -224,20 +209,26 @@ int main(void)
                 //abort();
             }
             else if (buf[0] == 'f') {
+                putchar('\n');
                 unsigned int temp_buf[3];
                 char* ptr_temp = buf;
                 ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
                 char* tok;
                 tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
+                int k = 0;
                 while (tok) {
                     unsigned int val;
                     int result = sscanf(tok, "%u", &val);
                     if (result == 0) {
                         abort();
                     }
+                    temp_buf[k] = val; 
                     tok = strtok(NULL, " ");
-                    elog_d(val);
+                    k++;
                 }
+                elog_d(temp_buf[0]);
+                elog_d(temp_buf[1]);
+                elog_d(temp_buf[2]);
             }
             i = 0;
             ptr++;
