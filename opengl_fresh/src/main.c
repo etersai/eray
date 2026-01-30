@@ -111,6 +111,78 @@ Texture texture_load_from_path(const char* path)
     return texture;
 }
 
+void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
+{
+    enum { MAX_BUF = 64 };
+    char line_buffer[MAX_BUF];
+    int line_buffer_count = 0;
+
+    char* ptr = file;
+    char* end = file + size;
+    while (ptr < end) {
+#if 1
+        if (*ptr == '\n') {
+
+            line_buffer[line_buffer_count] = '\0';
+
+            if (line_buffer[0] == 'v') {
+                float temp_buf[3];
+                char* ptr_temp = line_buffer;
+                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
+                char* tok;
+                tok = strtok(ptr_temp, " "); // strtok modifies buffer 
+                int k = 0;
+                while (tok) {
+                    float val;
+                    int result = sscanf(tok, "%f", &val);
+                    if (result == 0) {
+                        abort();
+                    }
+                    temp_buf[k] = val; 
+                    tok = strtok(NULL, " ");
+                    k++;
+                } 
+                elog_f(temp_buf[0]);
+                elog_f(temp_buf[1]);
+                elog_f(temp_buf[2]);
+            }
+
+            else if (line_buffer[0] == 'f') {
+                unsigned int temp_buf[3];
+                char* ptr_temp = line_buffer;
+                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
+                char* tok;
+                tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
+                int k = 0;
+                while (tok) {
+                    unsigned int val;
+                    int result = sscanf(tok, "%u", &val);
+                    if (result == 0) {
+                        abort();
+                    }
+                    temp_buf[k] = val; 
+                    tok = strtok(NULL, " ");
+                    k++;
+                }
+                elog_d(temp_buf[0]);
+                elog_d(temp_buf[1]);
+                elog_d(temp_buf[2]);
+            }
+            // go to next line.
+            line_buffer_count = 0;
+            ptr++;
+            continue;
+        }
+#endif
+        line_buffer[line_buffer_count] = *ptr;
+        line_buffer_count++;
+        assert(line_buffer_count < MAX_BUF);
+        putchar(*ptr);
+        ptr++;
+    }
+
+}
+
 const int cwd_path_max = 1024;
 void console_post_cwd(void)
 {
@@ -176,19 +248,18 @@ int main(void)
     float vertices[1024*1024];// 1 mib
     unsigned int indices[1024*1024];
 
+    enum { MAX_BUF = 64 };
+    char line_buffer[MAX_BUF];
+    int line_buffer_count = 0;
     char* ptr = file;
     char* end = file + size;
-    enum { MAX_BUF = 64 };
-    char buf[MAX_BUF];
-    int i = 0;
     while (ptr < end) {
 #if 1
         if (*ptr == '\n') {
-            buf[i] = '\0';
-            if (buf[0] == 'v') {
-                putchar('\n');
+            line_buffer[line_buffer_count] = '\0';
+            if (line_buffer[0] == 'v') {
                 float temp_buf[3];
-                char* ptr_temp = buf;
+                char* ptr_temp = line_buffer;
                 ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
                 char* tok;
                 tok = strtok(ptr_temp, " "); // strtok modifies buffer 
@@ -206,12 +277,10 @@ int main(void)
                 elog_f(temp_buf[0]);
                 elog_f(temp_buf[1]);
                 elog_f(temp_buf[2]);
-                //abort();
             }
-            else if (buf[0] == 'f') {
-                putchar('\n');
+            else if (line_buffer[0] == 'f') {
                 unsigned int temp_buf[3];
-                char* ptr_temp = buf;
+                char* ptr_temp = line_buffer;
                 ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
                 char* tok;
                 tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
@@ -230,14 +299,15 @@ int main(void)
                 elog_d(temp_buf[1]);
                 elog_d(temp_buf[2]);
             }
-            i = 0;
+            // go to next line.
+            line_buffer_count = 0;
             ptr++;
-            //abort();
+            continue;
         }
 #endif
-        buf[i] = *ptr;
-        i++;
-        assert(i < MAX_BUF);
+        line_buffer[line_buffer_count] = *ptr;
+        line_buffer_count++;
+        assert(line_buffer_count < MAX_BUF);
         putchar(*ptr);
         ptr++;
     }
