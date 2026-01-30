@@ -195,18 +195,22 @@ Texture texture_grass;
 TextureCubemap texture_skybox;
 Camerka camera;
 
+#define shader_valid(shader) ((shader).prog.id != 0)
+
 ShaderBasic make_shader_basic_n_get_unifrom_loc(const char* vert_src, const char* frag_src)
 {
     ShaderBasic s = {0};
     s.prog = shader_prog_create_from_memory(vert_src, frag_src);
-    if (s.prog.id == 0) { return s; }
+    if (s.prog.id == 0) { elog_abort("he"); }
 
-    s.model = shader_get_uniform_location(shader_basic.prog, "model");
-    s.view = shader_get_uniform_location(shader_basic.prog, "view");
-    s.projection = shader_get_uniform_location(shader_basic.prog, "projection");
+    s.model = shader_get_uniform_location(s.prog, "model");
+    s.view = shader_get_uniform_location(s.prog, "view");
+    s.projection = shader_get_uniform_location(s.prog, "projection");
 
     return s;
 }
+
+
 
 
 int main(void)
@@ -360,48 +364,32 @@ int main(void)
 
     // SHADERS //
     // basic shader. 
-    shader_basic.prog = shader_prog_create_from_memory(vertex_shader_basic_src, fragment_shader_basic_src);
-    if (shader_basic.prog.id == 0) {
-        log_print_n_flush("SHADER COMPILATION FAILED!\n");
-        abort();
-    }
-    shader_basic.model = shader_get_uniform_location(shader_basic.prog, "model");
-    shader_basic.view = shader_get_uniform_location(shader_basic.prog, "view");
-    shader_basic.projection = shader_get_uniform_location(shader_basic.prog, "projection");
+    ShaderBasic shader_basic = make_shader_basic_n_get_unifrom_loc(vertex_shader_basic_src, fragment_shader_basic_src);
+    if (!shader_valid(shader_basic)) { elog_abort("ABORT FOR NOW"); }
 
-    
-
-    
-    // basic_no_color_shader
-    shader_basic_wo_color_attr.program = shader_create_from_memory(basic_no_color_vertex_src, basic_no_color_fragment_src);
-    if (shader_basic_wo_color_attr.program.id == 0) {
-        elog_abort("SHADER COMPILATION FAILED");
-    }
-    shader_basic.model = shader_get_uniform_location(shader_basic.program, "model");
-    shader_basic.view = shader_get_uniform_location(shader_basic.program, "view");
-    shader_basic.projection = shader_get_uniform_location(shader_basic.program, "projection");
-
-
+    // to be model shader (teatwist.obj)
+    ShaderBasic shader_basic_wo_color_attr = make_shader_basic_n_get_unifrom_loc(basic_no_color_vertex_src, basic_no_color_fragment_src);
+    if (!shader_valid(shader_basic_wo_color_attr)) { elog_abort("ABORT FOR NOW"); }
 
 
     // skybox shader.
-    shader_skybox.program = shader_create_from_memory(vertex_shader_skybox_src, fragment_shader_skybox_src);
-    if (shader_skybox.program.id == 0) {
+    shader_skybox.prog = shader_prog_create_from_memory(vertex_shader_skybox_src, fragment_shader_skybox_src);
+    if (shader_skybox.prog.id == 0) {
         elog_abort("SHADER COMPILATION FAILED");
     }
-    shader_skybox.view = shader_get_uniform_location(shader_skybox.program, "view");
-    shader_skybox.projection = shader_get_uniform_location(shader_skybox.program, "projection");
+    shader_skybox.view = shader_get_uniform_location(shader_skybox.prog, "view");
+    shader_skybox.projection = shader_get_uniform_location(shader_skybox.prog, "projection");
 
     // ground shader.
-    shader_instanced.program = shader_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
-    if (shader_instanced.program.id == 0) {
+    shader_instanced.prog = shader_prog_create_from_memory(vertex_shader_instance_src, fragment_shader_src); 
+    if (shader_instanced.prog.id == 0) {
         log_print_n_flush("SHADER COMPILATION FAILED!\n");
         abort();
     }
-    shader_instanced.model = shader_get_uniform_location(shader_instanced.program, "model");
-    shader_instanced.view = shader_get_uniform_location(shader_instanced.program, "view");
-    shader_instanced.projection = shader_get_uniform_location(shader_instanced.program, "projection");
-    shader_instanced.offsets = shader_get_uniform_location(shader_instanced.program, "offsets");
+    shader_instanced.model = shader_get_uniform_location(shader_instanced.prog, "model");
+    shader_instanced.view = shader_get_uniform_location(shader_instanced.prog, "view");
+    shader_instanced.projection = shader_get_uniform_location(shader_instanced.prog, "projection");
+    shader_instanced.offsets = shader_get_uniform_location(shader_instanced.prog, "offsets");
 
     // LOAD MESHES
     mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
@@ -415,9 +403,9 @@ int main(void)
     float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
-    shader_set_mat4(shader_instanced.program, shader_instanced.projection, &projection.col1.x);
-    shader_set_mat4(shader_basic.program, shader_basic.projection, &projection.col1.x);
-    shader_set_mat4(shader_skybox.program, shader_skybox.projection, &projection.col1.x);
+    shader_set_mat4(shader_instanced.prog, shader_instanced.projection, &projection.col1.x);
+    shader_set_mat4(shader_basic.prog, shader_basic.projection, &projection.col1.x);
+    shader_set_mat4(shader_skybox.prog, shader_skybox.projection, &projection.col1.x);
 
     // prepare quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -429,7 +417,7 @@ int main(void)
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
-    shader_set_mat4(shader_instanced.program, shader_instanced.model, &transform.col1.x);
+    shader_set_mat4(shader_instanced.prog, shader_instanced.model, &transform.col1.x);
 
     // precalculate planes positionsss.
     const int area_size = 20;
@@ -443,7 +431,7 @@ int main(void)
     }
     
     // send to gpu. // hackyy
-    glUseProgram(shader_instanced.program.id);
+    glUseProgram(shader_instanced.prog.id);
     glUniform3fv(shader_instanced.offsets, 1600, &translations[0].x);
 
     // FISHCARD //
@@ -513,14 +501,14 @@ int main(void)
 
         // UPDATE THINGS.
         matf4x4 view = camerka_view_matrix(&camera); // you can use shader uniforms that can be shared across multiple shaders.
-        shader_set_mat4(shader_instanced.program, shader_instanced.view, &view.col1.x);
-        shader_set_mat4(shader_basic.program, shader_basic.view, &view.col1.x);
+        shader_set_mat4(shader_instanced.prog, shader_instanced.view, &view.col1.x);
+        shader_set_mat4(shader_basic.prog, shader_basic.view, &view.col1.x);
 
         matf4x4 view_no_translation = view;
         view_no_translation.col4.x = 0.0f; // zero out translation
         view_no_translation.col4.y = 0.0f;
         view_no_translation.col4.z = 0.0f;
-        shader_set_mat4(shader_skybox.program, shader_skybox.view, &view_no_translation.col1.x);
+        shader_set_mat4(shader_skybox.prog, shader_skybox.view, &view_no_translation.col1.x);
 
         // RENDER START
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -533,14 +521,14 @@ int main(void)
         //But passing fragments don't update the depth buffer
         //The depth values stay whatever they were before
         glDepthMask(GL_FALSE);
-        shader_use(shader_skybox.program);
+        shader_prog_use(shader_skybox.prog);
         glBindVertexArray(mesh_skybox.VAO);
         glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox.id);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthMask(GL_TRUE);
 
         // ground
-        shader_use(shader_instanced.program);
+        shader_prog_use(shader_instanced.prog);
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
@@ -548,23 +536,23 @@ int main(void)
         //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
        
         // anchor
-        shader_use(shader_basic.program);
+        shader_prog_use(shader_basic.prog);
         matf4x4 s = matf4x4_I_give();
         matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
         matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
         matf4x4 full = matf4x4_I_give();
         matf4x4_mul(&full, &t, &s);
-        shader_set_mat4(shader_basic.program, shader_basic.model, &full.col1.x);
+        shader_set_mat4(shader_basic.prog, shader_basic.model, &full.col1.x);
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 
-        shader_use(shader_basic.program);
+        shader_prog_use(shader_basic.prog);
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
         matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
         matf4x4 full2 = matf4x4_I_give();
         matf4x4_mul(&full2, &t2, &s2);
-        shader_set_mat4(shader_basic.program, shader_basic.model, &full2.col1.x);
+        shader_set_mat4(shader_basic.prog, shader_basic.model, &full2.col1.x);
         glBindVertexArray(mesh_model.VAO);
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
 

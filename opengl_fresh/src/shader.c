@@ -7,12 +7,12 @@
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);
 
-void shader_delete(ShaderProgram program)
+void shader_prog_delete(ShaderProgram program)
 {
     glDeleteProgram(program.id);
 }
 
-void shader_use(ShaderProgram program)
+void shader_prog_use(ShaderProgram program)
 {
     glUseProgram(program.id);
 }
