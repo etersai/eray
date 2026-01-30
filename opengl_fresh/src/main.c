@@ -112,7 +112,7 @@ Texture texture_load_from_path(const char* path)
 }
 
 
-void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
+void load_obj_to_buffers_not_safe(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
 {
     enum { MAX_BUF = 64 };
     char line_buffer[MAX_BUF];
@@ -158,7 +158,7 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
             // go to next line.
             line_buffer_count = 0;
             ptr++;
-            //continue;
+            continue;
         }
 
         line_buffer[line_buffer_count] = *ptr;
@@ -252,7 +252,7 @@ int main(void)
     unsigned int indices[1024*512];
     size_t v = 0;
     size_t in = 0;
-    do_some_shit(file, size, vertices, indices, &v, &in);
+    load_obj_to_buffers_not_safe(file, size, vertices, indices, &v, &in);
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
