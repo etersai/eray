@@ -582,8 +582,9 @@ ELOGDEF void elog_lld(long long val)
 
 ELOGDEF void elog_p(const void* p)
 {
-    fprintf(stdout, "[elog]: %p\n", p);
-    fflush(stdout);
+    FILE* out_target = stdout;
+    fprintf(out_target, "[elog]: %p\n", p);
+    fflush(out_target);
 }
 
 ELOGDEF void elog_lu(unsigned long val)
