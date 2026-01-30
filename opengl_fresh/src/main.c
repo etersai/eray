@@ -74,7 +74,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 typedef GLint uniform;
 typedef struct {
-    ShaderProgram program;
+    ShaderProgram prog;
     uniform model;
     uniform view;
     uniform projection;
@@ -82,14 +82,14 @@ typedef struct {
 } ShaderInstanced;
 
 typedef struct {
-    ShaderProgram program;
+    ShaderProgram prog;
     uniform model;
     uniform view;
     uniform projection;
 } ShaderBasic;
 
 typedef struct {
-    ShaderProgram program;
+    ShaderProgram prog;
     uniform view;
     uniform projection;
 } ShaderSkybox;
@@ -110,6 +110,7 @@ Texture texture_load_from_path(const char* path)
     }
     return texture;
 }
+
 
 void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
 {
@@ -183,6 +184,7 @@ void console_post_cwd(void)
 // globals
 const float mouse_sens = 0.1f;
 ShaderBasic shader_basic;
+ShaderBasic shader_basic_wo_color_attr;
 ShaderInstanced shader_instanced;
 ShaderSkybox shader_skybox;
 GpuMeshIndexed mesh_quad;
@@ -192,6 +194,20 @@ GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_grass;
 TextureCubemap texture_skybox;
 Camerka camera;
+
+ShaderBasic make_shader_basic_n_get_unifrom_loc(const char* vert_src, const char* frag_src)
+{
+    ShaderBasic s = {0};
+    s.prog = shader_prog_create_from_memory(vert_src, frag_src);
+    if (s.prog.id == 0) { return s; }
+
+    s.model = shader_get_uniform_location(shader_basic.prog, "model");
+    s.view = shader_get_uniform_location(shader_basic.prog, "view");
+    s.projection = shader_get_uniform_location(shader_basic.prog, "projection");
+
+    return s;
+}
+
 
 int main(void)
 {
@@ -344,20 +360,34 @@ int main(void)
 
     // SHADERS //
     // basic shader. 
-    shader_basic.program = shader_create_from_memory(vertex_shader_basic_src, fragment_shader_basic_src);
-    if (shader_basic.program.id == 0) {
+    shader_basic.prog = shader_prog_create_from_memory(vertex_shader_basic_src, fragment_shader_basic_src);
+    if (shader_basic.prog.id == 0) {
         log_print_n_flush("SHADER COMPILATION FAILED!\n");
         abort();
+    }
+    shader_basic.model = shader_get_uniform_location(shader_basic.prog, "model");
+    shader_basic.view = shader_get_uniform_location(shader_basic.prog, "view");
+    shader_basic.projection = shader_get_uniform_location(shader_basic.prog, "projection");
+
+    
+
+    
+    // basic_no_color_shader
+    shader_basic_wo_color_attr.program = shader_create_from_memory(basic_no_color_vertex_src, basic_no_color_fragment_src);
+    if (shader_basic_wo_color_attr.program.id == 0) {
+        elog_abort("SHADER COMPILATION FAILED");
     }
     shader_basic.model = shader_get_uniform_location(shader_basic.program, "model");
     shader_basic.view = shader_get_uniform_location(shader_basic.program, "view");
     shader_basic.projection = shader_get_uniform_location(shader_basic.program, "projection");
 
+
+
+
     // skybox shader.
     shader_skybox.program = shader_create_from_memory(vertex_shader_skybox_src, fragment_shader_skybox_src);
     if (shader_skybox.program.id == 0) {
-        log_print_n_flush("SHADER COMPILATION FAILED!\n");
-        abort();
+        elog_abort("SHADER COMPILATION FAILED");
     }
     shader_skybox.view = shader_get_uniform_location(shader_skybox.program, "view");
     shader_skybox.projection = shader_get_uniform_location(shader_skybox.program, "projection");

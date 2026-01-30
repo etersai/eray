@@ -39,7 +39,7 @@ void shader_set_mat4(ShaderProgram program, uniform uniform, const float* matrix
     glUniformMatrix4fv(uniform, 1, GL_FALSE, matrix);
 }
 
-ShaderProgram shader_create_from_memory(const char* vertex_shader_src, const char* fragment_shader_src)
+ShaderProgram shader_prog_create_from_memory(const char* vertex_shader_src, const char* fragment_shader_src)
 {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_src, NULL);
