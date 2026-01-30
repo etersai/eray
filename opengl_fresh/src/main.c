@@ -164,7 +164,7 @@ void do_some_shit(char* file, size_t size, float* vertices, unsigned int* indice
         line_buffer[line_buffer_count] = *ptr;
         line_buffer_count++;
         assert(line_buffer_count < MAX_BUF);
-        putchar(*ptr);
+     //   putchar(*ptr);
         ptr++;
     }
     (*vert_count) = v_count; 
@@ -176,8 +176,8 @@ void console_post_cwd(void)
 {
     char buf[cwd_path_max];
     char* success = eray_get_cwd(buf, sizeof(buf));
-    if (success) {fprintf(stdout, "%s\n", buf);} 
-    else {fprintf(stdout, "%s\n", "[err: getcwd failed]");}
+    if (success) {fprintf(stderr, "%s\n", buf);} 
+    else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
 
 // globals
@@ -187,6 +187,7 @@ ShaderInstanced shader_instanced;
 ShaderSkybox shader_skybox;
 GpuMeshIndexed mesh_quad;
 GpuMeshIndexed mesh_anchor;
+GpuMeshIndexed mesh_model;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_grass;
 TextureCubemap texture_skybox;
@@ -226,15 +227,26 @@ int main(void)
 
 
     const char* filename = "./assets/models/teapot.obj";
-    size_t size;
+    size_t size = 0;
     char* file = map_file_into_memory(filename, &size);  
     if (file == NULL) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", filename);
         abort();
     }
+    elog_zu(size);
 
-    float vertices[1024*1024];// 1 mib
-    unsigned int indices[1024*1024];
+    float vertices[1024*512];// 1/2 mib
+    unsigned int indices[1024*512];
+    size_t v = 0;
+    size_t i = 0;
+  // abort();
+     do_some_shit(file, size, vertices, indices, &v, &i);
+
+
+
+//(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
+
+
 
 #if 0 
     enum { MAX_BUF = 64 };
@@ -365,6 +377,7 @@ int main(void)
     mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
+    mesh_model = gpu_load_mesh_quad(vertices, indices, v*sizeof(float), i*sizeof(unsigned int));
 
     // camera setup PROJECTION SET ONCE AT START !!
     camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
@@ -514,6 +527,16 @@ int main(void)
         shader_set_mat4(shader_basic.program, shader_basic.model, &full.col1.x);
         glBindVertexArray(mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
+
+        shader_use(shader_basic.program);
+        matf4x4 s2 = matf4x4_I_give();
+        matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
+        matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
+        matf4x4 full2 = matf4x4_I_give();
+        matf4x4_mul(&full2, &t2, &s2);
+        shader_set_mat4(shader_basic.program, shader_basic.model, &full2.col1.x);
+        glBindVertexArray(mesh_model.VAO);
+        glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

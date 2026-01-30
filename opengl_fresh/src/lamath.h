@@ -597,4 +597,10 @@ ELOGDEF void elog_ld(long val)
     fflush(ELOG_TARGET);
 }
 
+ELOGDEF void elog_abort(const char* str)
+{
+    elog_s(str);
+    abort();
+}
+
 #endif /* LA_MATH_H_ */
