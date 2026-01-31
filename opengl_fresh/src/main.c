@@ -472,7 +472,7 @@ int main(void)
         shader_prog_use(shader_basic_wo_color_attr.prog);
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
-        matf4x4 t2 = matf4x4_translate_give((vecf3){5.0f, 0.0f, 0.0f});
+        matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
         matf4x4_scale_set(&s2, 0.5f, 0.5f, 0.5f);
         matf4x4_rot_y(&r, rotacja);
         rotacja += 0.009f;

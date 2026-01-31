@@ -31,6 +31,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define la_norm(value, min, max) (((value) - (min)) / ((max) - (min)))
 #define la_lerp(norm, min, max) (((max) - (min)) * (norm) + (min))
 #define la_min(a, b) ((a) < (b) ? (a) : (b))
