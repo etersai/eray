@@ -1,4 +1,4 @@
-const char* vertex_shader_basic_src = "#version 460 core\n"
+const char* glsl_basic_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
     "out vec3 out_color;\n"
@@ -11,7 +11,15 @@ const char* vertex_shader_basic_src = "#version 460 core\n"
     "   out_color = aColor;\n"
     "}\0";
 
-const char* basic_no_color_vertex_src = "#version 460 core\n"
+const char* glsl_basic_fs = "#version 460 core\n"
+    "in vec3 out_color;\n" // input from vertex (in n out must match)
+    "out vec4 final_color;\n"
+    "void main()\n"
+    "{\n"
+    "   final_color = vec4(out_color, 1.0);\n"
+    "}\0";
+
+const char* glsl_teapot_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
@@ -21,14 +29,14 @@ const char* basic_no_color_vertex_src = "#version 460 core\n"
     "   gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
 
-const char* basic_no_color_fragment_src = "#version 460 core\n"
+const char* glsl_teapot_fs = "#version 460 core\n"
     "out vec4 final_color;\n"
     "void main()\n"
     "{\n"
     "   final_color = vec4(0.5, 0.8, 0.2, 1.0);\n"
     "}\0";
 
-const char* vertex_shader_skybox_src = "#version 460 core\n"
+const char* glsl_skybox_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "out vec3 TexCoords;\n"
     "uniform mat4 view;\n"
@@ -39,7 +47,7 @@ const char* vertex_shader_skybox_src = "#version 460 core\n"
     "   gl_Position = projection * view * vec4(aPos, 1.0);\n"
     "}\0";
 
-const char* fragment_shader_skybox_src = "#version 460 core\n"
+const char* glsl_skybox_fs = "#version 460 core\n"
     "out vec4 FragColor;\n"
     "in vec3 TexCoords;\n"
     "uniform samplerCube skybox;\n"
@@ -48,15 +56,7 @@ const char* fragment_shader_skybox_src = "#version 460 core\n"
     "}\n";
 
 
-const char* fragment_shader_basic_src = "#version 460 core\n"
-    "in vec3 out_color;\n" // input from vertex (in n out must match)
-    "out vec4 final_color;\n"
-    "void main()\n"
-    "{\n"
-    "   final_color = vec4(out_color, 1.0);\n"
-    "}\0";
-
-const char* vertex_shader_instance_src = "#version 460 core\n"
+const char* glsl_instanced_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec2 aTexCoord;\n"
     "out vec2 TexCoord;\n"
@@ -72,7 +72,7 @@ const char* vertex_shader_instance_src = "#version 460 core\n"
     "   TexCoord = aTexCoord;\n"
     "}\0";
 
-const char* fragment_shader_src = "#version 460 core\n"
+const char* glsl_instanced_fs = "#version 460 core\n"
     "out vec4 final_color;\n"
     "in vec2 TexCoord;\n"
     "uniform sampler2D Texture;\n"

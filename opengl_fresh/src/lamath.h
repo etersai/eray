@@ -30,8 +30,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
 
-#ifndef M_PI
+#ifndef M_PI /* C99 not defined */
 #define M_PI 3.14159265358979323846
 #endif
 
@@ -534,15 +535,17 @@ static void log_print_n_flush(const char* format, ...)
 // Sometimes i just want to quickly print some value.
 // Basically save yourself some typing wrapper.
 // fflush intentional.
+
 #ifndef ELOGDEF
 #define ELOGDEF static inline
-#endif
+#endif /* ELOGDEF */
 #ifndef ELOG_TARGET
 #define ELOG_TARGET stderr
-#endif
+#endif /* ELOG_TARGET */
 #ifndef ELOG_TAG
 #define ELOG_TAG "[elog]: "
-#endif
+#endif /* ELOG_TAG */
+
 ELOGDEF void elog_zu(size_t val)
 {
     fprintf(ELOG_TARGET, ELOG_TAG "%zu\n", val);
@@ -605,6 +608,27 @@ ELOGDEF void elog_abort(const char* str)
 {
     elog_s(str);
     abort();
+}
+
+ELOGDEF double elog_time_sec(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (ts.tv_sec + (ts.tv_nsec / 1e9)); // 1*10^9
+}
+
+ELOGDEF double elog_time_ms(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ((ts.tv_sec * 1e3) + (ts.tv_nsec / 1e6));
+}
+
+ELOGDEF double elog_time_ns(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ((ts.tv_sec * 1e9) + ts.tv_nsec);
 }
 
 #endif /* LA_MATH_H_ */
