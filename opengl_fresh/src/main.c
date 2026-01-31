@@ -16,7 +16,7 @@
 #include "shader.h"
 #include "font.c"
 #include "vertex_data.c"
-#include "shaders_src.c"
+#include "glsl_shaders.c"
 
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
@@ -229,8 +229,6 @@ int main(void)
 
 
     // load teapot model.
-    double start = elog_time_sec();
-
     const char* filename = "./assets/models/teapot.obj";
     size_t size = 0;
     char* file = map_file_into_memory(filename, &size);  
@@ -244,9 +242,7 @@ int main(void)
     size_t in = 0;
     load_obj_to_buffers_not_safe(file, size, vertices, indices, &v, &in);
 
-    double end = elog_time_sec();
-    elog_f(end - start);
-    abort();
+
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
@@ -485,12 +481,11 @@ int main(void)
         matf4x4_mul(&temp, &r, &s2);
         matf4x4_mul(&full2, &temp, &t2);
         shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &full2.col1.x);
+
         glPointSize(2.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
         glBindVertexArray(mesh_model.VAO);
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
-
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glfwSwapBuffers(window);
