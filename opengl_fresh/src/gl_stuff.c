@@ -96,6 +96,40 @@ GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* ind
     return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
 
+GpuMeshIndexed gpu_load_mesh_3attr(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
+{
+    GLuint VAO;
+    GLuint VBO;
+    GLuint EBO;
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
+    // and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 3));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    // this is unnecesary but for now i leave it.
+    // glBindVertexArray(0); 
+    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
+
+}
+
 GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size)
 {
     GLuint VBO;
@@ -119,7 +153,6 @@ GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
     
-    elog_zu(vertices_size/(sizeof(float)*3));
     return (GpuMeshSimple){VAO, VBO, vertices_size/(sizeof(float)*3)};
 }
 

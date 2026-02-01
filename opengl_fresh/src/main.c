@@ -314,6 +314,7 @@ int main(void)
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
     mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
+    mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
     
     // precalculated
     GpuMeshSimple mesh_teapot_normals;
@@ -322,7 +323,7 @@ int main(void)
 
 
     // camera setup PROJECTION SET ONCE AT START !!
-    camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
+    camera.pos = (vecf3){-5.0f, 2.0f, 0.0f};
     matf4x4 projection;
     float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
