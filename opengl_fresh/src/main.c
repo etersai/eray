@@ -183,6 +183,11 @@ int main(void)
         unsigned int t_two_index = teapot_obj.indices[i+1];
         unsigned int t_three_index = teapot_obj.indices[i+2];
 
+        elog_u(t_one_index);
+        elog_u(t_two_index);
+        elog_u(t_three_index);
+        abort();
+
         triangle[0] = (vecf3){teapot_obj.vertices[t_one_index],
                               teapot_obj.vertices[t_one_index+1],
                               teapot_obj.vertices[t_one_index+2]};
