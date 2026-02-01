@@ -130,6 +130,7 @@ ShaderBasic shader_basic_teapot;
 ShaderInstanced shader_instanced;
 ShaderSkybox shader_skybox;
 GpuMeshIndexed mesh_quad;
+GpuMeshIndexed mesh_cube;
 GpuMeshIndexed mesh_anchor;
 GpuMeshIndexed mesh_model;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
@@ -236,7 +237,7 @@ int main(void)
         teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
     }
 
-
+    
 
 
 
