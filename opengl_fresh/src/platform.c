@@ -9,8 +9,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "STB/stb_image.h" 
 
+#if 0 /* made my own XD */
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tinyobj_loader_c/tinyobj_loader_c.h"
+#endif
 
 char* map_file_into_memory(const char* filename, size_t* out_file_size)
 {
@@ -47,6 +49,12 @@ char* map_file_into_memory(const char* filename, size_t* out_file_size)
 
     (*out_file_size) = sb.st_size;
     return mapped_file;
+}
+
+
+void unmap_file_from_memory(char* file, size_t size)
+{
+    munmap(file, size);
 }
 
 char* eray_get_cwd(char* buf, size_t size)

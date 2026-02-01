@@ -18,6 +18,7 @@ int load_obj_from_path(obj_in_memory* obj, const char* path)
         return 1;
     }
     load_obj_to_buffers_not_safe(obj, file, size);
+    unmap_file_from_memory(file, size);
     return 0;
 }
 
