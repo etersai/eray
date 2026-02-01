@@ -634,7 +634,7 @@ ELOGDEF void elog_abort(const char* str)
     elog_s(str);
     abort();
 }
-
+// TODO: windows compatible time funcs.
 ELOGDEF double elog_time_sec(void)
 {
     struct timespec ts;
