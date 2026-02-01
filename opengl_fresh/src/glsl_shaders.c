@@ -24,18 +24,22 @@ const char* glsl_teapot_vs = "#version 460 core\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
+    "uniform vec4 color;\n"
+    "out vec4 pass_color;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   pass_color = color;\n"
     "}\0";
 
 const char* glsl_teapot_fs = "#version 460 core\n"
     "out vec4 final_color;\n"
+    "in vec4 pass_color;\n"
     "void main()\n"
     "{\n"
-    "   final_color = vec4(0.5, 0.8, 0.2, 1.0);\n"
+    "   final_color = pass_color;\n"
     "}\0";
-
+// 0.5, 0.8, 0.2, 1.0 // cool green
 const char* glsl_skybox_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "out vec3 TexCoords;\n"

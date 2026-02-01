@@ -25,6 +25,12 @@ void shade_set_mat4_by_name(ShaderProgram program, const char* name, const float
     glUniformMatrix4fv(loc, 1, GL_FALSE, matrix);
 }
 
+void shader_set_vec4(ShaderProgram program, uniform uniform, const float* vec4)
+{
+    glUseProgram(program.id);
+    glUniform4fv(uniform, 1, vec4);
+}
+
 uniform shader_get_uniform_location(ShaderProgram program, const char* name)
 {
     glUseProgram(program.id);

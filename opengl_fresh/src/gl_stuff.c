@@ -1,7 +1,9 @@
 #include "gl_stuff.h"
+#include "lamath.h"
 #include "platform.h"
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {
     GLuint VAO;
@@ -117,6 +119,7 @@ GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_
     // don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
     
+    elog_zu(vertices_size/(sizeof(float)*3));
     return (GpuMeshSimple){VAO, VBO, vertices_size/(sizeof(float)*3)};
 }
 

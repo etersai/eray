@@ -86,6 +86,7 @@ typedef struct {
     uniform model;
     uniform view;
     uniform projection;
+    uniform color;
 } ShaderBasic;
 
 typedef struct {
@@ -167,7 +168,9 @@ int main(void)
         fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
     }    
-
+    /********************/
+    /* END BOILER PLATE */
+    /********************/
 
     // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
@@ -176,17 +179,18 @@ int main(void)
         elog_abort("OBJ LOAD FAIL!");
     }
 
+    vecf3 teapot_centers[6320];
+    vecf3 teapot_normals[6320];
+    vecf3 teapot_normals_lines[6320*2];
+    int centroid_count = 0;
+
     for (size_t i = 0; i < teapot_obj.i_count; i+=3) {
+
         vecf3 triangle[3];
 
-        unsigned int t_one_index = teapot_obj.indices[i];
-        unsigned int t_two_index = teapot_obj.indices[i+1];
-        unsigned int t_three_index = teapot_obj.indices[i+2];
-
-        elog_u(t_one_index);
-        elog_u(t_two_index);
-        elog_u(t_three_index);
-        abort();
+        unsigned int t_one_index = teapot_obj.indices[i] * 3; // uncoding
+        unsigned int t_two_index = teapot_obj.indices[i+1] * 3;
+        unsigned int t_three_index = teapot_obj.indices[i+2] * 3;
 
         triangle[0] = (vecf3){teapot_obj.vertices[t_one_index],
                               teapot_obj.vertices[t_one_index+1],
@@ -198,12 +202,40 @@ int main(void)
                               teapot_obj.vertices[t_three_index+1],
                               teapot_obj.vertices[t_three_index+2]};
 
-        vecf3_print(lamath_calc_triangle_normal(triangle));
+        //centroids[centroid_count] = lamath_triangle_centroid(triangle);
+        vecf3 center = lamath_triangle_centroid(triangle);
+        vecf3 normal = lamath_calc_triangle_normal(triangle); 
+    
+        // PIECE OF HIGH TEC CODE.
+        // float dot = center.x*normal.x + center.y*normal.y + center.z*normal.z;
+        // if (dot < 0.0f) {
+        //     normal.x = -normal.x;
+        //     normal.y = -normal.y;
+        //     normal.z = -normal.z;
+        // }
+
+        teapot_centers[centroid_count].x = center.x;
+        teapot_centers[centroid_count].y = center.y;
+        teapot_centers[centroid_count].z = center.z;
+
+        teapot_normals[centroid_count+1].x = normal.x;
+        teapot_normals[centroid_count+1].y = normal.y;
+        teapot_normals[centroid_count+1].z = normal.z;
+
+        centroid_count++;
     } 
 
-//[elog]: 2908
-//[elog]: 2920
-//[elog]: 2938
+    float tn_scale = 0.3f;
+    for (int i = 0; i < 6320; i++) {
+        // MERGE TWO BUFFER TOGGERTHER KINDA CODE...
+        // Start point of line
+        teapot_normals_lines[i*2] = teapot_centers[i];
+        // End point of line (center + scaled normal)
+        teapot_normals_lines[i*2+1].x = teapot_centers[i].x + (teapot_normals[i].x * tn_scale);
+        teapot_normals_lines[i*2+1].y = teapot_centers[i].y + (teapot_normals[i].y * tn_scale);
+        teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
+    }
+
 
 
 
@@ -254,6 +286,7 @@ int main(void)
     shader_basic_teapot.model = shader_get_uniform_location(shader_basic_teapot.prog, "model");
     shader_basic_teapot.view = shader_get_uniform_location(shader_basic_teapot.prog, "view");
     shader_basic_teapot.projection = shader_get_uniform_location(shader_basic_teapot.prog, "projection");
+    shader_basic_teapot.color = shader_get_uniform_location(shader_basic_teapot.prog, "color");
 
 
     // skybox shader.
@@ -280,6 +313,12 @@ int main(void)
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
     mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
+    
+    // precalculated
+    GpuMeshSimple mesh_teapot_normals;
+    mesh_teapot_normals = gpu_load_mesh_simple_1attr(&teapot_normals_lines[0].x, sizeof(teapot_normals_lines));
+
+
 
     // camera setup PROJECTION SET ONCE AT START !!
     camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
@@ -418,8 +457,6 @@ int main(void)
         glBindTexture(GL_TEXTURE_2D, texture_grass.id);
         glBindVertexArray(mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
-        //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400);  
-        //glDrawElements(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0);
        
         // anchor
         shader_prog_use(shader_basic.prog);
@@ -435,23 +472,37 @@ int main(void)
         // teapot
         static float rotacja = 0.0f;
         shader_prog_use(shader_basic_teapot.prog);
+
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
         matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
-        matf4x4_scale_set(&s2, 10.0f, 10.0f, 10.0f);
+        matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
         matf4x4_rot_y(&r, rotacja);
-        rotacja += 0.009f;
+        rotacja += 0.00f;
         matf4x4 full2 = matf4x4_I_give();
         matf4x4 temp = matf4x4_I_give();
         matf4x4_mul(&temp, &r, &s2);
         matf4x4_mul(&full2, &temp, &t2);
+
         shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &full2.col1.x);
+
+        const float teapot_color[] = {1.0f, 0.5f, 0.0f, 1.0f}; 
+        shader_set_vec4(shader_basic_teapot.prog, shader_basic_teapot.color, teapot_color);
 
         glPointSize(2.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glBindVertexArray(mesh_model.VAO);
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        shader_prog_use(shader_basic_teapot.prog);
+        matf4x4 cm = matf4x4_I_give();
+        shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &cm.col1.x);
+        vecf4 xd =(vecf4){0.0f, 1.0f, 0.0f, 1.0f};
+        shader_set_vec4(shader_basic_teapot.prog, shader_basic_teapot.color, &xd.x);
+        //glPointSize(5.0f);
+        glBindVertexArray(mesh_teapot_normals.VAO);
+        glDrawArrays(GL_LINES, 0, mesh_teapot_normals.vertex_count);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
