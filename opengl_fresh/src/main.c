@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "obj_loader.h"
 #include "platform.h"
 #include "lamath.h"
 #include "gl_stuff.h"
@@ -113,65 +114,6 @@ Texture texture_load_from_path(const char* path)
     return texture;
 }
 
-
-void load_obj_to_buffers_not_safe(char* file, size_t size, float* vertices, unsigned int* indices, size_t* vert_count, size_t* index_count)
-{
-    enum { MAX_BUF = 64 };
-    char line_buffer[MAX_BUF];
-    int line_buffer_count = 0;
-    size_t v_count = 0;
-    size_t i_count = 0;
-    char* ptr = file;
-    char* end = file + size;
-    while (ptr < end) {
-
-        if (*ptr == '\n') {
-            line_buffer[line_buffer_count] = '\0';
-
-            if (line_buffer[0] == 'v') {
-                char* ptr_temp = line_buffer;
-                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
-                char* tok = strtok(ptr_temp, " "); // strtok modifies buffer 
-                while (tok) {
-                    float val;
-                    int result = sscanf(tok, "%f", &val);
-                    if (result == 0) {
-                        la_unreachable();
-                    }
-                    vertices[v_count++] = val; 
-                    tok = strtok(NULL, " ");
-                } 
-            }
-
-            else if (line_buffer[0] == 'f') {
-                char* ptr_temp = line_buffer;
-                ptr_temp+=2; // skip v_ and f_ . _ as whitespace 
-                char* tok = strtok(ptr_temp, " "); // strtok puts '\0' at delimiters 
-                while (tok) {
-                    unsigned int val;
-                    int result = sscanf(tok, "%u", &val);
-                    if (result == 0) {
-                        la_unreachable();
-                    }
-                    indices[i_count++] = val - 1; 
-                    tok = strtok(NULL, " ");
-                }
-            }
-            // go to next line.
-            line_buffer_count = 0;
-            ptr++;
-            continue;
-        }
-
-        line_buffer[line_buffer_count] = *ptr;
-        line_buffer_count++;
-        assert(line_buffer_count < MAX_BUF);
-        ptr++;
-    }
-    (*vert_count) = v_count; 
-    (*index_count) = i_count; 
-}
-
 const int cwd_path_max = 1024;
 void console_post_cwd(void)
 {
@@ -230,18 +172,10 @@ int main(void)
 
     // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
-    size_t size = 0;
-    char* file = map_file_into_memory(filename, &size);  
-    if (file == NULL) {
-        log_print_prefix("asset_load_error", "failed to load '%s'\n", filename);
-        abort();
+    obj_in_memory teapot_obj;
+    if (load_obj_from_path(&teapot_obj, filename) != 0) {
+        elog_abort("OBJ LOAD FAIL!");
     }
-    float vertices[1024*512];// 1/2 mib
-    unsigned int indices[1024*512];
-    size_t v = 0;
-    size_t in = 0;
-    load_obj_to_buffers_not_safe(file, size, vertices, indices, &v, &in);
-
 
 
     // prepare gpu resources.
@@ -314,7 +248,7 @@ int main(void)
     mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
-    mesh_model = gpu_load_mesh_model(vertices, indices, v*sizeof(float), in*sizeof(unsigned int));
+    mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
 
     // camera setup PROJECTION SET ONCE AT START !!
     camera.pos = (vecf3){0.0f, 10.0f, 0.0f};
@@ -473,7 +407,7 @@ int main(void)
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
         matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
-        matf4x4_scale_set(&s2, 0.5f, 0.5f, 0.5f);
+        matf4x4_scale_set(&s2, 10.0f, 10.0f, 10.0f);
         matf4x4_rot_y(&r, rotacja);
         rotacja += 0.009f;
         matf4x4 full2 = matf4x4_I_give();

@@ -116,6 +116,8 @@ static inline float deg_to_rad(float degrees);
 // COMMON
 static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far);
 static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up);
+static inline vecf3 lamath_calc_triangle_normal(const vecf3 triangle[3]);
+static vecf3 lamath_triangle_centroid(const vecf3 triangle[3]);
 static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v);
 // VECTORS
 static inline float vecf3_len(vecf3 vec);
@@ -128,6 +130,7 @@ static inline vecf3 vecf3_scale(float factor, vecf3 vec);
 static inline vecf3 vecf3_cross(vecf3 a, vecf3 b);
 static inline float vecf3_dot(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_norm(vecf3 vec);
+static inline vecf3 vecf3_sum_three(vecf3 a, vecf3 b, vecf3 c);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
 static inline matf4x4 matf4x4_I_give(void);
@@ -159,6 +162,16 @@ static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v)
     result.w = m->col1.w * v.x + m->col2.w * v.y + m->col3.w * v.z + m->col4.w * v.w;
     return result;
 }
+
+static vecf3 lamath_triangle_centroid(const vecf3 triangle[3])
+{
+    // BARYCENTRIC MAGIC
+    // P = uA + vB + wC
+    // u + v + w  = 1
+    // w = 1 - u - v
+    // u + v <= 1 
+    return vecf3_scale(1.0f/3.0f, vecf3_sum_three(triangle[0], triangle[1], triangle[2]));
+} 
 
 static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far)
 { // TODO: UNDERSTAND THIS!
@@ -205,6 +218,13 @@ static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center
     lookat->col4.y = -vecf3_dot(t, eye);
     lookat->col4.z =  vecf3_dot(f, eye);
     lookat->col4.w = 1.0f;
+}
+
+static inline vecf3 lamath_calc_triangle_normal(const vecf3 triangle[3])
+{
+    vecf3 edge_1 = vecf3_sub(triangle[1], triangle[0]);
+    vecf3 edge_2 = vecf3_sub(triangle[2], triangle[0]);
+    return vecf3_norm(vecf3_cross(edge_1, edge_2));
 }
 
 // VECTORS
@@ -257,6 +277,11 @@ static inline vecf3 vecf3_cross(vecf3 a, vecf3 b)
     return (vecf3){a.y * b.z - a.z * b.y,
                    a.z * b.x - a.x * b.z,
                    a.x * b.y - a.y * b.x};
+}
+
+static inline vecf3 vecf3_sum_three(vecf3 a, vecf3 b, vecf3 c)
+{
+    return (vecf3){a.x+b.x+c.x, a.y+b.y+c.y, a.z+b.z+c.z};
 }
 
 // MATRICES
