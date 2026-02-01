@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 
 #include <stddef.h>
-#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -176,6 +175,33 @@ int main(void)
     if (load_obj_from_path(&teapot_obj, filename) != 0) {
         elog_abort("OBJ LOAD FAIL!");
     }
+
+    for (size_t i = 0; i < teapot_obj.i_count; i+=3) {
+        vecf3 triangle[3];
+
+        unsigned int t_one_index = teapot_obj.indices[i];
+        unsigned int t_two_index = teapot_obj.indices[i+1];
+        unsigned int t_three_index = teapot_obj.indices[i+2];
+
+        triangle[0] = (vecf3){teapot_obj.vertices[t_one_index],
+                              teapot_obj.vertices[t_one_index+1],
+                              teapot_obj.vertices[t_one_index+2]};
+        triangle[1] = (vecf3){teapot_obj.vertices[t_two_index],
+                              teapot_obj.vertices[t_two_index+1],
+                              teapot_obj.vertices[t_two_index+2]};
+        triangle[2] = (vecf3){teapot_obj.vertices[t_three_index],
+                              teapot_obj.vertices[t_three_index+1],
+                              teapot_obj.vertices[t_three_index+2]};
+
+        vecf3_print(lamath_calc_triangle_normal(triangle));
+    } 
+
+//[elog]: 2908
+//[elog]: 2920
+//[elog]: 2938
+
+
+
 
 
     // prepare gpu resources.

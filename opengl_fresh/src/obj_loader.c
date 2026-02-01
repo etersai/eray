@@ -62,8 +62,8 @@ void load_obj_to_buffers_not_safe(obj_in_memory* obj, char* file, size_t size)
                     int result = sscanf(tok, "%u", &val);
                     if (result == 0) {
                         abort();
-                    }
-                    obj->indices[i_count++] = val - 1; 
+                    }                                  //OBJ files use 1-based indexing (indices start at 1),
+                    obj->indices[i_count++] = val - 1; //while OpenGL uses 0-based indexing
                     tok = strtok(NULL, " ");
                 }
             }
