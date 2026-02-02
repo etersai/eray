@@ -6,6 +6,7 @@ generate_bin:
 	@rm -rf bin
 	@mkdir -p bin/assets/skybox
 	@mkdir -p bin/assets/models 
+	@mkdir -p bin/assets/textures
 	@cp -r assets/* bin/assets/
 
 clean:

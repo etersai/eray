@@ -249,6 +249,32 @@ int main(void)
     /*******************/
     /* END BOILERPLATE */
     /*******************/
+    
+    stbi_set_flip_vertically_on_load(true); // global state 
+
+    const char* path_teapot = "./assets/models/teapot.obj";
+    const char* path_grass = "./assets/textures/grass.jpg";
+    const char* paths_cubemap[] = {  
+        "./assets/skybox/right.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_X
+        "./assets/skybox/left.jpg",   // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+        "./assets/skybox/top.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+        "./assets/skybox/bottom.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+        "./assets/skybox/front.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+        "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    }; 
+
+    CpuImage img_grass = cpu_image_load(path_grass);  
+    if (img_grass.data == NULL) {
+        elog_abort("Image loading failed!");
+    }
+    CpuImage img_skybox[6];
+    for (int i = 0; i < 6; i++) {
+        img_skybox[i] = cpu_image_load(paths_cubemap[i]);
+        if (img_skybox[i].data == NULL) {
+            elog_abort("Image loading failed!");
+        }
+   }
+    
 
     // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
@@ -314,12 +340,11 @@ int main(void)
         teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
     }
 
-    
+     
     
 
     // prepare gpu resources.
-    stbi_set_flip_vertically_on_load(true);  
-    const char* asset_path = "assets/grass.jpg";
+    const char* asset_path = "assets/textures/grass.jpg";
     texture_grass = texture_load_from_path(asset_path);
     if (!texture_valid(texture_grass)) {
         // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
