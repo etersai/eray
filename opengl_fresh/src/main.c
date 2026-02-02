@@ -98,20 +98,41 @@ typedef struct {
 } ShaderSkybox;
 
 typedef struct {
-    ShaderBasic shader_basic;
-    ShaderBasic shader_basic_teapot;
-    ShaderInstanced shader_instanced;
-    ShaderSkybox shader_skybox;
+    ShaderBasic basic;
+    ShaderBasic teapot;
+    ShaderInstanced ground;
+    ShaderSkybox skybox;
+} RenderekShaders;
 
-    GpuMeshIndexed mesh_quad;
-    GpuMeshIndexed mesh_cube;
-    GpuMeshIndexed mesh_anchor;
-    GpuMeshIndexed mesh_model;
-    GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-                                
-    Texture texture_grass;
-    TextureCubemap texture_skybox;
+typedef struct {
+    Texture grass;
+    TextureCubemap skybox;
+} RenderekTextures;
+
+typedef struct {
+    GpuMeshIndexed quad;
+    GpuMeshIndexed cube;
+    GpuMeshIndexed anchor;
+    GpuMeshIndexed model;
+    GpuMeshSimple  skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+} RenderekMeshes;
+
+typedef struct {
+    RenderekMeshes   meshes;
+    RenderekShaders  shaders;
+    RenderekTextures textures;
 } Renderek;
+
+enum {
+    PIXELFORMAT_RGB8,
+};
+
+typedef struct {
+    unsigned char* data;
+    int width;
+    int height;
+    int format;
+} CpuImage;
 
 Texture texture_load_from_path(const char* path)
 {
@@ -152,6 +173,8 @@ GpuMeshIndexed mesh_model;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_grass;
 TextureCubemap texture_skybox;
+
+Renderek g_renderek;
 Camerka camera;
 
 int main(void)
@@ -170,8 +193,6 @@ int main(void)
         return 1;
     }
 
-    glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
-
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -180,14 +201,15 @@ int main(void)
     }
 
     glfwMakeContextCurrent(window);
-
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
     }    
-    /********************/
-    /* END BOILER PLATE */
-    /********************/
+    glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
+
+    /*******************/
+    /* END BOILERPLATE */
+    /*******************/
 
     // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
@@ -242,7 +264,7 @@ int main(void)
         centroid_count++;
     } 
 
-    float tn_scale = 0.3f;
+    float tn_scale = 0.1f;
     for (int i = 0; i < 6320; i++) {
         // MERGE TWO BUFFER TOGGERTHER KINDA CODE...
         // Start point of line
@@ -255,14 +277,14 @@ int main(void)
 
     
 
-
+    
 
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
     const char* asset_path = "assets/grass.jpg";
     texture_grass = texture_load_from_path(asset_path);
-    if (texture_grass.id == 0) {
+    if (!texture_valid(texture_grass)) {
         // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
         log_print_prefix("asset_load_error", "failed to load '%s'\n", asset_path);
         abort();
@@ -376,12 +398,6 @@ int main(void)
     glUseProgram(shader_instanced.prog.id);
     glUniform3fv(shader_instanced.offsets, 1600, &translations[0].x);
 
-    // FISHCARD //
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
-    //glFrontFace(GL_CCW);
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_FRONT); 
 
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f);

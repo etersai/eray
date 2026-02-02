@@ -196,7 +196,7 @@ TextureCubemap texture_cubemap_create_from_paths(const char** paths)
     int nrChannels;
     unsigned char *data; // f(x). wed jan 28 19:18:33. 2026.
     stbi_set_flip_vertically_on_load(false);
-    for (unsigned int i = 0; i < 6; i++) { // assert cubemaps 6!!
+    for (unsigned int i = 0; i < 6; i++) {
         data = stbi_load(paths[i], &width, &height, &nrChannels, 0);
         assert(data && "Cubemaps loads failed! RUN");
 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
