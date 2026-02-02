@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "STB/stb_image.h"
 #include "obj_loader.h"
 #include "platform.h"
 #include "lamath.h"
@@ -72,6 +73,61 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 }
 // END PLATFORM ////////////////////////////////////////
 
+typedef enum {
+    PIXEL_FORMAT_R8,
+    PIXEL_FORMAT_RG8,
+    PIXEL_FORMAT_RGB8,
+    PIXEL_FORMAT_RGBA8,
+} ImagePixelFormat;
+
+typedef struct {
+    unsigned char* data;
+    int width;
+    int height;
+    int num_channels;
+    int format;
+} CpuImage;
+
+CpuImage cpu_image_load(const char* path)
+{
+    CpuImage img = {0};
+    int width;
+    int height;
+    int num_channels;
+    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
+
+    if (data) {
+
+        img.data = data;
+        img.width = width;
+        img.height = height;
+        img.num_channels = num_channels;
+
+        switch (num_channels) 
+        {
+            case 1: img.format = PIXEL_FORMAT_R8;    break;
+            case 2: img.format = PIXEL_FORMAT_RG8;   break;
+            case 3: img.format = PIXEL_FORMAT_RGB8;  break;
+            case 4: img.format = PIXEL_FORMAT_RGBA8; break;
+            default: elog_abort("Unsupported channel count");
+        }
+
+        return img;
+    }
+
+    return img;
+}
+
+void cpu_image_unload(CpuImage* img)
+{
+    if (img != NULL && img->data != NULL) {
+        stbi_image_free(img->data);
+        img->data = NULL;
+        img->width = 0;
+        img->height = 0;
+    }
+}
+
 #define shader_valid(shader) ((shader).prog.id != 0) // kinda renderer helper or some shit.
 typedef GLint uniform;
 
@@ -123,30 +179,13 @@ typedef struct {
     RenderekTextures textures;
 } Renderek;
 
-enum {
-    PIXELFORMAT_RGB8,
-};
-
-typedef struct {
-    unsigned char* data;
-    int width;
-    int height;
-    int format;
-} CpuImage;
-
 Texture texture_load_from_path(const char* path)
 {
     Texture texture = {0};
-    int width; // TODO platform extract image data!
-    int height;
-    int num_channels;
-    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
-    if (data) {
-        //log_print_prefix("asset_load_success", "'%s' Width: %d, Height: %d, nrChannels: %d\n",
-        //        path, texture.width, texture.height, texture.num_color_channels);
-        texture = texture_create_from_memory(data, width, height, num_channels);
-        stbi_image_free(data);
-        return texture;
+    CpuImage img = cpu_image_load(path);
+    if (img.data != NULL) {
+        texture = texture_create_from_memory(img.data, img.width, img.height, img.num_channels);
+        cpu_image_unload(&img);
     }
     return texture;
 }
@@ -276,9 +315,7 @@ int main(void)
     }
 
     
-
     
-
 
     // prepare gpu resources.
     stbi_set_flip_vertically_on_load(true);  
@@ -357,7 +394,6 @@ int main(void)
     // precalculated
     GpuMeshSimple mesh_teapot_normals;
     mesh_teapot_normals = gpu_load_mesh_simple_1attr(&teapot_normals_lines[0].x, sizeof(teapot_normals_lines));
-
 
 
     // camera setup PROJECTION SET ONCE AT START !!
@@ -479,6 +515,8 @@ int main(void)
         //Fragments still test against the depth buffer (can still be rejected)
         //But passing fragments don't update the depth buffer
         //The depth values stay whatever they were before
+
+        // skybox
         glDepthMask(GL_FALSE);
         shader_prog_use(shader_skybox.prog);
         glBindVertexArray(mesh_skybox.VAO);
@@ -529,6 +567,7 @@ int main(void)
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+        // teapot normals.
         shader_prog_use(shader_basic_teapot.prog);
         matf4x4 cm = matf4x4_I_give();
         shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &cm.col1.x);
