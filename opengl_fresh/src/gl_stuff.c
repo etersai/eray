@@ -1,5 +1,4 @@
 #include "gl_stuff.h"
-#include "lamath.h"
 #include "platform.h"
 #include <assert.h>
 #include <stdbool.h>

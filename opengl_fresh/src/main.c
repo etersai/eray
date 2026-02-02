@@ -72,7 +72,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 }
 // END PLATFORM ////////////////////////////////////////
 
+#define shader_valid(shader) ((shader).prog.id != 0) // kinda renderer helper or some shit.
 typedef GLint uniform;
+
 typedef struct {
     ShaderProgram prog;
     uniform model;
@@ -95,7 +97,21 @@ typedef struct {
     uniform projection;
 } ShaderSkybox;
 
-#define shader_valid(shader) ((shader).prog.id != 0) // kinda renderer helper or some shit.
+typedef struct {
+    ShaderBasic shader_basic;
+    ShaderBasic shader_basic_teapot;
+    ShaderInstanced shader_instanced;
+    ShaderSkybox shader_skybox;
+
+    GpuMeshIndexed mesh_quad;
+    GpuMeshIndexed mesh_cube;
+    GpuMeshIndexed mesh_anchor;
+    GpuMeshIndexed mesh_model;
+    GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+                                
+    Texture texture_grass;
+    TextureCubemap texture_skybox;
+} Renderek;
 
 Texture texture_load_from_path(const char* path)
 {
