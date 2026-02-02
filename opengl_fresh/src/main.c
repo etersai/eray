@@ -186,6 +186,7 @@ Texture texture_load_from_path(const char* path)
     if (img.data != NULL) {
         texture = texture_create_from_memory(img.data, img.width, img.height, img.num_channels);
         cpu_image_unload(&img);
+        return texture;
     }
     return texture;
 }
@@ -197,6 +198,25 @@ void console_post_cwd(void)
     char* success = eray_get_cwd(buf, sizeof(buf));
     if (success) {fprintf(stderr, "%s\n", buf);} 
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
+}
+
+
+static void draw_text_immediate(Font font, const char* text)
+{
+    // NOTE: assume null termination
+    la_unused(font);
+
+    char* p = text;
+    while(*p != '\0') { // points to this null termination after loop
+        char c = *p;    
+        font_arial.characters[(int)c-32].codePoint;  
+
+
+
+
+        p++;
+    }
+
 }
 
 // globals
@@ -215,6 +235,7 @@ TextureCubemap texture_skybox;
 
 Renderek g_renderek;
 Camerka camera;
+//gpu_load_mesh_quad
 
 int main(void)
 {
@@ -251,7 +272,7 @@ int main(void)
     /*******************/
     
     stbi_set_flip_vertically_on_load(true); // global state 
-
+//home/eter/CGFS/eray/opengl_fresh/assets/textures
     const char* path_teapot = "./assets/models/teapot.obj";
     const char* path_grass = "./assets/textures/grass.jpg";
     const char* paths_cubemap[] = {  
@@ -275,7 +296,6 @@ int main(void)
         }
    }
     
-
     // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
     obj_in_memory teapot_obj;
@@ -340,11 +360,10 @@ int main(void)
         teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
     }
 
-     
-    
+    draw_text_immediate(font_arial, "CZE");
 
     // prepare gpu resources.
-    const char* asset_path = "assets/textures/grass.jpg";
+    const char* asset_path = "./assets/textures/grass.jpg";
     texture_grass = texture_load_from_path(asset_path);
     if (!texture_valid(texture_grass)) {
         // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
@@ -415,6 +434,7 @@ int main(void)
     mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
     mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
     mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
+
     
     // precalculated
     GpuMeshSimple mesh_teapot_normals;

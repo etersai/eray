@@ -119,3 +119,20 @@ static Character characters_arial[] = {
 };
 
 static Font font_arial = {"Arial", 32, 0, 0, 512, 256, 95, characters_arial};
+//
+//
+// typedef struct {
+//     char* text;
+//     size_t len;
+// } estring;
+//
+
+
+
+
+
+
+
+
+
+

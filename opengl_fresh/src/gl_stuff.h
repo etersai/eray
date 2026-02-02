@@ -28,7 +28,7 @@ typedef struct {
     GLuint id;
 } TextureCubemap;
 
-#define texture_valid(texture) ((texture).id != 0) // kinda renderer helper or some shit.
+#define texture_valid(texture) ((texture).id != 0)
 
 GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_model(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);

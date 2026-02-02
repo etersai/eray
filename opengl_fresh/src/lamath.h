@@ -26,6 +26,7 @@
 // Tailored to my liking and explicitness for learning purposes, so don’t expect much.
 // Feel free to contribute, though. Still learning myself.
 
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -72,6 +73,8 @@
     fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__);    \
     abort();                                                                   \
 } while (0)
+
+#define la_unused(var) ((void)(var))
 
 typedef struct {
     float x;
@@ -560,6 +563,28 @@ static void log_print_n_flush(const char* format, ...)
 // Sometimes i just want to quickly print some value.
 // Basically save yourself some typing wrapper.
 // fflush intentional.
+#include <sys/mman.h>
+typedef struct {
+    unsigned char* data; 
+    size_t         offset;
+    size_t         cap;
+} Arenka;
+
+static Arenka arenka_make(size_t size_in_bytes)
+{
+    Arenka arena = {0};
+    unsigned char* new_memory_piece;
+    new_memory_piece = mmap(NULL, size_in_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+    if (new_memory_piece == MAP_FAILED) {
+        return arena;
+    }
+    arena.data = new_memory_piece;
+    arena.cap = size_in_bytes;
+    arena.offset = 0;
+
+    return arena;
+    //mmap(void *addr, size_t len, int prot, int flags, int fd, __off_t offset) 
+}
 
 #ifndef ELOGDEF
 #define ELOGDEF static inline
