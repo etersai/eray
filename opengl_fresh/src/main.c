@@ -200,23 +200,29 @@ void console_post_cwd(void)
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
 
-
 static void draw_text_immediate(Font font, const char* text)
 {
     // NOTE: assume null termination
     la_unused(font);
 
+    const size_t text_max = 8192; // 8kib
+
+    
+
+
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
         char c = *p;    
-        font_arial.characters[(int)c-32].codePoint;  
-
-
-
-
+        Character character = g_font_arial.characters[(int)c-32];
+        elog_s("code");
+        elog_d(character.codePoint);
+        elog_d(character.x);
+        elog_d(character.y);
+        elog_d(character.width);
+        elog_d(character.height);
+        elog_s("/*end*/");
         p++;
     }
-
 }
 
 // globals
@@ -360,7 +366,7 @@ int main(void)
         teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
     }
 
-    draw_text_immediate(font_arial, "CZE");
+    draw_text_immediate(g_font_arial, "|i");
 
     // prepare gpu resources.
     const char* asset_path = "./assets/textures/grass.jpg";

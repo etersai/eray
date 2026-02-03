@@ -5,6 +5,12 @@
 #include <stddef.h>
 
 typedef struct {
+    GLuint VBO;
+    size_t size_in_bytes;
+    void* ptr_start_mem; 
+} GpuPMappedBuffer; 
+
+typedef struct {
     GLuint VAO; 
     GLuint VBO; 
     GLsizei vertex_count;

@@ -3,6 +3,25 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
+{
+    GLuint VBO_ID;
+    glGenBuffers(1, &VBO_ID);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_ID);
+    // TODO: memcpy VS for loop for small loop sizes. 
+    unsigned int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+    glBufferStorage(GL_ARRAY_BUFFER, size_in_bytes, NULL, flags);
+    void* ptr_to_mapped_space = glMapBufferRange(GL_ARRAY_BUFFER, 0, size_in_bytes, flags);
+    if (ptr_to_mapped_space == NULL) {
+        glDeleteBuffers(1, &VBO_ID);
+        VBO_ID = 0;
+        return (GpuPMappedBuffer){VBO_ID, 0, NULL};
+    }
+    return (GpuPMappedBuffer){VBO_ID, size_in_bytes, ptr_to_mapped_space};
+}
+
+
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {
     GLuint VAO;

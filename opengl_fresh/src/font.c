@@ -118,7 +118,7 @@ static Character characters_arial[] = {
     {'~', 320, 136, 26, 15, 4, 16},
 };
 
-static Font font_arial = {"Arial", 32, 0, 0, 512, 256, 95, characters_arial};
+static Font g_font_arial = {"Arial", 32, 0, 0, 512, 256, 95, characters_arial};
 //
 //
 // typedef struct {

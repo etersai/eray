@@ -559,32 +559,54 @@ static void log_print_n_flush(const char* format, ...)
     fflush(out_target);
 }
 
+// ARENKA
+#include <sys/mman.h> // TODO: i should probably remove arena from this file.
+typedef struct {
+    unsigned char* addr_start;
+    size_t         offset;
+    size_t         capacity;
+} Arenka;
+
+#define arenka_wipe(arena) do { (arena)->offset = 0; } while (0)
+
+static Arenka arenka_map(size_t size_in_bytes)
+{
+    Arenka arena = {0};
+    unsigned char* memory_region;
+
+    memory_region = mmap(NULL, size_in_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+    if (memory_region == MAP_FAILED) {
+        return arena;
+    }
+
+    arena.addr_start = memory_region;
+    arena.capacity = size_in_bytes;
+    arena.offset = 0;
+
+    return arena;
+}
+
+static unsigned char* arenka_get_piece(Arenka* arena, size_t size_in_bytes)
+{
+    if (arena->offset + size_in_bytes > arena->capacity) { 
+        return NULL;
+    }
+    unsigned char* return_addr = arena->addr_start + arena->offset;
+    fprintf(stdout, "Inside arenka_get_piece: %p", return_addr);
+    fflush(stdout);
+    arena->offset += size_in_bytes;
+    return return_addr;
+}
+
+static void arenka_unmap(Arenka* arena)
+{
+    munmap(arena->addr_start, arena->capacity);
+}
+
 // elog_ aka C victorinox.
 // Sometimes i just want to quickly print some value.
 // Basically save yourself some typing wrapper.
 // fflush intentional.
-#include <sys/mman.h>
-typedef struct {
-    unsigned char* data; 
-    size_t         offset;
-    size_t         cap;
-} Arenka;
-
-static Arenka arenka_make(size_t size_in_bytes)
-{
-    Arenka arena = {0};
-    unsigned char* new_memory_piece;
-    new_memory_piece = mmap(NULL, size_in_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-    if (new_memory_piece == MAP_FAILED) {
-        return arena;
-    }
-    arena.data = new_memory_piece;
-    arena.cap = size_in_bytes;
-    arena.offset = 0;
-
-    return arena;
-    //mmap(void *addr, size_t len, int prot, int flags, int fd, __off_t offset) 
-}
 
 #ifndef ELOGDEF
 #define ELOGDEF static inline
