@@ -1,6 +1,6 @@
 #include "r_font.h"
-#include <assert.h>
 #include <glad/glad.h>
+#include <assert.h>
 #include "gl_stuff.h"
 // Generated using => https://evanw.github.io/font-texture-generator/
 typedef struct Character {
@@ -22,7 +22,7 @@ typedef struct Font {
     int height;
     int characterCount;
     Character *characters;
-} Font;
+} FontData;
 
 static Character characters_arial[] = {
     {' ', 405, 136, 3, 3, 1, 1},
@@ -122,16 +122,45 @@ static Character characters_arial[] = {
     {'~', 320, 136, 26, 15, 4, 16},
 };
 
-static const Font font_arial = {"arial_white", 32, 0, 0, 512, 256, 95, characters_arial};
+typedef struct {
+    FontData layout_info;  
+    Texture texture; 
+} Fontek;
 
+static const FontData font_arial_white = {"arial_white", 32, 0, 0, 512, 256, 95, characters_arial};
 
 static const size_t max_text_data = 8192; // 8kib
 static GpuPMappedBuffer* gpu_side_buffer;
 
-void draw_text_immediate(Font font, const char* text)
+#include "lamath.h"
+Fontek font_arial = {
+    font_arial_white,
+    (Texture){0}, // need to manually supply texture.
+};
+
+
+void r_draw_text_immediate(Fontek font, const char* text)
 {
     assert(gpu_side_buffer != NULL);
     assert(gpu_side_buffer->size_in_bytes > max_text_data);
+    assert(texture_valid(font.texture));
+    char* p = text;
+    while(*p != '\0') { // points to this null termination after loop
+        Character character = characters_arial[0]; // space_by_default.
+        unsigned int quad_count = 0; 
+        char c = *p;    
+        if (c >= ' ' && c <= '~') { // printable ascii range
+            character = font_arial_white.characters[(int)c-32];
+        }
+
+        elog_f((float)character.x/font.texture.width); 
+        elog_f((float)character.y/font.texture.height); 
+        
+        
+        p++;
+    }
+
+
 }
 
 
