@@ -13,11 +13,12 @@
 #include "obj_loader.h"
 #include "lamath.h"
 
-#include "r_font.h"
+#include "r_text.h"
 #include "camerka.h"
 #include "shader.h"
-#include "vertex_data.c"
 #include "glsl_shaders.c"
+#include "data_vertex.c"
+#include "data_font.h"
 
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
@@ -72,6 +73,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     last_y = ypos;
 }
 // END PLATFORM ////////////////////////////////////////
+
+const int cwd_path_max = 1024;
+void console_post_cwd(void)
+{
+    char buf[cwd_path_max];
+    char* success = eray_get_cwd(buf, sizeof(buf));
+    if (success) {fprintf(stderr, "%s\n", buf);} 
+    else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
+}
 
 typedef enum {
     PIXEL_FORMAT_R8,
@@ -128,7 +138,33 @@ void cpu_image_unload(CpuImage* img)
     }
 }
 
-#define shader_valid(shader) ((shader).prog.id != 0) // kinda renderer helper or some shit.
+Texture texture_load_from_path(const char* path)
+{
+    Texture texture = {0};
+    CpuImage img = cpu_image_load(path);
+    if (img.data != NULL) {
+        texture = texture_create_from_memory(img.data, img.width, img.height, img.num_channels);
+        cpu_image_unload(&img);
+        return texture;
+    }
+    return texture;
+}
+
+typedef struct {
+    internal_font_data metadata;
+    Texture texture;
+} Fontek;
+
+int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
+{
+    assert(font != NULL);
+    assert(font_metadata.name != NULL); // at least some check XD. 
+    assert(texture_valid(texture));
+    font->metadata = font_metadata;
+    font->texture = texture;
+    return 0;
+}
+
 typedef GLint uniform;
 
 typedef struct {
@@ -179,26 +215,12 @@ typedef struct {
     RenderekTextures textures;
 } Renderek;
 
-Texture texture_load_from_path(const char* path)
-{
-    Texture texture = {0};
-    CpuImage img = cpu_image_load(path);
-    if (img.data != NULL) {
-        texture = texture_create_from_memory(img.data, img.width, img.height, img.num_channels);
-        cpu_image_unload(&img);
-        return texture;
-    }
-    return texture;
-}
+#define shader_valid(shader) ((shader).prog.id != 0) // kinda renderer helper or some shit.
 
-const int cwd_path_max = 1024;
-void console_post_cwd(void)
-{
-    char buf[cwd_path_max];
-    char* success = eray_get_cwd(buf, sizeof(buf));
-    if (success) {fprintf(stderr, "%s\n", buf);} 
-    else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
-}
+
+
+
+
 
 
 
@@ -216,9 +238,35 @@ GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_grass;
 TextureCubemap texture_skybox;
 
-Renderek g_renderek;
+Renderek g_renderek; // not used atm
 Camerka camera;
-//gpu_load_mesh_quad
+
+static const size_t max_text_data = 8192; // 8kib
+static GpuPMappedBuffer* gpu_side_buffer;
+void r_draw_text_immediate(Fontek* font, const char* text)
+{
+    assert(font);
+    assert(gpu_side_buffer != NULL);
+    assert(gpu_side_buffer->size_in_bytes > max_text_data);
+    assert(texture_valid(font->texture));
+    char* p = text;
+    while(*p != '\0') { // points to this null termination after loop
+        internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
+        unsigned int quad_count = 0; 
+        char c = *p;    
+        if (c >= ' ' && c <= '~') { // printable ascii range
+            character = font_arial_white.characters[(int)c-32];
+        }
+
+        elog_f((float)character.x/font->texture.width); 
+        elog_f((float)character.y/font->texture.height); 
+        
+        
+        p++;
+    }
+
+
+}
 
 int main(void)
 {
@@ -254,6 +302,7 @@ int main(void)
     /* END BOILERPLATE */
     /*******************/
     
+    
     stbi_set_flip_vertically_on_load(true); // global state 
 //home/eter/CGFS/eray/opengl_fresh/assets/textures
     const char* path_teapot = "./assets/models/teapot.obj";
@@ -277,7 +326,7 @@ int main(void)
         if (img_skybox[i].data == NULL) {
             elog_abort("Image loading failed!");
         }
-   }
+    }
     
     // load teapot model.
     const char* filename = "./assets/models/teapot.obj";
@@ -343,6 +392,9 @@ int main(void)
         teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
     }
 
+    Fontek f;
+    font_create(&f, font_arial_white, texture_grass);
+    r_draw_text_immediate(&f, "hehe");
 
     // prepare gpu resources.
     const char* asset_path = "./assets/textures/grass.jpg";
