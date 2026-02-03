@@ -13,7 +13,6 @@
 #include "obj_loader.h"
 #include "lamath.h"
 
-#include "r_text.h"
 #include "camerka.h"
 #include "shader.h"
 #include "glsl_shaders.c"
@@ -164,7 +163,9 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
     font->texture = texture;
     return 0;
 }
-
+// Asset loading = CPU side (parsing files, decoding)
+// Resource creation = GPU upload (creating textures/buffers)
+// Rendering = Draw commands
 typedef GLint uniform;
 
 typedef struct {
@@ -219,11 +220,6 @@ typedef struct {
 
 
 
-
-
-
-
-
 // globals
 const float mouse_sens = 0.1f;
 ShaderBasic shader_basic;
@@ -246,8 +242,8 @@ static GpuPMappedBuffer* gpu_side_buffer;
 void r_draw_text_immediate(Fontek* font, const char* text)
 {
     assert(font);
-    assert(gpu_side_buffer != NULL);
-    assert(gpu_side_buffer->size_in_bytes > max_text_data);
+    //assert(gpu_side_buffer != NULL);
+    //assert(gpu_side_buffer->size_in_bytes > max_text_data);
     assert(texture_valid(font->texture));
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
@@ -257,7 +253,10 @@ void r_draw_text_immediate(Fontek* font, const char* text)
         if (c >= ' ' && c <= '~') { // printable ascii range
             character = font_arial_white.characters[(int)c-32];
         }
+    
 
+        elog_f((float)character.width/font->texture.width);
+        elog_f((float)character.height/font->texture.height);
         elog_f((float)character.x/font->texture.width); 
         elog_f((float)character.y/font->texture.height); 
         
@@ -392,10 +391,6 @@ int main(void)
         teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
     }
 
-    Fontek f;
-    font_create(&f, font_arial_white, texture_grass);
-    r_draw_text_immediate(&f, "hehe");
-
     // prepare gpu resources.
     const char* asset_path = "./assets/textures/grass.jpg";
     texture_grass = texture_load_from_path(asset_path);
@@ -421,6 +416,10 @@ int main(void)
         abort();
     }
      
+    Fontek arial_font;
+    font_create(&arial_font, font_arial_white, texture_grass);
+    r_draw_text_immediate(&arial_font, "hehe");
+
                     
     // SHADERS //
     // basic shader.  
