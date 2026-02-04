@@ -237,36 +237,6 @@ TextureCubemap texture_skybox;
 //Renderek g_renderek; // not used atm
 Camerka camera;
 
-static const size_t max_text_data = 8192; // 8kib
-static size_t       data_bytes_filled;
-static GpuPMappedBuffer gpu_persistent_buffer;
-void r_draw_text_immediate(Fontek* font, const char* text)
-{
-    assert(font);
-    assert(texture_valid(font->texture));
-
-    // kickstart it's self kinda thing.
-    if (!gl_buffer_valid(gpu_persistent_buffer)) { // if not created
-
-        gpu_persistent_buffer = gpu_p_mapped_buffer_create(max_text_data);
-
-        if (!gl_buffer_valid(gpu_persistent_buffer)) {
-        
-            elog_abort("[draw text buffer creation]");
-        }
-        assert(gpu_persistent_buffer.size_in_bytes >= max_text_data);
-    }
-    
-
-    struct uv {
-        float x;
-        float y;
-        float w;
-        float h;
-    };
-    float vertices[max_text_data];
-    unsigned int count = 0;
-
     // DR CLAUDE TO THE RESCUE
 // void build_sprite_quad(Vertex* output, SpriteUV sprite,
 //                       float x, float y, float w, float h)
@@ -283,7 +253,45 @@ void r_draw_text_immediate(Fontek* font, const char* text)
 //     output[4] = (Vertex){x+w, y+h, u1, v1};
 //     output[5] = (Vertex){x,   y+h, u0, v1};
 // }
+//
+// float screen_x, float screen_y,
+//                float screen_w, float screen_h,
+//                float uv_x, float uv_y,
+//                float uv_width, float uv_height)
 
+#define TEXT_MAX_BYTES (8192) // 8kib
+static unsigned char cpu_text_vertices[TEXT_MAX_BYTES]; // use some sort of arenka here?
+static size_t cpu_text_vertices_bytes_taken;
+static GpuPMappedBuffer gpu_text_vertices_p_buffer;
+void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
+{
+    assert(font);
+    assert(texture_valid(font->texture));
+
+    // kickstart it's self kinda thing.
+    if (!gl_buffer_valid(gpu_text_vertices_p_buffer)) { // if not created
+
+        gpu_text_vertices_p_buffer = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
+
+        if (!gl_buffer_valid(gpu_text_vertices_p_buffer)) {
+            elog_abort("[draw text buffer creation]");
+        }
+    }
+    
+    struct uv {
+        float x;
+        float y;
+        float w;
+        float h;
+    };
+
+
+    float norm_x = x/SCR_WIDTH;
+    float norm_y = y/SCR_HEIGHT;
+    float start_ndc_x = norm_x * 2 - 1; // remap
+    float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
+
+    unsigned int count = cpu_text_vertices_bytes_taken / sizeof(float); 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
         internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
@@ -292,25 +300,34 @@ void r_draw_text_immediate(Fontek* font, const char* text)
             character = font_arial_white.characters[(int)c-32];
         }
         
-        float width_uv = (float)character.width/font->texture.width;
-        float height_uv = (float)character.height/font->texture.height;
-        float X_uv = (float)character.x/font->texture.width;
-        float Y_uv = (float)character.y/font->texture.height;
-   
-        // assume NDC
-        vertices[count] = 0.0f;
-        vertices[count+1] = 0.0f;
-        vertices[count+2] = X_uv;
-        vertices[count+3] = Y_uv;
+        float uv_width = (float)character.width/font->texture.width;
+        float uv_height = (float)character.height/font->texture.height;
+        float uv_x = (float)character.x/font->texture.width;
+        float uv_y = (float)character.y/font->texture.height;
+
+        // box top left.
+        cpu_text_vertices[count] = start_ndc_x;
+        cpu_text_vertices[count+1] = start_ndc_y;
+        cpu_text_vertices[count+2] = uv_x;
+        cpu_text_vertices[count+3] = uv_y;  
+
+        // box bottom left.
+        cpu_text_vertices[count+4] = start_ndc_x;
+        cpu_text_vertices[count+5] = start_ndc_y-uv_height;
+        cpu_text_vertices[count+6] = uv_x;
+        cpu_text_vertices[count+7] = uv_y+uv_height;
+
+
+
     
         
         count+=4;
         p++;
     }
      
-    data_bytes_filled += count * sizeof(float); 
+    cpu_text_vertices_bytes_taken += count * sizeof(float); 
     for (int i = 0; i < count; i++) {
-        elog_f(vertices[i]);
+        elog_f(cpu_text_vertices[i]);
     }
 
 
@@ -452,7 +469,7 @@ int main(void)
      
     Fontek arial_font;
     font_create(&arial_font, font_arial_white, texture_grass);  
-    r_draw_text_immediate(&arial_font, "aaa");
+    r_draw_text_immediate(&arial_font, 1250.0f, 700.0f, "aaa");
 
                     
     // SHADERS //

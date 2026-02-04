@@ -24,7 +24,9 @@ GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
 
 void gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t size_in_bytes, const void* source)
 {
-
+    assert(buffer);
+    assert(source);
+    
 }
 
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
