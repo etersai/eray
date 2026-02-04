@@ -163,6 +163,7 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
     font->texture = texture;
     return 0;
 }
+
 // Asset loading = CPU side (parsing files, decoding)
 // Resource creation = GPU upload (creating textures/buffers)
 // Rendering = Draw commands
@@ -216,9 +217,7 @@ typedef struct {
     RenderekTextures textures;
 } Renderek;
 
-#define shader_valid(shader) ((shader).prog.id != 0) // kinda renderer helper or some shit.
-
-
+#define shader_valid(shader) ((shader).prog.id != 0)
 
 // globals
 const float mouse_sens = 0.1f;
@@ -231,6 +230,7 @@ GpuMeshIndexed mesh_cube;
 GpuMeshIndexed mesh_anchor;
 GpuMeshIndexed mesh_model;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+Texture texture_font_arial_white;
 Texture texture_grass;
 TextureCubemap texture_skybox;
 
@@ -242,8 +242,8 @@ static GpuPMappedBuffer* gpu_side_buffer;
 void r_draw_text_immediate(Fontek* font, const char* text)
 {
     assert(font);
-    //assert(gpu_side_buffer != NULL);
-    //assert(gpu_side_buffer->size_in_bytes > max_text_data);
+    assert(gpu_side_buffer != NULL);
+    assert(gpu_side_buffer->size_in_bytes > max_text_data);
     assert(texture_valid(font->texture));
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
@@ -303,9 +303,10 @@ int main(void)
     
     
     stbi_set_flip_vertically_on_load(true); // global state 
-//home/eter/CGFS/eray/opengl_fresh/assets/textures
+                                            
     const char* path_teapot = "./assets/models/teapot.obj";
     const char* path_grass = "./assets/textures/grass.jpg";
+    const char* path_font = "./assets/textures/font.png";
     const char* paths_cubemap[] = {  
         "./assets/skybox/right.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_X
         "./assets/skybox/left.jpg",   // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
@@ -314,23 +315,10 @@ int main(void)
         "./assets/skybox/front.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
-
-    CpuImage img_grass = cpu_image_load(path_grass);  
-    if (img_grass.data == NULL) {
-        elog_abort("Image loading failed!");
-    }
-    CpuImage img_skybox[6];
-    for (int i = 0; i < 6; i++) {
-        img_skybox[i] = cpu_image_load(paths_cubemap[i]);
-        if (img_skybox[i].data == NULL) {
-            elog_abort("Image loading failed!");
-        }
-    }
     
     // load teapot model.
-    const char* filename = "./assets/models/teapot.obj";
     obj_in_memory teapot_obj;
-    if (load_obj_from_path(&teapot_obj, filename) != 0) {
+    if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
         elog_abort("OBJ LOAD FAIL!");
     }
 
@@ -392,24 +380,19 @@ int main(void)
     }
 
     // prepare gpu resources.
-    const char* asset_path = "./assets/textures/grass.jpg";
-    texture_grass = texture_load_from_path(asset_path);
+    texture_grass = texture_load_from_path(path_grass);
+    texture_font_arial_white = texture_load_from_path(path_font); 
     if (!texture_valid(texture_grass)) {
-        // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
-        log_print_prefix("asset_load_error", "failed to load '%s'\n", asset_path);
+        log_print_prefix("asset_load_error", "failed to load '%s'\n", path_grass);
+        abort();
+    }
+    if (!texture_valid(texture_font_arial_white)) {
+        log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
     
     // CUBEMAP //
-    const char* cubemap_paths[] = {  // realtionship.
-        "assets/skybox/right.jpg",   // GL_TEXTURE_CUBE_MAP_POSITIVE_X
-        "assets/skybox/left.jpg",    // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-        "assets/skybox/top.jpg",     // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-        "assets/skybox/bottom.jpg",  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-        "assets/skybox/front.jpg",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-        "assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
-    }; 
-    texture_skybox = texture_cubemap_create_from_paths(cubemap_paths);
+    texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
     if (texture_skybox.id == 0) {
         // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
         log_print_prefix("asset_load_error", "failed to load cubemap/skybox!\n");
@@ -418,7 +401,7 @@ int main(void)
      
     Fontek arial_font;
     font_create(&arial_font, font_arial_white, texture_grass);
-    r_draw_text_immediate(&arial_font, "hehe");
+//    r_draw_text_immediate(&arial_font, "hehe");
 
                     
     // SHADERS //

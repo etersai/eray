@@ -36,6 +36,8 @@ typedef struct {
 
 #define texture_valid(texture) ((texture).id != 0)
 
+GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes);
+
 GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_model(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
