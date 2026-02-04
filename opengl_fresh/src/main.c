@@ -390,6 +390,8 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
+    elog_d(texture_font_arial_white.num_color_channels);
+    abort();
     
     // CUBEMAP //
     texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);

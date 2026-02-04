@@ -177,7 +177,8 @@ GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)
 {
     assert(data);
-    assert(color_channels == 3 && "Texture loading ony supports 3 channgels for now!");
+    assert(color_channels >= 3 && "Texture loading ony supports 3 and 4 channgels for now!");
+    assert(color_channels <= 4 && "Texture loading ony supports 3 and 4 channgels for now!");
 
     Texture texture = {0};
 
@@ -189,7 +190,17 @@ Texture texture_create_from_memory(unsigned char* data, int width, int height, i
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // Generate gl texutre with picked options.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    // glTexImage2D(
+    //     internalFormat, // how OpenGL stores it on the GPU
+    //     format,         // how YOUR pixel data is laid out in CPU memory
+    //     type,           // type of each channel
+    // );
+    if (color_channels == 3) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    }
+    else if (color_channels == 4) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    }
     glGenerateMipmap(GL_TEXTURE_2D);       
 
     texture.width = width;
@@ -198,6 +209,7 @@ Texture texture_create_from_memory(unsigned char* data, int width, int height, i
 
     return texture;
 }
+
 
 TextureCubemap texture_cubemap_create_from_paths(const char** paths)
 {
