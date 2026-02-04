@@ -7,8 +7,10 @@
 typedef struct {
     GLuint VBO;
     size_t size_in_bytes;
-    void* ptr_start_mem; 
+    void* mem_start; 
 } GpuPMappedBuffer; 
+
+#define gl_buffer_valid(buffer) ((buffer).VBO != 0)
 
 typedef struct {
     GLuint VAO; 

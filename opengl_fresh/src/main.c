@@ -234,35 +234,86 @@ Texture texture_font_arial_white;
 Texture texture_grass;
 TextureCubemap texture_skybox;
 
-Renderek g_renderek; // not used atm
+//Renderek g_renderek; // not used atm
 Camerka camera;
 
 static const size_t max_text_data = 8192; // 8kib
-static GpuPMappedBuffer* gpu_side_buffer;
+static size_t       data_bytes_filled;
+static GpuPMappedBuffer gpu_persistent_buffer;
 void r_draw_text_immediate(Fontek* font, const char* text)
 {
     assert(font);
-    assert(gpu_side_buffer != NULL);
-    assert(gpu_side_buffer->size_in_bytes > max_text_data);
     assert(texture_valid(font->texture));
+
+    // kickstart it's self kinda thing.
+    if (!gl_buffer_valid(gpu_persistent_buffer)) { // if not created
+
+        gpu_persistent_buffer = gpu_p_mapped_buffer_create(max_text_data);
+
+        if (!gl_buffer_valid(gpu_persistent_buffer)) {
+        
+            elog_abort("[draw text buffer creation]");
+        }
+        assert(gpu_persistent_buffer.size_in_bytes >= max_text_data);
+    }
+    
+
+    struct uv {
+        float x;
+        float y;
+        float w;
+        float h;
+    };
+    float vertices[max_text_data];
+    unsigned int count = 0;
+
+    // DR CLAUDE TO THE RESCUE
+// void build_sprite_quad(Vertex* output, SpriteUV sprite,
+//                       float x, float y, float w, float h)
+// {
+//     float u0 = sprite.x_uv;
+//     float v0 = sprite.y_uv;
+//     float u1 = sprite.x_uv + sprite.width_uv;
+//     float v1 = sprite.y_uv + sprite.height_uv;
+//
+//     output[0] = (Vertex){x,   y,   u0, v0};
+//     output[1] = (Vertex){x+w, y,   u1, v0};
+//     output[2] = (Vertex){x+w, y+h, u1, v1};
+//     output[3] = (Vertex){x,   y,   u0, v0};
+//     output[4] = (Vertex){x+w, y+h, u1, v1};
+//     output[5] = (Vertex){x,   y+h, u0, v1};
+// }
+
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
         internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
-        unsigned int quad_count = 0; 
         char c = *p;    
         if (c >= ' ' && c <= '~') { // printable ascii range
             character = font_arial_white.characters[(int)c-32];
         }
+        
+        float width_uv = (float)character.width/font->texture.width;
+        float height_uv = (float)character.height/font->texture.height;
+        float X_uv = (float)character.x/font->texture.width;
+        float Y_uv = (float)character.y/font->texture.height;
+   
+        // assume NDC
+        vertices[count] = 0.0f;
+        vertices[count+1] = 0.0f;
+        vertices[count+2] = X_uv;
+        vertices[count+3] = Y_uv;
     
-
-        elog_f((float)character.width/font->texture.width);
-        elog_f((float)character.height/font->texture.height);
-        elog_f((float)character.x/font->texture.width); 
-        elog_f((float)character.y/font->texture.height); 
         
-        
+        count+=4;
         p++;
     }
+     
+    data_bytes_filled += count * sizeof(float); 
+    for (int i = 0; i < count; i++) {
+        elog_f(vertices[i]);
+    }
+
+
 
 
 }
@@ -390,8 +441,6 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
-    elog_d(texture_font_arial_white.num_color_channels);
-    abort();
     
     // CUBEMAP //
     texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
@@ -402,8 +451,8 @@ int main(void)
     }
      
     Fontek arial_font;
-    font_create(&arial_font, font_arial_white, texture_grass);
-//    r_draw_text_immediate(&arial_font, "hehe");
+    font_create(&arial_font, font_arial_white, texture_grass);  
+    r_draw_text_immediate(&arial_font, "aaa");
 
                     
     // SHADERS //

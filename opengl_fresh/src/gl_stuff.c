@@ -1,5 +1,6 @@
 #include "gl_stuff.h"
 #include "platform.h"
+#include <string.h> // memcpy
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -21,6 +22,10 @@ GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
     return (GpuPMappedBuffer){VBO_ID, size_in_bytes, ptr_to_mapped_space};
 }
 
+void gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t size_in_bytes, const void* source)
+{
+
+}
 
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {

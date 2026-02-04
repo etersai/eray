@@ -16,3 +16,19 @@ int load_obj_from_path(obj_in_memory* obj, const char* path);
 void load_obj_to_buffers_not_safe(obj_in_memory* obj, char* file, size_t size);
 
 #endif /* OBJ_LOADER_H_ */
+
+///////////
+// REMINDER
+// struct {
+//     float x;
+//     float y;
+//     float w;
+//     float h;
+// } uv = {
+//     .x = (float)character.x / font->texture.width,
+//     .y = (float)character.y / font->texture.height,
+//     .w = (float)character.width / font->texture.width,
+//     .h = (float)character.height / font->texture.height,
+// };
+//
+
