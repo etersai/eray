@@ -237,30 +237,14 @@ TextureCubemap texture_skybox;
 //Renderek g_renderek; // not used atm
 Camerka camera;
 
-    // DR CLAUDE TO THE RESCUE
-// void build_sprite_quad(Vertex* output, SpriteUV sprite,
-//                       float x, float y, float w, float h)
-// {
-//     float u0 = sprite.x_uv;
-//     float v0 = sprite.y_uv;
-//     float u1 = sprite.x_uv + sprite.width_uv;
-//     float v1 = sprite.y_uv + sprite.height_uv;
-//
-//     output[0] = (Vertex){x,   y,   u0, v0};
-//     output[1] = (Vertex){x+w, y,   u1, v0};
-//     output[2] = (Vertex){x+w, y+h, u1, v1};
-//     output[3] = (Vertex){x,   y,   u0, v0};
-//     output[4] = (Vertex){x+w, y+h, u1, v1};
-//     output[5] = (Vertex){x,   y+h, u0, v1};
-// }
-//
-// float screen_x, float screen_y,
-//                float screen_w, float screen_h,
-//                float uv_x, float uv_y,
-//                float uv_width, float uv_height)
 
-#define TEXT_MAX_BYTES (8192) // 8kib
+// DRAW FONT STUFF //
+////////////////////
+#define TEXT_MAX_BYTES (1024*512) // 0.5kib // 5461.33 CHARS.
+// relic of the ancient wisdom.
 static unsigned char cpu_text_vertices[TEXT_MAX_BYTES]; // use some sort of arenka here?
+                                                        //
+
 static size_t cpu_text_vertices_bytes_taken;
 static GpuPMappedBuffer gpu_text_vertices_p_buffer;
 void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
@@ -285,7 +269,6 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float h;
     };
 
-
     float norm_x = x/SCR_WIDTH;
     float norm_y = y/SCR_HEIGHT;
     float start_ndc_x = norm_x * 2 - 1; // remap
@@ -305,10 +288,16 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float uv_x = (float)character.x/font->texture.width;
         float uv_y = (float)character.y/font->texture.height;
 
-
+        // one char 24 floats 96 bytes.
         // Generate 2 triangles 
         // box top left. 0
-        cpu_text_vertices[count] = start_ndc_x;
+    
+        elog_d(start_ndc_x);
+        elog_d(start_ndc_y);
+        elog_f(uv_x);
+        elog_f(uv_y);
+
+        cpu_text_vertices[count] = start_ndc_x; 
         cpu_text_vertices[count+1] = start_ndc_y;
         cpu_text_vertices[count+2] = uv_x;
         cpu_text_vertices[count+3] = uv_y;  
@@ -344,12 +333,6 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         cpu_text_vertices[count+22] = uv_x;
         cpu_text_vertices[count+23] = uv_y;
 
-
-        
-
-    
-    
-        
         count+=24;
         p++;
     }
@@ -359,6 +342,7 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         elog_f(cpu_text_vertices[i]);
     }
     elog_zu(cpu_text_vertices_bytes_taken);
+    elog_u(count);
 
     abort();
 
@@ -500,7 +484,7 @@ int main(void)
      
     Fontek arial_font;
     font_create(&arial_font, font_arial_white, texture_grass);  
-    r_draw_text_immediate(&arial_font, 1250.0f, 700.0f, "aaa");
+    r_draw_text_immediate(&arial_font, 1250.0f, 700.0f, "a");
 
                     
     // SHADERS //
