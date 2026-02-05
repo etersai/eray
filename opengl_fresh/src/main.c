@@ -305,23 +305,52 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float uv_x = (float)character.x/font->texture.width;
         float uv_y = (float)character.y/font->texture.height;
 
-        // box top left.
+
+        // Generate 2 triangles 
+        // box top left. 0
         cpu_text_vertices[count] = start_ndc_x;
         cpu_text_vertices[count+1] = start_ndc_y;
         cpu_text_vertices[count+2] = uv_x;
         cpu_text_vertices[count+3] = uv_y;  
 
-        // box bottom left.
+        // box bottom left. 1
         cpu_text_vertices[count+4] = start_ndc_x;
         cpu_text_vertices[count+5] = start_ndc_y-uv_height;
         cpu_text_vertices[count+6] = uv_x;
         cpu_text_vertices[count+7] = uv_y+uv_height;
 
+        // box bottom right. 2
+        cpu_text_vertices[count+8] = start_ndc_x+uv_width;
+        cpu_text_vertices[count+9] = start_ndc_y-uv_height; 
+        cpu_text_vertices[count+10] = uv_x+uv_width; 
+        cpu_text_vertices[count+11] = uv_y+uv_height; 
 
+
+        // box bottom right. 2
+        cpu_text_vertices[count+12] = start_ndc_x+uv_width;
+        cpu_text_vertices[count+13] = start_ndc_y-uv_height; 
+        cpu_text_vertices[count+14] = uv_x+uv_width; 
+        cpu_text_vertices[count+15] = uv_y+uv_height; 
+
+        // box top right. 3 
+        cpu_text_vertices[count+16] = start_ndc_x+uv_width; 
+        cpu_text_vertices[count+17] = start_ndc_y; 
+        cpu_text_vertices[count+18] = uv_x+uv_width; 
+        cpu_text_vertices[count+19] = uv_y; 
+
+        // top 
+        cpu_text_vertices[count+20] = start_ndc_x;
+        cpu_text_vertices[count+21] = start_ndc_y;
+        cpu_text_vertices[count+22] = uv_x;
+        cpu_text_vertices[count+23] = uv_y;
+
+
+        
 
     
+    
         
-        count+=4;
+        count+=24;
         p++;
     }
      
@@ -329,7 +358,9 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     for (int i = 0; i < count; i++) {
         elog_f(cpu_text_vertices[i]);
     }
+    elog_zu(cpu_text_vertices_bytes_taken);
 
+    abort();
 
 
 
