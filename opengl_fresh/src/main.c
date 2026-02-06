@@ -240,24 +240,22 @@ Camerka camera;
 
 // DRAW FONT STUFF //
 ////////////////////
-#define TEXT_MAX_BYTES (1024*512) // 0.5kib // 5461.33 CHARS.
+#define TEXT_MAX_BYTES (1024*512) // 0.5kib
 // relic of the ancient wisdom.
-static unsigned char cpu_text_vertices[TEXT_MAX_BYTES]; // use some sort of arenka here?
-                                                        //
-
-static size_t cpu_text_vertices_bytes_taken;
-static GpuPMappedBuffer gpu_text_vertices_p_buffer;
+//static unsigned char cpu_text_vertices[TEXT_MAX_BYTES];
+static float cpu_text_vertices[TEXT_MAX_BYTES/sizeof(float)]; // 5461.33 CHARS.                                                //
+static GpuPMappedBuffer gpu_pmbuffer_text_vertices;
 void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 {
     assert(font);
     assert(texture_valid(font->texture));
 
     // kickstart it's self kinda thing.
-    if (!gl_buffer_valid(gpu_text_vertices_p_buffer)) { // if not created
+    if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) { // if not created
 
-        gpu_text_vertices_p_buffer = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
+        gpu_pmbuffer_text_vertices = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
 
-        if (!gl_buffer_valid(gpu_text_vertices_p_buffer)) {
+        if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) {
             elog_abort("[draw text buffer creation]");
         }
     }
@@ -274,7 +272,7 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     float start_ndc_x = norm_x * 2 - 1; // remap
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
 
-    unsigned int count = cpu_text_vertices_bytes_taken / sizeof(float); 
+    unsigned int fv_count = 0; 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
         internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
@@ -292,62 +290,51 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         // Generate 2 triangles 
         // box top left. 0
     
-        elog_d(start_ndc_x);
-        elog_d(start_ndc_y);
-        elog_f(uv_x);
-        elog_f(uv_y);
-
-        cpu_text_vertices[count] = start_ndc_x; 
-        cpu_text_vertices[count+1] = start_ndc_y;
-        cpu_text_vertices[count+2] = uv_x;
-        cpu_text_vertices[count+3] = uv_y;  
+        cpu_text_vertices[fv_count] = start_ndc_x; 
+        cpu_text_vertices[fv_count+1] = start_ndc_y;
+        cpu_text_vertices[fv_count+2] = uv_x;
+        cpu_text_vertices[fv_count+3] = uv_y;  
 
         // box bottom left. 1
-        cpu_text_vertices[count+4] = start_ndc_x;
-        cpu_text_vertices[count+5] = start_ndc_y-uv_height;
-        cpu_text_vertices[count+6] = uv_x;
-        cpu_text_vertices[count+7] = uv_y+uv_height;
+        cpu_text_vertices[fv_count+4] = start_ndc_x;
+        cpu_text_vertices[fv_count+5] = start_ndc_y-uv_height;
+        cpu_text_vertices[fv_count+6] = uv_x;
+        cpu_text_vertices[fv_count+7] = uv_y+uv_height;
 
         // box bottom right. 2
-        cpu_text_vertices[count+8] = start_ndc_x+uv_width;
-        cpu_text_vertices[count+9] = start_ndc_y-uv_height; 
-        cpu_text_vertices[count+10] = uv_x+uv_width; 
-        cpu_text_vertices[count+11] = uv_y+uv_height; 
+        cpu_text_vertices[fv_count+8] = start_ndc_x+uv_width;
+        cpu_text_vertices[fv_count+9] = start_ndc_y-uv_height; 
+        cpu_text_vertices[fv_count+10] = uv_x+uv_width; 
+        cpu_text_vertices[fv_count+11] = uv_y+uv_height; 
 
 
         // box bottom right. 2
-        cpu_text_vertices[count+12] = start_ndc_x+uv_width;
-        cpu_text_vertices[count+13] = start_ndc_y-uv_height; 
-        cpu_text_vertices[count+14] = uv_x+uv_width; 
-        cpu_text_vertices[count+15] = uv_y+uv_height; 
+        cpu_text_vertices[fv_count+12] = start_ndc_x+uv_width;
+        cpu_text_vertices[fv_count+13] = start_ndc_y-uv_height; 
+        cpu_text_vertices[fv_count+14] = uv_x+uv_width; 
+        cpu_text_vertices[fv_count+15] = uv_y+uv_height; 
 
         // box top right. 3 
-        cpu_text_vertices[count+16] = start_ndc_x+uv_width; 
-        cpu_text_vertices[count+17] = start_ndc_y; 
-        cpu_text_vertices[count+18] = uv_x+uv_width; 
-        cpu_text_vertices[count+19] = uv_y; 
+        cpu_text_vertices[fv_count+16] = start_ndc_x+uv_width; 
+        cpu_text_vertices[fv_count+17] = start_ndc_y; 
+        cpu_text_vertices[fv_count+18] = uv_x+uv_width; 
+        cpu_text_vertices[fv_count+19] = uv_y; 
 
         // top 
-        cpu_text_vertices[count+20] = start_ndc_x;
-        cpu_text_vertices[count+21] = start_ndc_y;
-        cpu_text_vertices[count+22] = uv_x;
-        cpu_text_vertices[count+23] = uv_y;
+        cpu_text_vertices[fv_count+20] = start_ndc_x;
+        cpu_text_vertices[fv_count+21] = start_ndc_y;
+        cpu_text_vertices[fv_count+22] = uv_x;
+        cpu_text_vertices[fv_count+23] = uv_y;
 
-        count+=24;
+        fv_count+=24;
         p++;
-    }
-     
-    cpu_text_vertices_bytes_taken += count * sizeof(float); 
-    for (int i = 0; i < count; i++) {
+    } 
+
+    for (int i = 0; i < fv_count; i++) {
         elog_f(cpu_text_vertices[i]);
     }
-    elog_zu(cpu_text_vertices_bytes_taken);
-    elog_u(count);
-
-    abort();
-
-
-
+    
+    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, fv_count*sizeof(float), cpu_text_vertices);
 }
 
 int main(void)
