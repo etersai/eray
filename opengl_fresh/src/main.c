@@ -255,26 +255,23 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 
     // kickstart it's self kinda thing.
     if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) { // if not created
-
         gpu_pmbuffer_text_vertices = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
+        assert(gl_buffer_valid(gpu_pmbuffer_text_vertices));
         vao_text = gpu_vao_create_for_text_buffer(gpu_pmbuffer_text_vertices.VBO);
         assert(vao_text != 0);
-
-        if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) {
-            elog_abort("[draw text buffer creation]");
-        }
     }
-    
-    struct uv {
-        float x;
-        float y;
-        float w;
-        float h;
-    };
 
+    // struct uv { // you can create struct inside functions :D
+    //     float x;
+    //     float y;
+    //     float w;
+    //     float h;
+    // };
+
+    // remap
     float norm_x = x/SCR_WIDTH;
     float norm_y = y/SCR_HEIGHT;
-    float start_ndc_x = norm_x * 2 - 1; // remap
+    float start_ndc_x = norm_x * 2 - 1;
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
     size_t byte_buffer_offset = sizeof(float) * fv_count;
@@ -336,13 +333,18 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         fv_count+=24;
         p++;
     } 
-
-    for (int i = 0; i < fv_count; i++) {
-        elog_f(cpu_text_vertices[i]);
-    }
+    
+    elog_u(fv_count);
 
     gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, byte_buffer_offset, fv_count*sizeof(float), cpu_text_vertices);
 
+    // draw.
+    shader_prog_use(shader_font.prog);
+    glBindVertexArray(vao_text);
+    glBindTexture(GL_TEXTURE_2D, texture_font_arial_white.id);
+    glDrawArrays(GL_TRIANGLES, 0, fv_count);
+
+    fv_count = 0;
 }
 
 int main(void)
@@ -481,7 +483,6 @@ int main(void)
      
     Fontek arial_font;
     font_create(&arial_font, font_arial_white, texture_grass);  
-    r_draw_text_immediate(&arial_font, 1250.0f, 700.0f, "a");
 
                     
     // SHADERS //
@@ -661,7 +662,7 @@ int main(void)
         //Fragments still test against the depth buffer (can still be rejected)
         //But passing fragments don't update the depth buffer
         //The depth values stay whatever they were before
-
+        
         // skybox
         glDepthMask(GL_FALSE);
         shader_prog_use(shader_skybox.prog);
@@ -722,6 +723,9 @@ int main(void)
         //glPointSize(5.0f);
         glBindVertexArray(mesh_teapot_normals.VAO);
         glDrawArrays(GL_LINES, 0, mesh_teapot_normals.vertex_count);
+
+        r_draw_text_immediate(&arial_font, 500.0f, 500.0f, "tiger bonzo");
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
