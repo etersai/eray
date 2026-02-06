@@ -22,6 +22,23 @@ GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
     return (GpuPMappedBuffer){VBO_ID, size_in_bytes, ptr_to_mapped_space};
 }
 
+GLuint gpu_vao_create_for_text_buffer(GLuint VBO)
+{
+    assert(VBO != 0);
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(sizeof(float) * 2));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0); 
+    return VAO;
+}
 
 
 void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t offset_in_bytes, size_t size_in_bytes, const void* source)

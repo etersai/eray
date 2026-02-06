@@ -257,6 +257,8 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) { // if not created
 
         gpu_pmbuffer_text_vertices = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
+        vao_text = gpu_vao_create_for_text_buffer(gpu_pmbuffer_text_vertices.VBO);
+        assert(vao_text != 0);
 
         if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) {
             elog_abort("[draw text buffer creation]");
