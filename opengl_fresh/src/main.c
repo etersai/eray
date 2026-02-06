@@ -275,6 +275,7 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
     size_t byte_buffer_offset = sizeof(float) * fv_count;
+    elog_zu(byte_buffer_offset);
 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
