@@ -22,12 +22,12 @@ GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
     return (GpuPMappedBuffer){VBO_ID, size_in_bytes, ptr_to_mapped_space};
 }
 
-void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t size_in_bytes, const void* source)
+void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t offset, size_t size_in_bytes, const void* source)
 {
     assert(buffer);
     assert(source);
     assert(buffer->VBO != 0); 
-    return memcpy(buffer->mem_start, source, size_in_bytes);
+    return memcpy(buffer->mem_start+offset, source, size_in_bytes);
 }
 
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)

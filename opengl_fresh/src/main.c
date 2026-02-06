@@ -244,6 +244,7 @@ Camerka camera;
 // relic of the ancient wisdom.
 //static unsigned char cpu_text_vertices[TEXT_MAX_BYTES];
 static float cpu_text_vertices[TEXT_MAX_BYTES/sizeof(float)]; // 5461.33 CHARS.                                                //
+unsigned int fv_count = 0; 
 static GpuPMappedBuffer gpu_pmbuffer_text_vertices;
 void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 {
@@ -271,8 +272,9 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     float norm_y = y/SCR_HEIGHT;
     float start_ndc_x = norm_x * 2 - 1; // remap
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
+    
+    size_t offset_prev = sizeof(float) * fv_count;
 
-    unsigned int fv_count = 0; 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
         internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
@@ -286,10 +288,10 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float uv_x = (float)character.x/font->texture.width;
         float uv_y = (float)character.y/font->texture.height;
 
-        // one char 24 floats 96 bytes.
+        // one char = 24 floats = 96 bytes.
+
         // Generate 2 triangles 
         // box top left. 0
-    
         cpu_text_vertices[fv_count] = start_ndc_x; 
         cpu_text_vertices[fv_count+1] = start_ndc_y;
         cpu_text_vertices[fv_count+2] = uv_x;
@@ -326,6 +328,7 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         cpu_text_vertices[fv_count+22] = uv_x;
         cpu_text_vertices[fv_count+23] = uv_y;
 
+        start_ndc_x += character.width;
         fv_count+=24;
         p++;
     } 
@@ -334,7 +337,10 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         elog_f(cpu_text_vertices[i]);
     }
     
-    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, fv_count*sizeof(float), cpu_text_vertices);
+    elog_zu(offset_prev);
+    abort();
+
+    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, offset_prev, fv_count*sizeof(float), cpu_text_vertices);
 }
 
 int main(void)
