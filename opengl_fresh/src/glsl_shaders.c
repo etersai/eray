@@ -19,6 +19,25 @@ const char* glsl_basic_fs = "#version 460 core\n"
     "   final_color = vec4(out_color, 1.0);\n"
     "}\0";
 
+const char* glsl_font_vs = "#version 460 core\n"
+    "layout (location = 0) in vec2 aPos;\n"
+    "layout (location = 1) in vec2 aTex;\n"
+    "out vec2 pass_texture_uv;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos, 0.0, 1.0);\n"
+    "   pass_texture_uv = aTex;\n"
+    "}\0";
+
+const char* glsl_font_fs = "#version 460 core\n"
+    "in vec2 pass_texture_uv;\n"              
+    "uniform sampler2D textureSampler;\n"     
+    "out vec4 final_color;\n"
+    "void main()\n"
+    "{\n"
+    "   final_color = texture(textureSampler, pass_texture_uv);\n"
+    "}\0";
+
 const char* glsl_cube_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aNorm;\n"

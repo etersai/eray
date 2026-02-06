@@ -223,6 +223,7 @@ typedef struct {
 const float mouse_sens = 0.1f;
 ShaderBasic shader_basic;
 ShaderBasic shader_basic_teapot;
+ShaderBasic shader_font;
 ShaderInstanced shader_instanced;
 ShaderSkybox shader_skybox;
 GpuMeshIndexed mesh_quad;
@@ -245,6 +246,7 @@ Camerka camera;
 //static unsigned char cpu_text_vertices[TEXT_MAX_BYTES];
 static float cpu_text_vertices[TEXT_MAX_BYTES/sizeof(float)]; // 5461.33 CHARS.                                                //
 unsigned int fv_count = 0; 
+static GLuint vao_text;
 static GpuPMappedBuffer gpu_pmbuffer_text_vertices;
 void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 {
@@ -273,7 +275,7 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     float start_ndc_x = norm_x * 2 - 1; // remap
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
-    size_t offset_prev = sizeof(float) * fv_count;
+    size_t byte_buffer_offset = sizeof(float) * fv_count;
 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
@@ -336,11 +338,9 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     for (int i = 0; i < fv_count; i++) {
         elog_f(cpu_text_vertices[i]);
     }
-    
-    elog_zu(offset_prev);
-    abort();
 
-    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, offset_prev, fv_count*sizeof(float), cpu_text_vertices);
+    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, byte_buffer_offset, fv_count*sizeof(float), cpu_text_vertices);
+
 }
 
 int main(void)
@@ -466,7 +466,9 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
-    
+
+
+
     // CUBEMAP //
     texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
     if (texture_skybox.id == 0) {
@@ -490,6 +492,12 @@ int main(void)
     shader_basic.view = shader_get_uniform_location(shader_basic.prog, "view");
     shader_basic.projection = shader_get_uniform_location(shader_basic.prog, "projection");
 
+    // shader font
+    shader_font.prog = shader_prog_create_from_memory(glsl_font_vs, glsl_font_fs);
+    if (!shader_valid(shader_font)) {
+        elog_abort("ABORT FOR NOW"); 
+    }
+
     // basic model (teapot) shader
     shader_basic_teapot.prog = shader_prog_create_from_memory(glsl_teapot_vs, glsl_teapot_fs);
     if (!shader_valid(shader_basic_teapot)) {
@@ -499,7 +507,6 @@ int main(void)
     shader_basic_teapot.view = shader_get_uniform_location(shader_basic_teapot.prog, "view");
     shader_basic_teapot.projection = shader_get_uniform_location(shader_basic_teapot.prog, "projection");
     shader_basic_teapot.color = shader_get_uniform_location(shader_basic_teapot.prog, "color");
-
 
     // skybox shader.
     shader_skybox.prog = shader_prog_create_from_memory(glsl_skybox_vs, glsl_skybox_fs);
