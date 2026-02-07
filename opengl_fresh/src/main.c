@@ -275,7 +275,6 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
     size_t byte_buffer_offset = sizeof(float) * fv_count;
-    elog_zu(byte_buffer_offset);
 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
@@ -290,6 +289,11 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float uv_x = (float)character.x/font->texture.width;
         float uv_y = (float)character.y/font->texture.height;
 
+
+        float char_width_norm = (float)character.width / SCR_WIDTH;
+        float char_height_norm = (float)character.height / SCR_HEIGHT;
+        elog_f(char_width_norm);
+        elog_f(char_height_norm);
         // one char = 24 floats = 96 bytes.
 
         // Generate 2 triangles 
@@ -301,25 +305,25 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 
         // box bottom left. 1
         cpu_text_vertices[fv_count+4] = start_ndc_x;
-        cpu_text_vertices[fv_count+5] = start_ndc_y-uv_height;
+        cpu_text_vertices[fv_count+5] = start_ndc_y-char_height_norm;
         cpu_text_vertices[fv_count+6] = uv_x;
         cpu_text_vertices[fv_count+7] = uv_y+uv_height;
 
         // box bottom right. 2
-        cpu_text_vertices[fv_count+8] = start_ndc_x+uv_width;
-        cpu_text_vertices[fv_count+9] = start_ndc_y-uv_height; 
+        cpu_text_vertices[fv_count+8] = start_ndc_x+char_width_norm;
+        cpu_text_vertices[fv_count+9] = start_ndc_y-char_height_norm; 
         cpu_text_vertices[fv_count+10] = uv_x+uv_width; 
         cpu_text_vertices[fv_count+11] = uv_y+uv_height; 
 
 
         // box bottom right. 2
-        cpu_text_vertices[fv_count+12] = start_ndc_x+uv_width;
-        cpu_text_vertices[fv_count+13] = start_ndc_y-uv_height; 
+        cpu_text_vertices[fv_count+12] = start_ndc_x+char_width_norm;
+        cpu_text_vertices[fv_count+13] = start_ndc_y-char_height_norm; 
         cpu_text_vertices[fv_count+14] = uv_x+uv_width; 
         cpu_text_vertices[fv_count+15] = uv_y+uv_height; 
 
         // box top right. 3 
-        cpu_text_vertices[fv_count+16] = start_ndc_x+uv_width; 
+        cpu_text_vertices[fv_count+16] = start_ndc_x+char_width_norm; 
         cpu_text_vertices[fv_count+17] = start_ndc_y; 
         cpu_text_vertices[fv_count+18] = uv_x+uv_width; 
         cpu_text_vertices[fv_count+19] = uv_y; 
@@ -330,19 +334,18 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         cpu_text_vertices[fv_count+22] = uv_x;
         cpu_text_vertices[fv_count+23] = uv_y;
 
-        start_ndc_x += character.width;
+        start_ndc_x += char_width_norm;
         fv_count+=24;
         p++;
     } 
     
-    elog_u(fv_count);
-
     gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, byte_buffer_offset, fv_count*sizeof(float), cpu_text_vertices);
 
     // draw.
+    assert(shader_valid(shader_font));
     shader_prog_use(shader_font.prog);
     glBindVertexArray(vao_text);
-    glBindTexture(GL_TEXTURE_2D, texture_font_arial_white.id);
+    glBindTexture(GL_TEXTURE_2D, font->texture.id);
     glDrawArrays(GL_TRIANGLES, 0, fv_count);
 
     fv_count = 0;
@@ -483,7 +486,7 @@ int main(void)
     }
      
     Fontek arial_font;
-    font_create(&arial_font, font_arial_white, texture_grass);  
+    font_create(&arial_font, font_arial_white, texture_font_arial_white);  
 
                     
     // SHADERS //
@@ -725,7 +728,7 @@ int main(void)
         glBindVertexArray(mesh_teapot_normals.VAO);
         glDrawArrays(GL_LINES, 0, mesh_teapot_normals.vertex_count);
 
-        r_draw_text_immediate(&arial_font, 500.0f, 500.0f, "tiger bonzo");
+        r_draw_text_immediate(&arial_font, 500.0f, 400.0f, "co jest kurcze tutaj grane?");
 
 
         glfwSwapBuffers(window);

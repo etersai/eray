@@ -35,7 +35,7 @@ const char* glsl_font_fs = "#version 460 core\n"
     "out vec4 final_color;\n"
     "void main()\n"
     "{\n"
-    "   final_color = texture(textureSampler, pass_texture_uv);\n"
+    "   final_color = texture(textureSampler, vec2(pass_texture_uv.x, -pass_texture_uv.y));\n"
     "}\0";
 
 const char* glsl_cube_vs = "#version 460 core\n"
