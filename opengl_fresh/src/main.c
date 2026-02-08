@@ -31,6 +31,7 @@ bool move_w;
 bool move_s;
 bool move_a;
 bool move_d;
+const float mouse_sens = 0.1f;
 const unsigned int SCR_WIDTH = 1280; // 16:9
 const unsigned int SCR_HEIGHT = 720; 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
@@ -187,7 +188,6 @@ typedef struct {
 #define shader_valid(shader) ((shader).prog.id != 0)
 
 // globals
-const float mouse_sens = 0.1f;
 ShaderBasic shader_basic;
 ShaderBasic shader_basic_teapot;
 ShaderBasic shader_font;
@@ -202,30 +202,6 @@ Texture texture_font_arial_white;
 Texture texture_grass;
 TextureCubemap texture_skybox;
 Camerka camera;
-
-typedef struct {
-    ShaderBasic shader_basic;
-    ShaderBasic shader_basic_teapot;
-    ShaderBasic shader_font;
-    ShaderInstanced shader_instanced;
-    ShaderSkybox shader_skybox;
-
-    GpuMeshIndexed mesh_quad;
-    GpuMeshIndexed mesh_cube;
-    GpuMeshIndexed mesh_anchor;
-    GpuMeshIndexed mesh_model;
-    GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-                                
-    Texture texture_font_arial_white;
-    Texture texture_grass;
-    TextureCubemap texture_skybox;
-} Renderek;
-
-typedef struct { 
-    const float mouse_sens;
-    Camerka camera;
-    Renderek renderer;
-} ProgramState;
 
 // DRAW FONT STUFF //
 ////////////////////
@@ -321,7 +297,6 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         cpu_text_vertices[fv_count+23] = uv_y;
 
         float xxx = (float)character.originX/SCR_WIDTH;
-        float yyy = (float)character.originY/SCR_HEIGHT;
 
         start_ndc_x += char_width_norm + xxx;
         fv_count+=24;
@@ -470,13 +445,15 @@ int main(void)
         return 1;
     }    
     glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
-
+    stbi_set_flip_vertically_on_load(true); // global state 
     /*******************/
     /* END BOILERPLATE */
     /*******************/
+   
+    // MEDIA LOADING
     
-    stbi_set_flip_vertically_on_load(true); // global state 
-                                            
+    Arenka asset_arena = arenka_map(LA_MEBIBYTE(5));
+    
     const char* path_teapot = "./assets/models/teapot.obj";
     const char* path_grass = "./assets/textures/grass.jpg";
     const char* path_font = "./assets/textures/font.png";
@@ -488,6 +465,18 @@ int main(void)
         "./assets/skybox/front.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
+    
+
+                                            
+
+
+    
+
+
+    unsigned char* aptr = arenka_get_piece(&asset_arena, LA_MEBIBYTE(5));
+    if (aptr == NULL) elog_abort("ARENA MAP FAILED!");
+    arenka_wipe(&asset_arena);
+
     
     // load teapot model.
     obj_in_memory teapot_obj;
@@ -796,7 +785,7 @@ int main(void)
 
         shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &full2.col1.x);
 
-        const float teapot_color[] = {1.0f, 0.5f, 0.0f, 1.0f}; 
+        const float teapot_color[] = {1.0f, 0.5f, 0.5f, 1.0f}; 
         shader_set_vec4(shader_basic_teapot.prog, shader_basic_teapot.color, teapot_color);
 
         glPointSize(2.0f);
@@ -811,7 +800,6 @@ int main(void)
         shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &cm.col1.x);
         vecf4 xd =(vecf4){0.0f, 1.0f, 0.0f, 1.0f};
         shader_set_vec4(shader_basic_teapot.prog, shader_basic_teapot.color, &xd.x);
-        //glPointSize(5.0f);
         glBindVertexArray(mesh_teapot_normals.VAO);
         glDrawArrays(GL_LINES, 0, mesh_teapot_normals.vertex_count);
 

@@ -41,12 +41,8 @@ typedef struct {
     GpuMeshIndexed mesh_anchor;
     GpuMeshIndexed mesh_model;
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-                                
-    Texture texture_font_arial_white;
-    Texture texture_grass;
-    TextureCubemap texture_skybox;
-} Renderek;
+} RendererState;
 
-#define shader_valid(shader) ((shader).prog.id != 0)
+#define r_shader_valid(shader) ((shader).prog.id != 0)
 
 #endif /* R_MAIN_H_ */

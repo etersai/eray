@@ -561,6 +561,9 @@ static void log_print_n_flush(const char* format, ...)
 
 // ARENKA
 #include <sys/mman.h> // TODO: i should probably remove arena from this file.
+#define LA_KIBIBYTE(val) ((val)*1024)
+#define LA_MEBIBYTE(val) ((val)*1024*1024)
+#define LA_GIBIBYTE(val) ((val)*1024*1024*1024) 
 typedef struct {
     unsigned char* addr_start;
     size_t         offset;
@@ -592,8 +595,6 @@ static unsigned char* arenka_get_piece(Arenka* arena, size_t size_in_bytes)
         return NULL;
     }
     unsigned char* return_addr = arena->addr_start + arena->offset;
-    fprintf(stdout, "Inside arenka_get_piece: %p", return_addr);
-    fflush(stdout);
     arena->offset += size_in_bytes;
     return return_addr;
 }
