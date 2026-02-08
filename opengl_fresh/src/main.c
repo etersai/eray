@@ -406,13 +406,8 @@ void console_post_cwd(void)
 {
     char buf[cwd_path_max];
     char* success = eray_get_cwd(buf, sizeof(buf));
-    if (success) {
-        fprintf(stderr, "%s\n", buf);
-    } 
-    else 
-    {
-        fprintf(stderr, "%s\n", "[err: getcwd failed]");
-    }
+    if (success) {fprintf(stderr, "%s\n", buf);} 
+    else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
 
 int main(void)
@@ -445,12 +440,13 @@ int main(void)
         return 1;
     }    
     glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
-    stbi_set_flip_vertically_on_load(true); // global state 
+
     /*******************/
     /* END BOILERPLATE */
     /*******************/
    
     // MEDIA LOADING
+    stbi_set_flip_vertically_on_load(true); // global state 
     Arenka asset_arena = arenka_map(LA_MEBIBYTE(5));
     
     const char* path_teapot = "./assets/models/teapot.obj";
@@ -466,7 +462,8 @@ int main(void)
     }; 
     
 
-    unsigned char* aptr = arenka_get_piece(&asset_arena, LA_MEBIBYTE(5));
+    unsigned char* aptr = arenka_get_piece(&asset_arena, 128);
+    elog_zu(asset_arena.offset);
     if (aptr == NULL) elog_abort("ARENA MAP FAILED!");
     arenka_wipe(&asset_arena);
 
