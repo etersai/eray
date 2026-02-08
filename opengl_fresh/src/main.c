@@ -451,7 +451,6 @@ int main(void)
     /*******************/
    
     // MEDIA LOADING
-    
     Arenka asset_arena = arenka_map(LA_MEBIBYTE(5));
     
     const char* path_teapot = "./assets/models/teapot.obj";
@@ -466,12 +465,6 @@ int main(void)
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
     
-
-                                            
-
-
-    
-
 
     unsigned char* aptr = arenka_get_piece(&asset_arena, LA_MEBIBYTE(5));
     if (aptr == NULL) elog_abort("ARENA MAP FAILED!");

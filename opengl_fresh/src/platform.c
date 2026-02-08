@@ -40,7 +40,7 @@ char* map_file_into_memory(const char* filename, size_t* out_file_size)
 
     mapped_file = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0); 
     if (mapped_file == MAP_FAILED) {
-        perror("mmap"); // NOTE: perror not cross platform with windows.
+        perror("mmap"); // NOTE: perror not cross platform with windows. as well as mmap XD
         close(fd);
         return NULL;
     }
