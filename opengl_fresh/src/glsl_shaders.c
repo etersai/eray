@@ -25,7 +25,7 @@ const char* glsl_font_vs = "#version 460 core\n"
     "out vec2 pass_texture_uv;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos, 0.0, 1.0);\n"
+    "   gl_Position = vec4(aPos, -1.0, 1.0);\n"
     "   pass_texture_uv = aTex;\n"
     "}\0";
 

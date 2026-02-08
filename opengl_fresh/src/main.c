@@ -290,10 +290,8 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float uv_y = (float)character.y/font->texture.height;
 
 
-        float char_width_norm = (float)character.width / SCR_WIDTH;
-        float char_height_norm = (float)character.height / SCR_HEIGHT;
-        elog_f(char_width_norm);
-        elog_f(char_height_norm);
+        float char_width_norm = 2*((float)character.width / SCR_WIDTH);
+        float char_height_norm = 2*((float)character.height / SCR_HEIGHT);
         // one char = 24 floats = 96 bytes.
 
         // Generate 2 triangles 
@@ -334,12 +332,19 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         cpu_text_vertices[fv_count+22] = uv_x;
         cpu_text_vertices[fv_count+23] = uv_y;
 
-        start_ndc_x += char_width_norm;
+        float xxx = (float)character.originX/SCR_WIDTH;
+        float yyy = (float)character.originY/SCR_HEIGHT;
+
+        start_ndc_x += char_width_norm + xxx;
+        start_ndc_y -= yyy;
         fv_count+=24;
         p++;
     } 
     
     gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, byte_buffer_offset, fv_count*sizeof(float), cpu_text_vertices);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // draw.
     assert(shader_valid(shader_font));
@@ -348,8 +353,91 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     glBindTexture(GL_TEXTURE_2D, font->texture.id);
     glDrawArrays(GL_TRIANGLES, 0, fv_count);
 
+    glDisable(GL_BLEND);
+
     fv_count = 0;
 }
+
+// void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
+// {
+//     // ... existing setup code ...
+//
+//     fv_count = 0;
+//
+//     float norm_x = x/SCR_WIDTH;
+//     float norm_y = y/SCR_HEIGHT;
+//     float pen_x_ndc = norm_x * 2 - 1;
+//     float pen_y_ndc = -(norm_y * 2 - 1);
+//
+//     char* p = text;
+//     while(*p != '\0') {
+//         internal_font_char character = font->metadata.characters[0];
+//         char c = *p;    
+//         if (c >= ' ' && c <= '~') {
+//             character = font->metadata.characters[(int)c-32];
+//         }
+//
+//         // Calculate UV coordinates
+//         float uv_width = (float)character.width / font->texture.width;
+//         float uv_height = (float)character.height / font->texture.height;
+//         float uv_x = (float)character.x / font->texture.width;
+//         float uv_y = (float)character.y / font->texture.height;
+//
+//         // Convert glyph dimensions to NDC
+//         float char_width_ndc = ((float)character.width / SCR_WIDTH) * 2.0f;
+//         float char_height_ndc = ((float)character.height / SCR_HEIGHT) * 2.0f;
+//
+//         // IMPORTANT: Apply origin offsets for proper alignment
+//         float origin_x_ndc = ((float)character.originX / SCR_WIDTH) * 2.0f;
+//         float origin_y_ndc = ((float)character.originY / SCR_HEIGHT) * 2.0f;
+//
+//         // Calculate actual glyph position (pen position + bearing offset)
+//         float glyph_x = pen_x_ndc + origin_x_ndc;
+//         float glyph_y = pen_y_ndc - origin_y_ndc; // Subtract because Y is inverted
+//
+//         // Generate triangles at the adjusted position
+//         // Triangle 1: TL, BL, BR
+//         cpu_text_vertices[fv_count+0] = glyph_x;
+//         cpu_text_vertices[fv_count+1] = glyph_y;
+//         cpu_text_vertices[fv_count+2] = uv_x;
+//         cpu_text_vertices[fv_count+3] = uv_y;
+//
+//         cpu_text_vertices[fv_count+4] = glyph_x;
+//         cpu_text_vertices[fv_count+5] = glyph_y - char_height_ndc;
+//         cpu_text_vertices[fv_count+6] = uv_x;
+//         cpu_text_vertices[fv_count+7] = uv_y + uv_height;
+//
+//         cpu_text_vertices[fv_count+8] = glyph_x + char_width_ndc;
+//         cpu_text_vertices[fv_count+9] = glyph_y - char_height_ndc;
+//         cpu_text_vertices[fv_count+10] = uv_x + uv_width;
+//         cpu_text_vertices[fv_count+11] = uv_y + uv_height;
+//
+//         // Triangle 2: BR, TR, TL
+//         cpu_text_vertices[fv_count+12] = glyph_x + char_width_ndc;
+//         cpu_text_vertices[fv_count+13] = glyph_y - char_height_ndc;
+//         cpu_text_vertices[fv_count+14] = uv_x + uv_width;
+//         cpu_text_vertices[fv_count+15] = uv_y + uv_height;
+//
+//         cpu_text_vertices[fv_count+16] = glyph_x + char_width_ndc;
+//         cpu_text_vertices[fv_count+17] = glyph_y;
+//         cpu_text_vertices[fv_count+18] = uv_x + uv_width;
+//         cpu_text_vertices[fv_count+19] = uv_y;
+//
+//         cpu_text_vertices[fv_count+20] = glyph_x;
+//         cpu_text_vertices[fv_count+21] = glyph_y;
+//         cpu_text_vertices[fv_count+22] = uv_x;
+//         cpu_text_vertices[fv_count+23] = uv_y;
+//
+//         // ADVANCE THE PEN: move by the full character width (the "advance" value)
+//         // If you have an 'advance' field, use that instead
+//         pen_x_ndc += char_width_ndc + origin_x_ndc; // width + bearing for proper spacing
+//
+//         fv_count += 24;
+//         p++;
+//     }
+//
+//     // ... rest of your drawing code ...
+// }
 
 int main(void)
 {
@@ -728,8 +816,7 @@ int main(void)
         glBindVertexArray(mesh_teapot_normals.VAO);
         glDrawArrays(GL_LINES, 0, mesh_teapot_normals.vertex_count);
 
-        r_draw_text_immediate(&arial_font, 500.0f, 400.0f, "co jest kurcze tutaj grane?");
-
+        r_draw_text_immediate(&arial_font, 0.0f, 0.0f, "FPS: 60.0");
 
         glfwSwapBuffers(window);
         glfwPollEvents();
