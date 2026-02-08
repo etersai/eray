@@ -9,7 +9,7 @@
 #include <assert.h>
 
 #include "platform.h"
-#include "r_gl_stuff.h"
+#include "r_opengl.h"
 #include "obj_loader.h"
 #include "lamath.h"
 
@@ -20,7 +20,7 @@
 #include "data_font.h"
 
 // VERY IMPORTANT TODOS //
-// TODO: ADD ERROR CHECKS FOR GL STUFF. (DONE??)
+// TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
@@ -150,7 +150,7 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
 {
     assert(font != NULL);
     assert(font_metadata.name != NULL); // at least some check XD. 
-    assert(texture_valid(texture));
+    assert(gl_texture_valid(texture));
     font->metadata = font_metadata;
     font->texture = texture;
     return 0;
@@ -239,7 +239,7 @@ static GpuPMappedBuffer gpu_pmbuffer_text_vertices;
 void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 {
     assert(font);
-    assert(texture_valid(font->texture));
+    assert(gl_texture_valid(font->texture));
 
     // kickstart it's self kinda thing.
     if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) { // if not created
@@ -555,11 +555,11 @@ int main(void)
     // prepare gpu resources.
     texture_grass = texture_load_from_path(path_grass);
     texture_font_arial_white = texture_load_from_path(path_font); 
-    if (!texture_valid(texture_grass)) {
+    if (!gl_texture_valid(texture_grass)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_grass);
         abort();
     }
-    if (!texture_valid(texture_font_arial_white)) {
+    if (!gl_texture_valid(texture_font_arial_white)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }

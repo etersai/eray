@@ -1,4 +1,4 @@
-#include "gl_stuff.h"
+#include "r_opengl.h"
 #include "platform.h"
 #include <string.h> // memcpy
 #include <assert.h>

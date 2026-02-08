@@ -2,6 +2,7 @@
 #define R_MAIN_H_
 
 #include <glad/glad.h>
+#include "r_opengl.h"
 #include "r_shader.h"
 
 typedef GLint uniform;
