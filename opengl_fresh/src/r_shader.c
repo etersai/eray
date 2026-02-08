@@ -1,4 +1,4 @@
-#include "shader.h"
+#include "r_shader.h"
 
 #include <stddef.h>
 #include <assert.h>

@@ -9,18 +9,18 @@
 #include <assert.h>
 
 #include "platform.h"
-#include "gl_stuff.h"
+#include "r_gl_stuff.h"
 #include "obj_loader.h"
 #include "lamath.h"
 
 #include "camerka.h"
-#include "shader.h"
+#include "r_shader.h"
 #include "glsl_shaders.c"
 #include "data_vertex.c"
 #include "data_font.h"
 
 // VERY IMPORTANT TODOS //
-// TODO: ADD ERROR CHECKS FOR GL STUFF.
+// TODO: ADD ERROR CHECKS FOR GL STUFF. (DONE??)
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
@@ -73,14 +73,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 }
 // END PLATFORM ////////////////////////////////////////
 
-const int cwd_path_max = 1024;
-void console_post_cwd(void)
-{
-    char buf[cwd_path_max];
-    char* success = eray_get_cwd(buf, sizeof(buf));
-    if (success) {fprintf(stderr, "%s\n", buf);} 
-    else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
-}
 
 typedef enum {
     PIXEL_FORMAT_R8,
@@ -167,6 +159,7 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
 // Asset loading = CPU side (parsing files, decoding)
 // Resource creation = GPU upload (creating textures/buffers)
 // Rendering = Draw commands
+
 typedef GLint uniform;
 
 typedef struct {
@@ -191,32 +184,6 @@ typedef struct {
     uniform projection;
 } ShaderSkybox;
 
-typedef struct {
-    ShaderBasic basic;
-    ShaderBasic teapot;
-    ShaderInstanced ground;
-    ShaderSkybox skybox;
-} RenderekShaders;
-
-typedef struct {
-    Texture grass;
-    TextureCubemap skybox;
-} RenderekTextures;
-
-typedef struct {
-    GpuMeshIndexed quad;
-    GpuMeshIndexed cube;
-    GpuMeshIndexed anchor;
-    GpuMeshIndexed model;
-    GpuMeshSimple  skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-} RenderekMeshes;
-
-typedef struct {
-    RenderekMeshes   meshes;
-    RenderekShaders  shaders;
-    RenderekTextures textures;
-} Renderek;
-
 #define shader_valid(shader) ((shader).prog.id != 0)
 
 // globals
@@ -234,10 +201,31 @@ GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
 Texture texture_font_arial_white;
 Texture texture_grass;
 TextureCubemap texture_skybox;
-
-//Renderek g_renderek; // not used atm
 Camerka camera;
 
+typedef struct {
+    ShaderBasic shader_basic;
+    ShaderBasic shader_basic_teapot;
+    ShaderBasic shader_font;
+    ShaderInstanced shader_instanced;
+    ShaderSkybox shader_skybox;
+
+    GpuMeshIndexed mesh_quad;
+    GpuMeshIndexed mesh_cube;
+    GpuMeshIndexed mesh_anchor;
+    GpuMeshIndexed mesh_model;
+    GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+                                
+    Texture texture_font_arial_white;
+    Texture texture_grass;
+    TextureCubemap texture_skybox;
+} Renderek;
+
+typedef struct { 
+    const float mouse_sens;
+    Camerka camera;
+    Renderek renderer;
+} ProgramState;
 
 // DRAW FONT STUFF //
 ////////////////////
@@ -336,7 +324,6 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
         float yyy = (float)character.originY/SCR_HEIGHT;
 
         start_ndc_x += char_width_norm + xxx;
-        start_ndc_y -= yyy;
         fv_count+=24;
         p++;
     } 
@@ -439,10 +426,25 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
 //     // ... rest of your drawing code ...
 // }
 
+const unsigned int cwd_path_max = 1024;
+void console_post_cwd(void)
+{
+    char buf[cwd_path_max];
+    char* success = eray_get_cwd(buf, sizeof(buf));
+    if (success) {
+        fprintf(stderr, "%s\n", buf);
+    } 
+    else 
+    {
+        fprintf(stderr, "%s\n", "[err: getcwd failed]");
+    }
+}
+
 int main(void)
 {
     // Setup GLFW and OpenGL Context
     console_post_cwd();
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -472,7 +474,6 @@ int main(void)
     /*******************/
     /* END BOILERPLATE */
     /*******************/
-    
     
     stbi_set_flip_vertically_on_load(true); // global state 
                                             
@@ -562,8 +563,6 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
-
-
 
     // CUBEMAP //
     texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
@@ -820,6 +819,7 @@ int main(void)
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
         move_w = false;
         move_s = false;
         move_a = false;
