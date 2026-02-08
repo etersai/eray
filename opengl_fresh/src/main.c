@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <assert.h>
 
@@ -90,6 +91,15 @@ typedef struct {
     int format;
 } CpuImage;
 
+int cpu_img_ld(CpuImage* img, const char* path)
+{
+    assert(img); 
+    int width;
+    int height;
+    int num_channels;
+    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
+}
+
 CpuImage cpu_image_load(const char* path)
 {
     CpuImage img = {0};
@@ -97,7 +107,7 @@ CpuImage cpu_image_load(const char* path)
     int height;
     int num_channels;
     unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
-
+    
     if (data) {
 
         img.data = data;
@@ -461,10 +471,29 @@ int main(void)
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
     
+    typedef struct {
+        int x;
+        int y;
+        int nr_channels;
+        unsigned char* data;
+        size_t size;
+    } cpuimg;
 
-    unsigned char* aptr = arenka_get_piece(&asset_arena, 128);
-    elog_zu(asset_arena.offset);
+    cpuimg img_xd = {0};
+
+    unsigned char* idata = stbi_load(path_grass, &img_xd.x, &img_xd.y, &img_xd.nr_channels, 0);
+    if (idata == NULL) {
+        elog_abort("STBI");
+    }
+    img_xd.data = idata;
+    img_xd.size = img_xd.x*img_xd.y*img_xd.nr_channels;
+
+    unsigned char* aptr = arenka_get_piece(&asset_arena, img_xd.size);
     if (aptr == NULL) elog_abort("ARENA MAP FAILED!");
+
+    memcpy(aptr, idata, img_xd.size);
+    stbi_image_free(idata);
+
     arenka_wipe(&asset_arena);
 
     
