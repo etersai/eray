@@ -26,6 +26,8 @@
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
 
+#define global static
+
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
 bool move_w;
