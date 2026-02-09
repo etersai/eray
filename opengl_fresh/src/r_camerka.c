@@ -1,4 +1,4 @@
-#include "camerka.h"
+#include "r_camerka.h"
 #include "lamath.h"
 
 matf4x4 camerka_view_matrix(const Camerka* camerka)
