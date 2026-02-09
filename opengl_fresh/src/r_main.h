@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
     ShaderBasic shader_basic;
-    ShaderBasic shader_basic_teapot;
+    ShaderBasic shader_basic_model;
     ShaderBasic shader_font;
     ShaderInstanced shader_instanced;
     ShaderSkybox shader_skybox;

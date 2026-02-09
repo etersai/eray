@@ -10,15 +10,14 @@
 #include <assert.h>
 
 #include "platform.h"
-#include "r_main.h"
 #include "r_opengl.h"
 #include "obj_loader.h"
 #include "lamath.h"
 
-#include "camerka.h"
+#include "r_camerka.h"
 #include "r_shader.h"
 #include "glsl_shaders.c"
-#include "data_vertex.c"
+#include "data_vertices.c"
 #include "data_font.h"
 
 // VERY IMPORTANT TODOS //
@@ -47,8 +46,8 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { move_s = true; }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
-    
 }
+
 double last_x;
 double last_y;
 double mouse_dx;
@@ -413,7 +412,6 @@ typedef struct {
     TextureCubemap texture_skybox;
 } ProgramContext;
 
-static RendererContext renderer;
 static ProgramContext program_state;
 
 int main(void)
@@ -488,7 +486,6 @@ int main(void)
     if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
         elog_abort("OBJ LOAD FAIL!");
     }
-
     Fontek arial_font;
     font_create(&arial_font, font_arial_white, texture_font);  
 
@@ -539,9 +536,9 @@ int main(void)
     shader_instanced.offsets = shader_get_uniform_location(shader_instanced.prog, "offsets");
 
     // LOAD MESHES
-    mesh_quad = gpu_load_mesh_quad(quad_verts, quad_indices, sizeof(quad_verts), sizeof(quad_indices));
+    mesh_quad = gpu_load_mesh_quad(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices));
     mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
-    mesh_skybox = gpu_load_mesh_simple_1attr(skyboxVertices, sizeof(skyboxVertices));
+    mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
     mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
     mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
 
