@@ -31,7 +31,6 @@ typedef struct {
 
 typedef struct {
     ShaderBasic shader_basic_3d;
-    ShaderBasic shader_basic_model;
     ShaderBasic shader_font;
     ShaderInstanced shader_instanced;
     ShaderSkybox shader_skybox;
@@ -45,7 +44,7 @@ typedef struct {
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
-int r_renderer_init(RendererContext* renderer);
-void r_renderer_shutdown(RendererContext* renderer);
+int r_renderer_init(RendererContext* r);
+void r_renderer_shutdown(RendererContext* r);
 
 #endif /* R_MAIN_H_ */

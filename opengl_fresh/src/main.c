@@ -26,17 +26,18 @@
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
 
-#define global static
+// credit Ryan Fleury
+#define global static 
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
-bool move_w;
-bool move_s;
-bool move_a;
-bool move_d;
-const float mouse_sens = 0.1f;
-const unsigned int SCR_WIDTH = 1280; // 16:9
-const unsigned int SCR_HEIGHT = 720; 
+global bool move_w;
+global bool move_s;
+global bool move_a;
+global bool move_d;
+global const float mouse_sens = 0.1f;
+global const unsigned int SCR_WIDTH = 1280; // 16:9
+global const unsigned int SCR_HEIGHT = 720; 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
 void processInput(GLFWwindow *window)
 {
@@ -50,11 +51,11 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
 }
 
-double last_x;
-double last_y;
-double mouse_dx;
-double mouse_dy;
-static bool first_mouse = true;
+global double last_x;
+global double last_y;
+global double mouse_dx;
+global double mouse_dy;
+global bool first_mouse = true;
 //#define MOUSE_FLIP_Y
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -414,7 +415,7 @@ typedef struct {
     TextureCubemap texture_skybox;
 } ProgramContext;
 
-static ProgramContext program_state;
+global ProgramContext program_state;
 
 int main(void)
 {
