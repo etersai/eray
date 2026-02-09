@@ -27,7 +27,9 @@
 // TODO: SEPERATE PLATFORM LAYER
 
 // credit Ryan Fleury
-#define global static 
+#define global        static 
+#define internal      static
+#define local_persist static
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
@@ -413,6 +415,7 @@ typedef struct {
     Texture texture_font;
     Texture texture_grass;
     TextureCubemap texture_skybox;
+    GpuMeshIndexed mesh_teapot;
 } ProgramContext;
 
 global ProgramContext program_state;
