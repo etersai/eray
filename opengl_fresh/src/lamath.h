@@ -42,6 +42,7 @@
 #define la_min(a, b) ((a) < (b) ? (a) : (b))
 #define la_max(a, b) ((a) > (b) ? (a) : (b))
 #define la_clamp(val, lo, hi) (la_min(la_max((val), (lo)), (hi)))
+#define la_arrlen(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
 // MY SCRATCH PAD //
 // this trick is amazing! flipped_value = max + min - original_value

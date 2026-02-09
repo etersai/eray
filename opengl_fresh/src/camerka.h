@@ -9,6 +9,9 @@ typedef struct {
     vecf3 pos;
 } Camerka;
 
+#define camerka_set_pos(camerka, pos) do { (camerka).pos = (pos); } while (0)
+#define camerka_set_orientation(camerka, orientation) do { (camerka).orientation = (orientation); } while (0)
+
 matf4x4 camerka_view_matrix(const Camerka* camerka);
 vecf3 camerka_orientation(const Camerka* camerka);
 

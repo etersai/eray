@@ -91,14 +91,6 @@ typedef struct {
     int format;
 } CpuImage;
 
-int cpu_img_ld(CpuImage* img, const char* path)
-{
-    assert(img); 
-    int width;
-    int height;
-    int num_channels;
-    unsigned char *data = stbi_load(path, &width, &height, &num_channels, 0);
-}
 
 CpuImage cpu_image_load(const char* path)
 {
@@ -208,7 +200,7 @@ GpuMeshIndexed mesh_cube;
 GpuMeshIndexed mesh_anchor;
 GpuMeshIndexed mesh_model;
 GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-Texture texture_font_arial_white;
+Texture texture_font;
 Texture texture_grass;
 TextureCubemap texture_skybox;
 Camerka camera;
@@ -422,9 +414,8 @@ void console_post_cwd(void)
 
 int main(void)
 {
-    // Setup GLFW and OpenGL Context
     console_post_cwd();
-
+    // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -456,8 +447,8 @@ int main(void)
     /*******************/
    
     // MEDIA LOADING
+    // TODO: create temp texture for any failed to load texture [black/purple checkerboard pattern etc.]
     stbi_set_flip_vertically_on_load(true); // global state 
-    Arenka asset_arena = arenka_map(LA_MEBIBYTE(5));
     
     const char* path_teapot = "./assets/models/teapot.obj";
     const char* path_grass = "./assets/textures/grass.jpg";
@@ -470,118 +461,32 @@ int main(void)
         "./assets/skybox/front.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
-    
-    typedef struct {
-        int x;
-        int y;
-        int nr_channels;
-        unsigned char* data;
-        size_t size;
-    } cpuimg;
 
-    cpuimg img_xd = {0};
-
-    unsigned char* idata = stbi_load(path_grass, &img_xd.x, &img_xd.y, &img_xd.nr_channels, 0);
-    if (idata == NULL) {
-        elog_abort("STBI");
-    }
-    img_xd.data = idata;
-    img_xd.size = img_xd.x*img_xd.y*img_xd.nr_channels;
-
-    unsigned char* aptr = arenka_get_piece(&asset_arena, img_xd.size);
-    if (aptr == NULL) elog_abort("ARENA MAP FAILED!");
-
-    memcpy(aptr, idata, img_xd.size);
-    stbi_image_free(idata);
-
-    arenka_wipe(&asset_arena);
-
-    
-    // load teapot model.
-    obj_in_memory teapot_obj;
-    if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
-        elog_abort("OBJ LOAD FAIL!");
-    }
-
-    vecf3 teapot_centers[6320];
-    vecf3 teapot_normals[6320];
-    vecf3 teapot_normals_lines[6320*2];
-    int centroid_count = 0;
-
-    for (size_t i = 0; i < teapot_obj.i_count; i+=3) {
-
-        vecf3 triangle[3];
-
-        unsigned int t_one_index = teapot_obj.indices[i] * 3; // uncoding
-        unsigned int t_two_index = teapot_obj.indices[i+1] * 3;
-        unsigned int t_three_index = teapot_obj.indices[i+2] * 3;
-
-        triangle[0] = (vecf3){teapot_obj.vertices[t_one_index],
-                              teapot_obj.vertices[t_one_index+1],
-                              teapot_obj.vertices[t_one_index+2]};
-        triangle[1] = (vecf3){teapot_obj.vertices[t_two_index],
-                              teapot_obj.vertices[t_two_index+1],
-                              teapot_obj.vertices[t_two_index+2]};
-        triangle[2] = (vecf3){teapot_obj.vertices[t_three_index],
-                              teapot_obj.vertices[t_three_index+1],
-                              teapot_obj.vertices[t_three_index+2]};
-
-        //centroids[centroid_count] = lamath_triangle_centroid(triangle);
-        vecf3 center = lamath_triangle_centroid(triangle);
-        vecf3 normal = lamath_calc_triangle_normal(triangle); 
-    
-        // PIECE OF HIGH TEC CODE.
-        // float dot = center.x*normal.x + center.y*normal.y + center.z*normal.z;
-        // if (dot < 0.0f) {
-        //     normal.x = -normal.x;
-        //     normal.y = -normal.y;
-        //     normal.z = -normal.z;
-        // }
-
-        teapot_centers[centroid_count].x = center.x;
-        teapot_centers[centroid_count].y = center.y;
-        teapot_centers[centroid_count].z = center.z;
-
-        teapot_normals[centroid_count+1].x = normal.x;
-        teapot_normals[centroid_count+1].y = normal.y;
-        teapot_normals[centroid_count+1].z = normal.z;
-
-        centroid_count++;
-    } 
-
-    float tn_scale = 0.1f;
-    for (int i = 0; i < 6320; i++) {
-        // MERGE TWO BUFFER TOGGERTHER KINDA CODE...
-        // Start point of line
-        teapot_normals_lines[i*2] = teapot_centers[i];
-        // End point of line (center + scaled normal)
-        teapot_normals_lines[i*2+1].x = teapot_centers[i].x + (teapot_normals[i].x * tn_scale);
-        teapot_normals_lines[i*2+1].y = teapot_centers[i].y + (teapot_normals[i].y * tn_scale);
-        teapot_normals_lines[i*2+1].z = teapot_centers[i].z + (teapot_normals[i].z * tn_scale);
-    }
-
-    // prepare gpu resources.
     texture_grass = texture_load_from_path(path_grass);
-    texture_font_arial_white = texture_load_from_path(path_font); 
+    texture_font = texture_load_from_path(path_font); 
+    texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
+
     if (!gl_texture_valid(texture_grass)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_grass);
         abort();
     }
-    if (!gl_texture_valid(texture_font_arial_white)) {
+    if (!gl_texture_valid(texture_font)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
-
-    // CUBEMAP //
-    texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
-    if (texture_skybox.id == 0) {
-        // TODO: create temp texture for any failed to load texture [Black, pruple checkerboard pattern :DDD]
+    if (!gl_texture_valid(texture_skybox)) {
         log_print_prefix("asset_load_error", "failed to load cubemap/skybox!\n");
         abort();
     }
-     
+
+    // maybe malloc it?
+    obj_in_memory teapot_obj = {0};
+    if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
+        elog_abort("OBJ LOAD FAIL!");
+    }
+
     Fontek arial_font;
-    font_create(&arial_font, font_arial_white, texture_font_arial_white);  
+    font_create(&arial_font, font_arial_white, texture_font);  
 
                     
     // SHADERS //
@@ -636,14 +541,10 @@ int main(void)
     mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
     mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
 
-    
-    // precalculated
-    GpuMeshSimple mesh_teapot_normals;
-    mesh_teapot_normals = gpu_load_mesh_simple_1attr(&teapot_normals_lines[0].x, sizeof(teapot_normals_lines));
-
 
     // camera setup PROJECTION SET ONCE AT START !!
-    camera.pos = (vecf3){-5.0f, 2.0f, 0.0f};
+    vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
+    camerka_set_pos(camera, pos);
     matf4x4 projection;
     float camera_fov = 90.0f;
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
@@ -812,15 +713,6 @@ int main(void)
         glBindVertexArray(mesh_model.VAO);
         glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        // teapot normals.
-        shader_prog_use(shader_basic_teapot.prog);
-        matf4x4 cm = matf4x4_I_give();
-        shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &cm.col1.x);
-        vecf4 xd =(vecf4){0.0f, 1.0f, 0.0f, 1.0f};
-        shader_set_vec4(shader_basic_teapot.prog, shader_basic_teapot.color, &xd.x);
-        glBindVertexArray(mesh_teapot_normals.VAO);
-        glDrawArrays(GL_LINES, 0, mesh_teapot_normals.vertex_count);
 
         r_draw_text_immediate(&arial_font, 0.0f, 0.0f, "FPS: 60.0");
 
