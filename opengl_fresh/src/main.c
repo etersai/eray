@@ -10,6 +10,7 @@
 #include <assert.h>
 
 #include "platform.h"
+#include "r_main.h"
 #include "r_opengl.h"
 #include "obj_loader.h"
 #include "lamath.h"
@@ -75,7 +76,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 }
 // END PLATFORM ////////////////////////////////////////
 
-
 typedef enum {
     PIXEL_FORMAT_R8,
     PIXEL_FORMAT_RG8,
@@ -90,7 +90,6 @@ typedef struct {
     int num_channels;
     int format;
 } CpuImage;
-
 
 CpuImage cpu_image_load(const char* path)
 {
@@ -158,10 +157,6 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
     font->texture = texture;
     return 0;
 }
-
-// Asset loading = CPU side (parsing files, decoding)
-// Resource creation = GPU upload (creating textures/buffers)
-// Rendering = Draw commands
 
 typedef GLint uniform;
 
@@ -411,6 +406,15 @@ void console_post_cwd(void)
     if (success) {fprintf(stderr, "%s\n", buf);} 
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
+
+typedef struct {
+    Texture texture_font;
+    Texture texture_grass;
+    TextureCubemap texture_skybox;
+} ProgramContext;
+
+static RendererContext renderer;
+static ProgramContext program_state;
 
 int main(void)
 {

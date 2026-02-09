@@ -41,8 +41,11 @@ typedef struct {
     GpuMeshIndexed mesh_anchor;
     GpuMeshIndexed mesh_model;
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-} RendererState;
+} RendererContext;
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)
+
+int r_renderer_init(RendererContext* renderer);
+void r_renderer_shutdown(RendererContext* renderer);
 
 #endif /* R_MAIN_H_ */

@@ -1,10 +1,10 @@
-float triangle_verts[] = { 
+float triangle_vertices[] = { 
     -0.5f, -0.5f, 0.0f,
      0.5f, -0.5f, 0.0f,
      0.0f,  0.5f, 0.0f
 };
 
-float quad_verts[] = {
+float quad_vertices[] = {
     -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // P1
      0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // P2
      0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // P3
@@ -64,7 +64,8 @@ unsigned int anchor_indices[] = {
     22, 23, 20,
 };
 
-float skyboxVertices[] = { // learnopengl.com/code_viewer.php?code=advanced/cubemaps_skybox_data
+// learnopengl.com/code_viewer.php?code=advanced/cubemaps_skybox_data
+float skybox_vertices[] = { 
     // positions          
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
