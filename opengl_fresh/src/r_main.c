@@ -29,6 +29,14 @@ void r_draw_skybox(RendererContext* r, TextureCubemap texture)
     glDepthMask(GL_TRUE);
 }
 
+void r_draw_anchor(RendererContext* r, const matf4x4* transform)
+{
+    shader_prog_use(r->shader_basic_3d_color.prog);
+    shader_set_mat4(r->shader_basic_3d_color.prog, r->shader_basic_3d_color.model, &transform->col1.x);
+    glBindVertexArray(r->mesh_anchor.VAO);
+    glDrawElements(GL_TRIANGLES, r->mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
+}
+
 int r_renderer_init(RendererContext* r)
 {
     assert(r);
@@ -46,9 +54,6 @@ int r_renderer_init(RendererContext* r)
     if (!r_shader_valid(r->shader_basic_3d_color)) {
         return 1;
     }
-    // r->shader_basic_3d_color.model = shader_get_uniform_location(r->shader_basic_3d_color.prog, "model");
-    // r->shader_basic_3d_color.view = shader_get_uniform_location(r->shader_basic_3d_color.prog, "view");
-    // r->shader_basic_3d_color.projection = shader_get_uniform_location(r->shader_basic_3d_color.prog, "projection");
     shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d_color, r->shader_basic_3d_color.prog);
     
     // instanced

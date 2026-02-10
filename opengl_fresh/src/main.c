@@ -323,6 +323,13 @@ int main(void)
     }
     shader_set_3fv(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.offsets, 1600, &translations[0].x); 
 
+    // ANCHOR Transform
+    matf4x4 s = matf4x4_I_give();
+    matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
+    matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
+    matf4x4 full = matf4x4_I_give();
+    matf4x4_mul(&full, &t, &s);
+
     // camera setup PROJECTION SET ONCE AT START !!
     vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
     camerka_set_pos(program_ctx.camera, pos);
@@ -383,18 +390,9 @@ int main(void)
         glBindTexture(GL_TEXTURE_2D, program_ctx.texture_grass.id);
         glBindVertexArray(renderer_ctx.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, renderer_ctx.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
-       
-        // anchor
-        matf4x4 s = matf4x4_I_give();
-        matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
-        matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
-        matf4x4 full = matf4x4_I_give();
-        matf4x4_mul(&full, &t, &s);
 
-        shader_prog_use(renderer_ctx.shader_basic_3d_color.prog);
-        shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.model, &full.col1.x);
-        glBindVertexArray(renderer_ctx.mesh_anchor.VAO);
-        glDrawElements(GL_TRIANGLES, renderer_ctx.mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
+        r_draw_anchor(&renderer_ctx, &full);
+
 
         // teapot
         static float rotacja = 0.0f;
