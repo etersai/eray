@@ -39,6 +39,12 @@ uniform shader_get_uniform_location(ShaderProgram program, const char* name)
     return loc;
 }
 
+void shader_set_3fv(ShaderProgram program, uniform uniform, int count, const float* fv)
+{
+    glUseProgram(program.id);
+    glUniform3fv(uniform, count, fv);
+}
+
 void shader_set_mat4(ShaderProgram program, uniform uniform, const float* matrix)
 {
     glUseProgram(program.id);

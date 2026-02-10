@@ -1,4 +1,5 @@
 #include "r_main.h"
+#include "r_opengl.h"
 #include "r_shader.h"
 #include "r_glsl_shaders.c"
 #include "data_vertices.c"
@@ -41,6 +42,11 @@ int r_renderer_init(RendererContext* r)
     if (!r_shader_valid(r->shader_font)) {
         return 1;
     }
+
+    r->mesh_quad = gpu_load_mesh_quad(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices));
+    r->mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
+    r->mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
+    r->mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
     
     return 0;
 }
@@ -52,4 +58,9 @@ void r_renderer_shutdown(RendererContext* r)
     shader_prog_delete(r->shader_skybox.prog);
     shader_prog_delete(r->shader_instanced.prog);
     shader_prog_delete(r->shader_font.prog);
+
+    gpu_delete_mesh_indexed(r->mesh_quad); 
+    gpu_delete_mesh_indexed(r->mesh_cube); 
+    gpu_delete_mesh_indexed(r->mesh_anchor); 
+    gpu_delete_mesh_simple(r->mesh_skybox); 
 }

@@ -49,6 +49,9 @@ GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* i
 GpuMeshIndexed gpu_load_mesh_3attr(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size); 
 GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size);
 
+void gpu_delete_mesh_indexed(GpuMeshIndexed mesh_indexed);
+void gpu_delete_mesh_simple(GpuMeshSimple mesh_simple);
+
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels);
 TextureCubemap texture_cubemap_create_from_paths(const char** paths);
 

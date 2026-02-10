@@ -134,11 +134,6 @@ GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* ind
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    // this is unnecesary but for now i leave it.
-    glBindVertexArray(0); 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
     return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
 
@@ -200,6 +195,19 @@ GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_
     glBindVertexArray(0); 
     
     return (GpuMeshSimple){VAO, VBO, vertices_size/(sizeof(float)*3)};
+}
+
+void gpu_delete_mesh_indexed(GpuMeshIndexed mesh_indexed)
+{
+    glDeleteVertexArrays(1, &mesh_indexed.VAO);
+    glDeleteBuffers(1, &mesh_indexed.VBO);
+    glDeleteBuffers(1, &mesh_indexed.EBO);
+}
+
+void gpu_delete_mesh_simple(GpuMeshSimple mesh_simple)
+{
+    glDeleteVertexArrays(1, &mesh_simple.VAO);
+    glDeleteBuffers(1, &mesh_simple.VBO);
 }
 
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)
