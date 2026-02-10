@@ -2,6 +2,7 @@
 #define R_MAIN_H_
 
 #include <glad/glad.h>
+#include "lamath.h"
 #include "r_opengl.h"
 #include "r_shader.h"
 
@@ -55,6 +56,7 @@ typedef struct {
 
 void r_begin_frame(RendererContext* r);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
+void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 int r_renderer_init(RendererContext* r);
 void r_renderer_shutdown(RendererContext* r);
 

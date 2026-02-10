@@ -46,10 +46,10 @@ int r_renderer_init(RendererContext* r)
     if (!r_shader_valid(r->shader_basic_3d_color)) {
         return 1;
     }
-    r->shader_basic_3d_color.model = shader_get_uniform_location(r->shader_basic_3d_color.prog, "model");
-    r->shader_basic_3d_color.view = shader_get_uniform_location(r->shader_basic_3d_color.prog, "view");
-    r->shader_basic_3d_color.projection = shader_get_uniform_location(r->shader_basic_3d_color.prog, "projection");
-    //shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d_color, r->shader_basic_3d_color.prog);
+    // r->shader_basic_3d_color.model = shader_get_uniform_location(r->shader_basic_3d_color.prog, "model");
+    // r->shader_basic_3d_color.view = shader_get_uniform_location(r->shader_basic_3d_color.prog, "view");
+    // r->shader_basic_3d_color.projection = shader_get_uniform_location(r->shader_basic_3d_color.prog, "projection");
+    shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d_color, r->shader_basic_3d_color.prog);
     
     // instanced
     r->shader_instanced.prog = shader_prog_create_from_memory(glsl_instanced_vs, glsl_instanced_fs);
