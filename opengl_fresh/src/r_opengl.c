@@ -1,6 +1,6 @@
 #include "r_opengl.h"
 #include "platform.h"
-#include "common/common_types.h"
+#include "common/types.h"
 #include <string.h> // memcpy
 #include <assert.h>
 #include <stdbool.h>

@@ -5,11 +5,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
 #include <assert.h>
 
-#include "common/common_types.h"
+#include "common/types.h"
 #include "platform.h"
 #include "r_main.h"
 #include "r_opengl.h"

@@ -3,7 +3,7 @@
 #include "r_opengl.h"
 #include "r_shader.h"
 #include "r_glsl_shaders.c"
-#include "common/common_types.h"
+#include "common/types.h"
 #include "data_vertices.c"
 #include <assert.h>
 

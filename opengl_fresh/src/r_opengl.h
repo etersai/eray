@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 #include <stddef.h>
-#include "common/common_types.h" // color
+#include "common/types.h" // color
 
 typedef struct {
     GLuint VBO;
