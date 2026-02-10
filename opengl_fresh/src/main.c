@@ -406,7 +406,7 @@ const unsigned int cwd_path_max = 1024;
 void console_post_cwd(void)
 {
     char buf[cwd_path_max];
-    char* success = eray_get_cwd(buf, sizeof(buf));
+    char* success = os_get_cwd(buf, sizeof(buf));
     if (success) {fprintf(stderr, "%s\n", buf);} 
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
@@ -484,14 +484,15 @@ int main(void)
         abort();
     }
     if (!gl_texture_valid(texture_skybox)) {
-        log_print_prefix("asset_load_error", "failed to load cubemap/skybox!\n");
+        log_print_prefix("asset_load_error", "failed to load cubemap/skybox\n");
         abort();
     }
 
     // maybe malloc it?
     obj_in_memory teapot_obj = {0};
     if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
-        elog_abort("OBJ LOAD FAIL!");
+        log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
+        abort();
     }
     Fontek arial_font;
     font_create(&arial_font, font_arial_white, texture_font);  

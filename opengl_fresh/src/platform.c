@@ -57,7 +57,7 @@ void unmap_file_from_memory(char* file, size_t size)
     munmap(file, size);
 }
 
-char* eray_get_cwd(char* buf, size_t size)
+char* os_get_cwd(char* buf, size_t size)
 { // TODO: windows idef _getcwd() ?
     return getcwd(buf, size);
 }

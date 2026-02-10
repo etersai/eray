@@ -8,7 +8,7 @@
 
 char* map_file_into_memory(const char* filename, size_t* out_file_size);
 void unmap_file_from_memory(char* file, size_t size);
-char* eray_get_cwd(char* buf, size_t size);
+char* os_get_cwd(char* buf, size_t size);
 
 
 #endif /* ERAY_PLATFORM_H_ */
