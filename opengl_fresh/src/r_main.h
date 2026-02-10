@@ -40,6 +40,7 @@ typedef struct {
 
 typedef struct {
     ShaderBasic shader_basic_3d;
+    ShaderBasic shader_basic_color_3d;
     ShaderBasic shader_font;
     ShaderInstanced shader_instanced;
     ShaderSkybox shader_skybox;
@@ -52,6 +53,8 @@ typedef struct {
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
+void r_begin_frame(RendererContext* r);
+void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 int r_renderer_init(RendererContext* r);
 void r_renderer_shutdown(RendererContext* r);
 

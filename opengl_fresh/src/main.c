@@ -93,6 +93,11 @@ typedef struct {
     int format;
 } CpuImage;
 
+typedef struct {
+    internal_font_data metadata;
+    Texture texture;
+} Fontek;
+
 CpuImage cpu_image_load(const char* path)
 {
     CpuImage img = {0};
@@ -145,11 +150,6 @@ Texture texture_load_from_path(const char* path)
     return texture;
 }
 
-typedef struct {
-    internal_font_data metadata;
-    Texture texture;
-} Fontek;
-
 int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
 {
     assert(font != NULL);
@@ -158,123 +158,6 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
     font->metadata = font_metadata;
     font->texture = texture;
     return 0;
-}
-
-// DRAW FONT STUFF //
-////////////////////
-#define TEXT_MAX_BYTES (1024*512) // 0.5kib
-// relic of the ancient wisdom.
-//static unsigned char cpu_text_vertices[TEXT_MAX_BYTES];
-static float cpu_text_vertices[TEXT_MAX_BYTES/sizeof(float)]; // 5461.33 CHARS.                                                //
-unsigned int fv_count = 0; 
-static GLuint vao_text;
-static GpuPMappedBuffer gpu_pmbuffer_text_vertices;
-void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
-{
-    assert(font);
-    assert(gl_texture_valid(font->texture));
-
-    // kickstart it's self kinda thing.
-    if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) { // if not created
-        gpu_pmbuffer_text_vertices = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
-        assert(gl_buffer_valid(gpu_pmbuffer_text_vertices));
-        vao_text = gpu_vao_create_for_text_buffer(gpu_pmbuffer_text_vertices.VBO);
-        assert(vao_text != 0);
-    }
-
-    // struct uv { // you can create struct inside functions :D
-    //     float x;
-    //     float y;
-    //     float w;
-    //     float h;
-    // };
-
-    // remap
-    float norm_x = x/SCR_WIDTH;
-    float norm_y = y/SCR_HEIGHT;
-    float start_ndc_x = norm_x * 2 - 1;
-    float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
-    
-    size_t byte_buffer_offset = sizeof(float) * fv_count;
-
-    char* p = text;
-    while(*p != '\0') { // points to this null termination after loop
-        internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
-        char c = *p;    
-        if (c >= ' ' && c <= '~') { // printable ascii range
-            character = font_arial_white.characters[(int)c-32];
-        }
-        
-        float uv_width = (float)character.width/font->texture.width;
-        float uv_height = (float)character.height/font->texture.height;
-        float uv_x = (float)character.x/font->texture.width;
-        float uv_y = (float)character.y/font->texture.height;
-
-
-        float char_width_norm = 2*((float)character.width / SCR_WIDTH);
-        float char_height_norm = 2*((float)character.height / SCR_HEIGHT);
-        // one char = 24 floats = 96 bytes.
-
-        // Generate 2 triangles 
-        // box top left. 0
-        cpu_text_vertices[fv_count] = start_ndc_x; 
-        cpu_text_vertices[fv_count+1] = start_ndc_y;
-        cpu_text_vertices[fv_count+2] = uv_x;
-        cpu_text_vertices[fv_count+3] = uv_y;  
-
-        // box bottom left. 1
-        cpu_text_vertices[fv_count+4] = start_ndc_x;
-        cpu_text_vertices[fv_count+5] = start_ndc_y-char_height_norm;
-        cpu_text_vertices[fv_count+6] = uv_x;
-        cpu_text_vertices[fv_count+7] = uv_y+uv_height;
-
-        // box bottom right. 2
-        cpu_text_vertices[fv_count+8] = start_ndc_x+char_width_norm;
-        cpu_text_vertices[fv_count+9] = start_ndc_y-char_height_norm; 
-        cpu_text_vertices[fv_count+10] = uv_x+uv_width; 
-        cpu_text_vertices[fv_count+11] = uv_y+uv_height; 
-
-
-        // box bottom right. 2
-        cpu_text_vertices[fv_count+12] = start_ndc_x+char_width_norm;
-        cpu_text_vertices[fv_count+13] = start_ndc_y-char_height_norm; 
-        cpu_text_vertices[fv_count+14] = uv_x+uv_width; 
-        cpu_text_vertices[fv_count+15] = uv_y+uv_height; 
-
-        // box top right. 3 
-        cpu_text_vertices[fv_count+16] = start_ndc_x+char_width_norm; 
-        cpu_text_vertices[fv_count+17] = start_ndc_y; 
-        cpu_text_vertices[fv_count+18] = uv_x+uv_width; 
-        cpu_text_vertices[fv_count+19] = uv_y; 
-
-        // top 
-        cpu_text_vertices[fv_count+20] = start_ndc_x;
-        cpu_text_vertices[fv_count+21] = start_ndc_y;
-        cpu_text_vertices[fv_count+22] = uv_x;
-        cpu_text_vertices[fv_count+23] = uv_y;
-
-        float xxx = (float)character.originX/SCR_WIDTH;
-
-        start_ndc_x += char_width_norm + xxx;
-        fv_count+=24;
-        p++;
-    } 
-    
-    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, byte_buffer_offset, fv_count*sizeof(float), cpu_text_vertices);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // draw.
-   // assert(r_shader_valid(shader_font));
-   // shader_prog_use(shader_font.prog);
-    glBindVertexArray(vao_text);
-    glBindTexture(GL_TEXTURE_2D, font->texture.id);
-    glDrawArrays(GL_TRIANGLES, 0, fv_count);
-
-    glDisable(GL_BLEND);
-
-    fv_count = 0;
 }
 
 void console_post_cwd(void)
@@ -297,6 +180,43 @@ typedef struct {
 
 global ProgramContext program_ctx;
 global RendererContext renderer_ctx;
+
+void update_camera_input(Camerka* camera)
+{
+    assert(camera);
+    camera->yaw   += mouse_dx * mouse_sens;
+    camera->pitch += mouse_dy * mouse_sens;
+    if (camera->pitch > 89.0f)  camera->pitch = 89.0f;
+    if (camera->pitch < -89.0f) camera->pitch = -89.0f;
+    mouse_dx = 0.0;
+    mouse_dy = 0.0;
+
+    vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
+    vecf3 movement_vector = VECF3_ZERO;
+    vecf3 orient = camerka_orientation(camera);
+    camera->orientation = orient; // cache it.
+    if (move_w) {
+        vecf3_apply_add(&movement_vector, orient);
+    }
+    if (move_s) {
+        vecf3_apply_sub(&movement_vector, orient);
+    }
+    if (move_a || move_d) {
+        vecf3 right = vecf3_cross(orient, world_up);
+        right = vecf3_norm(right);
+        if (move_a) {
+            right.x = -right.x;
+            right.y = -right.y;
+            right.z = -right.z;
+        }
+        vecf3_apply_add(&movement_vector, right);
+    }
+    if (vecf3_len(movement_vector) > 0.0f) {
+        movement_vector = vecf3_norm(movement_vector);
+        movement_vector = vecf3_scale(0.1f, movement_vector); // hackyyy
+        vecf3_apply_add(&camera->pos, movement_vector);
+    }
+}
 
 int main(void)
 {
@@ -365,19 +285,18 @@ int main(void)
         abort();
     }
 
+    font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
+
     // maybe malloc it?
     obj_in_memory teapot_obj = {0};
     if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
         abort();
     }
-    Fontek arial_font;
-    font_create(&arial_font, font_arial_white, program_ctx.texture_font);  
 
     if (r_renderer_init(&renderer_ctx) != 0) {
         elog_abort("Renderer initialization failed!");
     }
-
 
 
     // prepare ground quad transform
@@ -392,7 +311,7 @@ int main(void)
     matf4x4_mul(&transform, &translate, &temp);
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &transform.col1.x);
 
-    // precalculate planes positionsss.
+    // precalculate planes positions.
     const int area_size = 20;
     vecf3 translations[1600];
     int curr = 0;
@@ -402,7 +321,6 @@ int main(void)
             curr++;
         }
     }
-
     shader_set_3fv(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.offsets, 1600, &translations[0].x); 
 
     // camera setup PROJECTION SET ONCE AT START !!
@@ -418,6 +336,7 @@ int main(void)
 
     gl_enable_depth_test();
     gl_set_clear_color(&(vecf4){0.53f, 0.81f, 0.92f, 1.0f}.x);
+
     unsigned int frames = 0;
     double delta_time;
     double curr_time;
@@ -440,39 +359,7 @@ int main(void)
 
         // HANDLE INPUT
         processInput(window);
-
-        program_ctx.camera.yaw   += mouse_dx * mouse_sens;
-        program_ctx.camera.pitch += mouse_dy * mouse_sens;
-        if (program_ctx.camera.pitch > 89.0f)  program_ctx.camera.pitch = 89.0f;
-        if (program_ctx.camera.pitch < -89.0f) program_ctx.camera.pitch = -89.0f;
-        mouse_dx = 0.0; // does platform reset, dunno if here?
-        mouse_dy = 0.0;
-
-        vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
-        vecf3 movement_vector = VECF3_ZERO;
-        vecf3 orient = camerka_orientation(&program_ctx.camera);
-        program_ctx.camera.orientation = orient; // cache it.
-        if (move_w) {
-            vecf3_apply_add(&movement_vector, orient);
-        }
-        if (move_s) {
-            vecf3_apply_sub(&movement_vector, orient);
-        }
-        if (move_a || move_d) {
-            vecf3 right = vecf3_cross(orient, world_up);
-            right = vecf3_norm(right);
-            if (move_a) {
-                right.x = -right.x;
-                right.y = -right.y;
-                right.z = -right.z;
-            }
-            vecf3_apply_add(&movement_vector, right);
-        }
-        if (vecf3_len(movement_vector) > 0.0f) {
-            movement_vector = vecf3_norm(movement_vector);
-            movement_vector = vecf3_scale(0.1f, movement_vector); // hackyyy
-            vecf3_apply_add(&program_ctx.camera.pos, movement_vector);
-        }
+        update_camera_input(&program_ctx.camera);
 
         // UPDATE THINGS.
         matf4x4 view = camerka_view_matrix(&program_ctx.camera); // you can use shader uniforms that can be shared across multiple shaders.
@@ -486,15 +373,8 @@ int main(void)
         shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.view, &view_no_translation.col1.x);
 
         // RENDER START
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        // skybox
-        glDepthMask(GL_FALSE);
-        shader_prog_use(renderer_ctx.shader_skybox.prog);
-        glBindVertexArray(renderer_ctx.mesh_skybox.VAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, program_ctx.texture_skybox.id);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glDepthMask(GL_TRUE);
+        r_begin_frame(&renderer_ctx);
+        r_draw_skybox(&renderer_ctx, program_ctx.texture_skybox);        
 
         // ground
         shader_prog_use(renderer_ctx.shader_instanced.prog);
@@ -546,7 +426,7 @@ int main(void)
         move_a = false;
         move_d = false;
     }
-    
+    r_renderer_shutdown(&renderer_ctx);    
     glfwTerminate();
     return 0;
 }
