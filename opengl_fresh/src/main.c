@@ -333,6 +333,7 @@ int main(void)
     shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
+    shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.projection, &projection.col1.x);
 
     gl_enable_depth_test();
     gl_set_clear_color(&(vecf4){0.53f, 0.81f, 0.92f, 1.0f}.x);
@@ -365,6 +366,7 @@ int main(void)
         matf4x4 view = camerka_view_matrix(&program_ctx.camera); // you can use shader uniforms that can be shared across multiple shaders.
         shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.view, &view.col1.x);
         shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.view, &view.col1.x);
+        shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.view, &view.col1.x);
 
         matf4x4 view_no_translation = view;
         view_no_translation.col4.x = 0.0f; // zero out translation
@@ -383,13 +385,14 @@ int main(void)
         glDrawElementsInstanced(GL_TRIANGLES, renderer_ctx.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
        
         // anchor
-        shader_prog_use(renderer_ctx.shader_basic_3d.prog);
         matf4x4 s = matf4x4_I_give();
         matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
         matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
         matf4x4 full = matf4x4_I_give();
         matf4x4_mul(&full, &t, &s);
-        shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.model, &full.col1.x);
+
+        shader_prog_use(renderer_ctx.shader_basic_3d_color.prog);
+        shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.model, &full.col1.x);
         glBindVertexArray(renderer_ctx.mesh_anchor.VAO);
         glDrawElements(GL_TRIANGLES, renderer_ctx.mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 

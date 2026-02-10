@@ -69,9 +69,9 @@ GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* i
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(1);
 
     // this is unnecesary but for now i leave it.
     // glBindVertexArray(0); 
