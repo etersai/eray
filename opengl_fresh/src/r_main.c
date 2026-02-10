@@ -8,6 +8,8 @@
 
 #define internal static
 
+internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program);
+
 void r_begin_frame(RendererContext* r)
 {
     assert(r);
@@ -35,18 +37,15 @@ int r_renderer_init(RendererContext* r)
     if (!r_shader_valid(r->shader_basic_3d)) {
         return 1;
     }
-    r->shader_basic_3d.model = shader_get_uniform_location(r->shader_basic_3d.prog, "model");
-    r->shader_basic_3d.view = shader_get_uniform_location(r->shader_basic_3d.prog, "view");
-    r->shader_basic_3d.projection = shader_get_uniform_location(r->shader_basic_3d.prog, "projection");
+    shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d, r->shader_basic_3d.prog);
     r->shader_basic_3d.color = shader_get_uniform_location(r->shader_basic_3d.prog, "color");
 
-    r->shader_basic_color_3d.prog = shader_prog_create_from_memory(glsl_basic_3d_color_vs, glsl_basic_3d_color_fs);
-    if (!r_shader_valid(r->shader_basic_color_3d)) {
+    // basic 3d color
+    r->shader_basic_3d_color.prog = shader_prog_create_from_memory(glsl_basic_3d_color_vs, glsl_basic_3d_color_fs);
+    if (!r_shader_valid(r->shader_basic_3d_color)) {
         return 1;
     }
-    r->shader_basic_3d.model = shader_get_uniform_location(r->shader_basic_3d.prog, "model");
-    r->shader_basic_3d.view = shader_get_uniform_location(r->shader_basic_3d.prog, "view");
-    r->shader_basic_3d.projection = shader_get_uniform_location(r->shader_basic_3d.prog, "projection");
+    shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d_color, r->shader_basic_3d_color.prog);
     
     // instanced
     r->shader_instanced.prog = shader_prog_create_from_memory(glsl_instanced_vs, glsl_instanced_fs);
@@ -92,6 +91,13 @@ void r_renderer_shutdown(RendererContext* r)
     gpu_delete_mesh_indexed(r->mesh_cube); 
     gpu_delete_mesh_indexed(r->mesh_anchor); 
     gpu_delete_mesh_simple(r->mesh_skybox); 
+}
+
+internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program)
+{
+    basic->model = shader_get_uniform_location(program, "model");
+    basic->view = shader_get_uniform_location(program, "view");
+    basic->projection = shader_get_uniform_location(program, "projection");
 }
 
 #if 0

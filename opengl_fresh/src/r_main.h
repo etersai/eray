@@ -40,7 +40,7 @@ typedef struct {
 
 typedef struct {
     ShaderBasic shader_basic_3d;
-    ShaderBasic shader_basic_color_3d;
+    ShaderBasic shader_basic_3d_color;
     ShaderBasic shader_font;
     ShaderInstanced shader_instanced;
     ShaderSkybox shader_skybox;
