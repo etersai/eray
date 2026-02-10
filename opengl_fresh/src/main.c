@@ -327,8 +327,15 @@ int main(void)
     matf4x4 s = matf4x4_I_give();
     matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
     matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
-    matf4x4 full = matf4x4_I_give();
-    matf4x4_mul(&full, &t, &s);
+    matf4x4 transform_anchor = matf4x4_I_give();
+    matf4x4_mul(&transform_anchor, &t, &s);
+
+    // ANCHOR Transform
+    matf4x4 ss = matf4x4_I_give();
+    matf4x4 tt = matf4x4_translate_give((vecf3){0.0f, 1.0f, 1.0f});
+    matf4x4_scale_set(&ss, 0.05f, 0.05f, 0.05f);
+    matf4x4 transform_anchor_2 = matf4x4_I_give();
+    matf4x4_mul(&transform_anchor_2, &tt, &ss);
 
     // camera setup PROJECTION SET ONCE AT START !!
     vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
@@ -391,7 +398,8 @@ int main(void)
         glBindVertexArray(renderer_ctx.mesh_quad.VAO);
         glDrawElementsInstanced(GL_TRIANGLES, renderer_ctx.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
 
-        r_draw_anchor(&renderer_ctx, &full);
+        r_draw_anchor(&renderer_ctx, &transform_anchor);
+        r_draw_anchor(&renderer_ctx, &transform_anchor_2);
 
 
         // teapot
