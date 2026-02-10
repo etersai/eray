@@ -43,6 +43,7 @@
 #define la_max(a, b) ((a) > (b) ? (a) : (b))
 #define la_clamp(val, lo, hi) (la_min(la_max((val), (lo)), (hi)))
 #define la_arrlen(arr) (sizeof((arr)) / sizeof((arr)[0]))
+#define la_unused(var) ((void)(var))
 
 // MY SCRATCH PAD //
 // this trick is amazing! flipped_value = max + min - original_value
@@ -74,8 +75,6 @@
     fprintf(stderr, "Unreachable code hit at %s:%d\n", __FILE__, __LINE__);    \
     abort();                                                                   \
 } while (0)
-
-#define la_unused(var) ((void)(var))
 
 typedef struct {
     float x;
@@ -558,51 +557,6 @@ static void log_print_n_flush(const char* format, ...)
     vfprintf(out_target, format, args);
     va_end(args);
     fflush(out_target);
-}
-
-// ARENKA
-#include <sys/mman.h> // TODO: i should probably remove arena from this file.
-#define LA_KIBIBYTE(val) ((val)*1024)
-#define LA_MEBIBYTE(val) ((val)*1024*1024)
-#define LA_GIBIBYTE(val) ((val)*1024*1024*1024) 
-typedef struct {
-    unsigned char* addr_start;
-    size_t         offset;
-    size_t         capacity;
-} Arenka;
-
-#define arenka_wipe(arena) do { (arena)->offset = 0; } while (0)
-
-static Arenka arenka_map(size_t size_in_bytes)
-{
-    Arenka arena = {0};
-    unsigned char* memory_region;
-
-    memory_region = mmap(NULL, size_in_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-    if (memory_region == MAP_FAILED) {
-        return arena;
-    }
-
-    arena.addr_start = memory_region;
-    arena.capacity = size_in_bytes;
-    arena.offset = 0;
-
-    return arena;
-}
-
-static unsigned char* arenka_get_piece(Arenka* arena, size_t size_in_bytes)
-{
-    if (arena->offset + size_in_bytes > arena->capacity) { 
-        return NULL;
-    }
-    unsigned char* return_addr = arena->addr_start + arena->offset;
-    arena->offset += size_in_bytes;
-    return return_addr;
-}
-
-static void arenka_unmap(Arenka* arena)
-{
-    munmap(arena->addr_start, arena->capacity);
 }
 
 // elog_ aka C victorinox.

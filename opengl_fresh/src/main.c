@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "common/common_types.h"
 #include "platform.h"
 #include "r_main.h"
 #include "r_opengl.h"
@@ -169,18 +170,6 @@ void console_post_cwd(void)
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
 
-typedef struct {
-    Fontek font;
-    Texture texture_font;
-    Texture texture_grass;
-    TextureCubemap texture_skybox;
-    GpuMeshIndexed mesh_teapot;
-    Camerka camera;
-} ProgramContext;
-
-global ProgramContext program_ctx;
-global RendererContext renderer_ctx;
-
 void update_camera_input(Camerka* camera)
 {
     assert(camera);
@@ -217,6 +206,18 @@ void update_camera_input(Camerka* camera)
         vecf3_apply_add(&camera->pos, movement_vector);
     }
 }
+
+typedef struct {
+    Fontek font;
+    Texture texture_font;
+    Texture texture_grass;
+    TextureCubemap texture_skybox;
+    GpuMeshIndexed mesh_teapot;
+    Camerka camera;
+} ProgramContext;
+
+global ProgramContext program_ctx;
+global RendererContext renderer_ctx;
 
 int main(void)
 {
@@ -350,7 +351,7 @@ int main(void)
     shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.projection, &projection.col1.x);
 
     gl_enable_depth_test();
-    gl_set_clear_color(&(vecf4){0.53f, 0.81f, 0.92f, 1.0f}.x);
+    gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
 
     unsigned int frames = 0;
     double delta_time;
@@ -376,7 +377,7 @@ int main(void)
         processInput(window);
         update_camera_input(&program_ctx.camera);
 
-        // UPDATE THINGS.
+        // UPDATE VIEW MATRICES.
         matf4x4 view = camerka_view_matrix(&program_ctx.camera); // you can use shader uniforms that can be shared across multiple shaders.
         shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.view, &view.col1.x);
         shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.view, &view.col1.x);

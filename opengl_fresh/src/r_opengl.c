@@ -1,5 +1,6 @@
 #include "r_opengl.h"
 #include "platform.h"
+#include "common/common_types.h"
 #include <string.h> // memcpy
 #include <assert.h>
 #include <stdbool.h>
@@ -215,9 +216,9 @@ void gl_enable_depth_test(void)
     glEnable(GL_DEPTH_TEST);
 }
 
-void gl_set_clear_color(const float* color)
+void gl_set_clear_color(Colorek color)
 {
-    glClearColor(color[0], color[1], color[2], color[3]);
+    glClearColor(color.r, color.g, color.b, color.a);
 }
 
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)

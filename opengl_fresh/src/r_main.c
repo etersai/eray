@@ -3,6 +3,7 @@
 #include "r_opengl.h"
 #include "r_shader.h"
 #include "r_glsl_shaders.c"
+#include "common/common_types.h"
 #include "data_vertices.c"
 #include <assert.h>
 
@@ -27,6 +28,11 @@ void r_draw_skybox(RendererContext* r, TextureCubemap texture)
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(GL_TRUE);
+}
+
+void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
+{
+
 }
 
 void r_draw_anchor(RendererContext* r, const matf4x4* transform)
