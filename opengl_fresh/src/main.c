@@ -10,14 +10,12 @@
 #include <assert.h>
 
 #include "platform.h"
+#include "r_main.h"
 #include "r_opengl.h"
-#include "obj_loader.h"
-#include "lamath.h"
-
 #include "r_camerka.h"
 #include "r_shader.h"
-#include "glsl_shaders.c"
-#include "data_vertices.c"
+#include "obj_loader.h"
+#include "lamath.h"
 #include "data_font.h"
 
 // VERY IMPORTANT TODOS //
@@ -162,48 +160,6 @@ int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
     return 0;
 }
 
-typedef GLint uniform;
-
-typedef struct {
-    ShaderProgram prog;
-    uniform model;
-    uniform view;
-    uniform projection;
-    uniform offsets;
-} ShaderInstanced;
-
-typedef struct {
-    ShaderProgram prog;
-    uniform model;
-    uniform view;
-    uniform projection;
-    uniform color;
-} ShaderBasic;
-
-typedef struct {
-    ShaderProgram prog;
-    uniform view;
-    uniform projection;
-} ShaderSkybox;
-
-#define shader_valid(shader) ((shader).prog.id != 0)
-
-// globals
-ShaderBasic shader_basic;
-ShaderBasic shader_basic_teapot;
-ShaderBasic shader_font;
-ShaderInstanced shader_instanced;
-ShaderSkybox shader_skybox;
-GpuMeshIndexed mesh_quad;
-GpuMeshIndexed mesh_cube;
-GpuMeshIndexed mesh_anchor;
-GpuMeshIndexed mesh_model;
-GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
-Texture texture_font;
-Texture texture_grass;
-TextureCubemap texture_skybox;
-Camerka camera;
-
 // DRAW FONT STUFF //
 ////////////////////
 #define TEXT_MAX_BYTES (1024*512) // 0.5kib
@@ -310,8 +266,8 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // draw.
-    assert(shader_valid(shader_font));
-    shader_prog_use(shader_font.prog);
+   // assert(r_shader_valid(shader_font));
+   // shader_prog_use(shader_font.prog);
     glBindVertexArray(vao_text);
     glBindTexture(GL_TEXTURE_2D, font->texture.id);
     glDrawArrays(GL_TRIANGLES, 0, fv_count);
@@ -321,91 +277,10 @@ void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
     fv_count = 0;
 }
 
-// void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
-// {
-//     // ... existing setup code ...
-//
-//     fv_count = 0;
-//
-//     float norm_x = x/SCR_WIDTH;
-//     float norm_y = y/SCR_HEIGHT;
-//     float pen_x_ndc = norm_x * 2 - 1;
-//     float pen_y_ndc = -(norm_y * 2 - 1);
-//
-//     char* p = text;
-//     while(*p != '\0') {
-//         internal_font_char character = font->metadata.characters[0];
-//         char c = *p;    
-//         if (c >= ' ' && c <= '~') {
-//             character = font->metadata.characters[(int)c-32];
-//         }
-//
-//         // Calculate UV coordinates
-//         float uv_width = (float)character.width / font->texture.width;
-//         float uv_height = (float)character.height / font->texture.height;
-//         float uv_x = (float)character.x / font->texture.width;
-//         float uv_y = (float)character.y / font->texture.height;
-//
-//         // Convert glyph dimensions to NDC
-//         float char_width_ndc = ((float)character.width / SCR_WIDTH) * 2.0f;
-//         float char_height_ndc = ((float)character.height / SCR_HEIGHT) * 2.0f;
-//
-//         // IMPORTANT: Apply origin offsets for proper alignment
-//         float origin_x_ndc = ((float)character.originX / SCR_WIDTH) * 2.0f;
-//         float origin_y_ndc = ((float)character.originY / SCR_HEIGHT) * 2.0f;
-//
-//         // Calculate actual glyph position (pen position + bearing offset)
-//         float glyph_x = pen_x_ndc + origin_x_ndc;
-//         float glyph_y = pen_y_ndc - origin_y_ndc; // Subtract because Y is inverted
-//
-//         // Generate triangles at the adjusted position
-//         // Triangle 1: TL, BL, BR
-//         cpu_text_vertices[fv_count+0] = glyph_x;
-//         cpu_text_vertices[fv_count+1] = glyph_y;
-//         cpu_text_vertices[fv_count+2] = uv_x;
-//         cpu_text_vertices[fv_count+3] = uv_y;
-//
-//         cpu_text_vertices[fv_count+4] = glyph_x;
-//         cpu_text_vertices[fv_count+5] = glyph_y - char_height_ndc;
-//         cpu_text_vertices[fv_count+6] = uv_x;
-//         cpu_text_vertices[fv_count+7] = uv_y + uv_height;
-//
-//         cpu_text_vertices[fv_count+8] = glyph_x + char_width_ndc;
-//         cpu_text_vertices[fv_count+9] = glyph_y - char_height_ndc;
-//         cpu_text_vertices[fv_count+10] = uv_x + uv_width;
-//         cpu_text_vertices[fv_count+11] = uv_y + uv_height;
-//
-//         // Triangle 2: BR, TR, TL
-//         cpu_text_vertices[fv_count+12] = glyph_x + char_width_ndc;
-//         cpu_text_vertices[fv_count+13] = glyph_y - char_height_ndc;
-//         cpu_text_vertices[fv_count+14] = uv_x + uv_width;
-//         cpu_text_vertices[fv_count+15] = uv_y + uv_height;
-//
-//         cpu_text_vertices[fv_count+16] = glyph_x + char_width_ndc;
-//         cpu_text_vertices[fv_count+17] = glyph_y;
-//         cpu_text_vertices[fv_count+18] = uv_x + uv_width;
-//         cpu_text_vertices[fv_count+19] = uv_y;
-//
-//         cpu_text_vertices[fv_count+20] = glyph_x;
-//         cpu_text_vertices[fv_count+21] = glyph_y;
-//         cpu_text_vertices[fv_count+22] = uv_x;
-//         cpu_text_vertices[fv_count+23] = uv_y;
-//
-//         // ADVANCE THE PEN: move by the full character width (the "advance" value)
-//         // If you have an 'advance' field, use that instead
-//         pen_x_ndc += char_width_ndc + origin_x_ndc; // width + bearing for proper spacing
-//
-//         fv_count += 24;
-//         p++;
-//     }
-//
-//     // ... rest of your drawing code ...
-// }
-
-const unsigned int cwd_path_max = 1024;
 void console_post_cwd(void)
 {
-    char buf[cwd_path_max];
+    enum { CWD_PATH_MAX = 1024 };
+    char buf[CWD_PATH_MAX];
     char* success = os_get_cwd(buf, sizeof(buf));
     if (success) {fprintf(stderr, "%s\n", buf);} 
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
@@ -417,9 +292,11 @@ typedef struct {
     Texture texture_grass;
     TextureCubemap texture_skybox;
     GpuMeshIndexed mesh_teapot;
+    Camerka camera;
 } ProgramContext;
 
-global ProgramContext program_state;
+global ProgramContext program_ctx;
+global RendererContext renderer_ctx;
 
 int main(void)
 {
@@ -471,19 +348,19 @@ int main(void)
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
 
-    texture_grass = texture_load_from_path(path_grass);
-    texture_font = texture_load_from_path(path_font); 
-    texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
+    program_ctx.texture_grass = texture_load_from_path(path_grass);
+    program_ctx.texture_font = texture_load_from_path(path_font); 
+    program_ctx.texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
 
-    if (!gl_texture_valid(texture_grass)) {
+    if (!gl_texture_valid(program_ctx.texture_grass)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_grass);
         abort();
     }
-    if (!gl_texture_valid(texture_font)) {
+    if (!gl_texture_valid(program_ctx.texture_font)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
-    if (!gl_texture_valid(texture_skybox)) {
+    if (!gl_texture_valid(program_ctx.texture_skybox)) {
         log_print_prefix("asset_load_error", "failed to load cubemap/skybox\n");
         abort();
     }
@@ -495,73 +372,13 @@ int main(void)
         abort();
     }
     Fontek arial_font;
-    font_create(&arial_font, font_arial_white, texture_font);  
+    font_create(&arial_font, font_arial_white, program_ctx.texture_font);  
 
-                    
-    // SHADERS //
-    // basic shader.  
-    shader_basic.prog = shader_prog_create_from_memory(glsl_basic_vs, glsl_basic_fs);
-    if (!shader_valid(shader_basic)) {
-        elog_abort("ABORT FOR NOW"); 
-    }
-    shader_basic.model = shader_get_uniform_location(shader_basic.prog, "model");
-    shader_basic.view = shader_get_uniform_location(shader_basic.prog, "view");
-    shader_basic.projection = shader_get_uniform_location(shader_basic.prog, "projection");
-
-    // shader font
-    shader_font.prog = shader_prog_create_from_memory(glsl_font_vs, glsl_font_fs);
-    if (!shader_valid(shader_font)) {
-        elog_abort("ABORT FOR NOW"); 
+    if (r_renderer_init(&renderer_ctx) != 0) {
+        elog_abort("Renderer initialization failed!");
     }
 
-    // basic model (teapot) shader
-    shader_basic_teapot.prog = shader_prog_create_from_memory(glsl_teapot_vs, glsl_teapot_fs);
-    if (!shader_valid(shader_basic_teapot)) {
-        elog_abort("ABORT FOR NOW");
-    }
-    shader_basic_teapot.model = shader_get_uniform_location(shader_basic_teapot.prog, "model");
-    shader_basic_teapot.view = shader_get_uniform_location(shader_basic_teapot.prog, "view");
-    shader_basic_teapot.projection = shader_get_uniform_location(shader_basic_teapot.prog, "projection");
-    shader_basic_teapot.color = shader_get_uniform_location(shader_basic_teapot.prog, "color");
 
-    // skybox shader.
-    shader_skybox.prog = shader_prog_create_from_memory(glsl_skybox_vs, glsl_skybox_fs);
-    if (shader_skybox.prog.id == 0) {
-        elog_abort("SHADER COMPILATION FAILED");
-    }
-    shader_skybox.view = shader_get_uniform_location(shader_skybox.prog, "view");
-    shader_skybox.projection = shader_get_uniform_location(shader_skybox.prog, "projection");
-
-    // ground shader.
-    shader_instanced.prog = shader_prog_create_from_memory(glsl_instanced_vs, glsl_instanced_fs); 
-    if (shader_instanced.prog.id == 0) {
-        log_print_n_flush("SHADER COMPILATION FAILED!\n");
-        abort();
-    }
-    shader_instanced.model = shader_get_uniform_location(shader_instanced.prog, "model");
-    shader_instanced.view = shader_get_uniform_location(shader_instanced.prog, "view");
-    shader_instanced.projection = shader_get_uniform_location(shader_instanced.prog, "projection");
-    shader_instanced.offsets = shader_get_uniform_location(shader_instanced.prog, "offsets");
-
-    // LOAD MESHES
-    mesh_quad = gpu_load_mesh_quad(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices));
-    mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
-    mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
-    mesh_model = gpu_load_mesh_model(teapot_obj.vertices, teapot_obj.indices, teapot_obj.v_count*sizeof(float), teapot_obj.i_count*sizeof(unsigned int));
-    mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
-
-
-    // camera setup PROJECTION SET ONCE AT START !!
-    vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
-    camerka_set_pos(camera, pos);
-    matf4x4 projection;
-    float camera_fov = 90.0f;
-    float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
-    lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
-    shader_set_mat4(shader_instanced.prog, shader_instanced.projection, &projection.col1.x);
-    shader_set_mat4(shader_basic.prog, shader_basic.projection, &projection.col1.x);
-    shader_set_mat4(shader_skybox.prog, shader_skybox.projection, &projection.col1.x);
-    shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.projection, &projection.col1.x);
 
     // prepare ground quad transform
     matf4x4 transform = matf4x4_I_give();
@@ -573,7 +390,7 @@ int main(void)
     matf4x4 temp = matf4x4_I_give();
     matf4x4_mul(&temp, &rotate, &scale);
     matf4x4_mul(&transform, &translate, &temp);
-    shader_set_mat4(shader_instanced.prog, shader_instanced.model, &transform.col1.x);
+    shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &transform.col1.x);
 
     // precalculate planes positionsss.
     const int area_size = 20;
@@ -586,10 +403,21 @@ int main(void)
         }
     }
 
-    shader_set_3fv(shader_instanced.prog, shader_instanced.offsets, 1600, &translations[0].x); 
+    shader_set_3fv(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.offsets, 1600, &translations[0].x); 
 
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
+    // camera setup PROJECTION SET ONCE AT START !!
+    vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
+    camerka_set_pos(program_ctx.camera, pos);
+    matf4x4 projection;
+    float camera_fov = 90.0f;
+    float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
+    lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
+    shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.projection, &projection.col1.x);
+    shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
+    shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
+
+    gl_enable_depth_test();
+    gl_set_clear_color(&(vecf4){0.53f, 0.81f, 0.92f, 1.0f}.x);
     unsigned int frames = 0;
     double delta_time;
     double curr_time;
@@ -604,8 +432,8 @@ int main(void)
         frames++;
         if (curr_time - prev_frame_time >= 1.0) {
             log_print_n_flush("[FPS: %d | DELTA TIME: %f]\n", frames, delta_time);
-            log_print_n_flush("[CAMERA POS] X: %f, Y: %f, Z: %f\n", camera.pos.x, camera.pos.y, camera.pos.z);
-            log_print_n_flush("[CAMERA DIR] X: %f, Y: %f, Z: %f\n", camera.orientation.x, camera.orientation.y, camera.orientation.z);
+            log_print_n_flush("[CAMERA POS] X: %f, Y: %f, Z: %f\n", program_ctx.camera.pos.x, program_ctx.camera.pos.y, program_ctx.camera.pos.z);
+            log_print_n_flush("[CAMERA DIR] X: %f, Y: %f, Z: %f\n", program_ctx.camera.orientation.x, program_ctx.camera.orientation.y, program_ctx.camera.orientation.z);
             frames = 0;
             prev_frame_time = curr_time;
         }
@@ -613,17 +441,17 @@ int main(void)
         // HANDLE INPUT
         processInput(window);
 
-        camera.yaw   += mouse_dx * mouse_sens;
-        camera.pitch += mouse_dy * mouse_sens;
-        if (camera.pitch > 89.0f)  camera.pitch = 89.0f;
-        if (camera.pitch < -89.0f) camera.pitch = -89.0f;
+        program_ctx.camera.yaw   += mouse_dx * mouse_sens;
+        program_ctx.camera.pitch += mouse_dy * mouse_sens;
+        if (program_ctx.camera.pitch > 89.0f)  program_ctx.camera.pitch = 89.0f;
+        if (program_ctx.camera.pitch < -89.0f) program_ctx.camera.pitch = -89.0f;
         mouse_dx = 0.0; // does platform reset, dunno if here?
         mouse_dy = 0.0;
 
         vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
         vecf3 movement_vector = VECF3_ZERO;
-        vecf3 orient = camerka_orientation(&camera);
-        camera.orientation = orient; // cache it.
+        vecf3 orient = camerka_orientation(&program_ctx.camera);
+        program_ctx.camera.orientation = orient; // cache it.
         if (move_w) {
             vecf3_apply_add(&movement_vector, orient);
         }
@@ -643,60 +471,51 @@ int main(void)
         if (vecf3_len(movement_vector) > 0.0f) {
             movement_vector = vecf3_norm(movement_vector);
             movement_vector = vecf3_scale(0.1f, movement_vector); // hackyyy
-            vecf3_apply_add(&camera.pos, movement_vector);
+            vecf3_apply_add(&program_ctx.camera.pos, movement_vector);
         }
 
         // UPDATE THINGS.
-        matf4x4 view = camerka_view_matrix(&camera); // you can use shader uniforms that can be shared across multiple shaders.
-        shader_set_mat4(shader_instanced.prog, shader_instanced.view, &view.col1.x);
-        shader_set_mat4(shader_basic.prog, shader_basic.view, &view.col1.x);
-        shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.view, &view.col1.x);
+        matf4x4 view = camerka_view_matrix(&program_ctx.camera); // you can use shader uniforms that can be shared across multiple shaders.
+        shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.view, &view.col1.x);
+        shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.view, &view.col1.x);
 
         matf4x4 view_no_translation = view;
         view_no_translation.col4.x = 0.0f; // zero out translation
         view_no_translation.col4.y = 0.0f;
         view_no_translation.col4.z = 0.0f;
-        shader_set_mat4(shader_skybox.prog, shader_skybox.view, &view_no_translation.col1.x);
+        shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.view, &view_no_translation.col1.x);
 
         // RENDER START
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // Frustum culling solution:
-        // CPU-side test: For each quad, check if its bounding box intersects the view frustum.
-        // Only send visible quads to GPU.
-
-        // Depth mask info.
-        //Fragments still test against the depth buffer (can still be rejected)
-        //But passing fragments don't update the depth buffer
-        //The depth values stay whatever they were before
         
         // skybox
         glDepthMask(GL_FALSE);
-        shader_prog_use(shader_skybox.prog);
-        glBindVertexArray(mesh_skybox.VAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox.id);
+        shader_prog_use(renderer_ctx.shader_skybox.prog);
+        glBindVertexArray(renderer_ctx.mesh_skybox.VAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, program_ctx.texture_skybox.id);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthMask(GL_TRUE);
 
         // ground
-        shader_prog_use(shader_instanced.prog);
-        glBindTexture(GL_TEXTURE_2D, texture_grass.id);
-        glBindVertexArray(mesh_quad.VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
+        shader_prog_use(renderer_ctx.shader_instanced.prog);
+        glBindTexture(GL_TEXTURE_2D, program_ctx.texture_grass.id);
+        glBindVertexArray(renderer_ctx.mesh_quad.VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, renderer_ctx.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
        
         // anchor
-        shader_prog_use(shader_basic.prog);
+        shader_prog_use(renderer_ctx.shader_basic_3d.prog);
         matf4x4 s = matf4x4_I_give();
         matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
         matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
         matf4x4 full = matf4x4_I_give();
         matf4x4_mul(&full, &t, &s);
-        shader_set_mat4(shader_basic.prog, shader_basic.model, &full.col1.x);
-        glBindVertexArray(mesh_anchor.VAO);
-        glDrawElements(GL_TRIANGLES, mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
+        shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.model, &full.col1.x);
+        glBindVertexArray(renderer_ctx.mesh_anchor.VAO);
+        glDrawElements(GL_TRIANGLES, renderer_ctx.mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 
         // teapot
         static float rotacja = 0.0f;
-        shader_prog_use(shader_basic_teapot.prog);
+        shader_prog_use(renderer_ctx.shader_basic_3d.prog);
 
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
@@ -710,16 +529,14 @@ int main(void)
         matf4x4_mul(&full2, &temp, &t2);
 
         const float teapot_color[] = {1.0f, 1.0f, 0.5f, 1.0f}; 
-        shader_set_mat4(shader_basic_teapot.prog, shader_basic_teapot.model, &full2.col1.x);
-        shader_set_vec4(shader_basic_teapot.prog, shader_basic_teapot.color, teapot_color);
+        shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.model, &full2.col1.x);
+        shader_set_vec4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.color, teapot_color);
 
         glPointSize(2.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBindVertexArray(mesh_model.VAO);
-        glDrawElements(GL_TRIANGLES, mesh_model.index_count, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(program_ctx.mesh_teapot.VAO);
+        glDrawElements(GL_TRIANGLES, program_ctx.mesh_teapot.index_count, GL_UNSIGNED_INT, 0);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        r_draw_text_immediate(&arial_font, 0.0f, 0.0f, "FPS: 60.0");
 
         glfwSwapBuffers(window);
         glfwPollEvents();

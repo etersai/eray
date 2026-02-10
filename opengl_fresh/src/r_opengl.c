@@ -210,6 +210,16 @@ void gpu_delete_mesh_simple(GpuMeshSimple mesh_simple)
     glDeleteBuffers(1, &mesh_simple.VBO);
 }
 
+void gl_enable_depth_test(void)
+{
+    glEnable(GL_DEPTH_TEST);
+}
+
+void gl_set_clear_color(const float* color)
+{
+    glClearColor(color[0], color[1], color[2], color[3]);
+}
+
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)
 {
     assert(data);
