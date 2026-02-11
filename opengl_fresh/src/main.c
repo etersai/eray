@@ -304,7 +304,7 @@ int main(void)
          abort();
     }
 
-    program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, obj_teapot->v_count, obj_teapot->i_count); 
+    program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int)); 
 
     arenka_wipe(&arena);
     arenka_unmap(&arena);
@@ -411,20 +411,20 @@ int main(void)
 
         // teapot
         static float rotacja = 0.0f;
-        shader_prog_use(renderer_ctx.shader_basic_3d.prog);
 
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
         matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
         matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
         matf4x4_rot_y(&r, rotacja);
-        rotacja += 0.02f;
+        rotacja += 0.002f;
         matf4x4 full2 = matf4x4_I_give();
         matf4x4 temp = matf4x4_I_give();
         matf4x4_mul(&temp, &r, &s2);
         matf4x4_mul(&full2, &temp, &t2);
+        const float teapot_color[] = {1.0f, 0.0f, 0.0f, 1.0f}; 
 
-        const float teapot_color[] = {1.0f, 1.0f, 0.5f, 1.0f}; 
+        shader_prog_use(renderer_ctx.shader_basic_3d.prog);
         shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.model, &full2.col1.x);
         shader_set_vec4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.color, teapot_color);
 
@@ -442,7 +442,6 @@ int main(void)
         move_d = false;
     }
     r_renderer_shutdown(&renderer_ctx);    
-    arenka_unmap(&arena);
     glfwTerminate();
     return 0;
 }

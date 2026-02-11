@@ -1,6 +1,7 @@
 #ifndef ERAY_ARENA_H_
 #define ERAY_ARENA_H_
 
+#include <assert.h>
 #include <sys/mman.h>                      
 #include <stddef.h>
 
@@ -45,7 +46,13 @@ static unsigned char* arenka_get_piece(Arenka* arena, size_t size_in_bytes)
 
 static void arenka_unmap(Arenka* arena)
 {
-    munmap(arena->addr_start, arena->capacity);
+    assert(arena);
+    if (arena->addr_start != NULL) {
+        munmap(arena->addr_start, arena->capacity);
+        arena->addr_start = NULL;
+        arena->capacity = 0;
+        arena->offset = 0;
+    }
 }
 
 #endif /* ERAY_ARENA_H_ */
