@@ -129,12 +129,13 @@ static inline float vecf3_len_no_sqrt(vecf3 vec);
 static inline vecf3 vecf3_add(vecf3 a, vecf3 b);
 static inline void vecf3_apply_add(vecf3* a, vecf3 b);
 static inline void vecf3_apply_sub(vecf3* a, vecf3 b);
+static inline vecf3 vecf3_mul(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_sub(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_scale(float factor, vecf3 vec);
 static inline vecf3 vecf3_cross(vecf3 a, vecf3 b);
 static inline float vecf3_dot(vecf3 a, vecf3 b);
 static inline vecf3 vecf3_norm(vecf3 vec);
-static inline vecf3 vecf3_sum_three(vecf3 a, vecf3 b, vecf3 c);
+static inline vecf3 vecf3_sum_3(vecf3 a, vecf3 b, vecf3 c);
 // MATRICES
 static inline void matf4x4_I(matf4x4* matrix);
 static inline matf4x4 matf4x4_I_give(void);
@@ -193,7 +194,7 @@ static vecf3 lamath_triangle_centroid(const vecf3 triangle[3])
     // u + v + w  = 1
     // w = 1 - u - v
     // u + v <= 1 
-    return vecf3_scale(1.0f/3.0f, vecf3_sum_three(triangle[0], triangle[1], triangle[2]));
+    return vecf3_scale(1.0f/3.0f, vecf3_sum_3(triangle[0], triangle[1], triangle[2]));
 } 
 
 static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far)
@@ -302,9 +303,14 @@ static inline vecf3 vecf3_cross(vecf3 a, vecf3 b)
                    a.x * b.y - a.y * b.x};
 }
 
-static inline vecf3 vecf3_sum_three(vecf3 a, vecf3 b, vecf3 c)
+static inline vecf3 vecf3_sum_3(vecf3 a, vecf3 b, vecf3 c)
 {
     return (vecf3){a.x+b.x+c.x, a.y+b.y+c.y, a.z+b.z+c.z};
+}
+
+static inline vecf3 vecf3_mul(vecf3 a, vecf3 b)
+{
+    return (vecf3){a.x*b.x, a.y*b.y, a.z*b.z};
 }
 
 // MATRICES

@@ -5,6 +5,7 @@
 #include "r_glsl_shaders.c"
 #include "common/types.h"
 #include "data_vertices.c"
+#include <GL/gl.h>
 #include <assert.h>
 
 #define internal static
@@ -49,6 +50,15 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
     shader_set_mat4(r->shader_basic_3d_color.prog, r->shader_basic_3d_color.model, &transform->col1.x);
     glBindVertexArray(r->mesh_anchor.VAO);
     glDrawElements(GL_TRIANGLES, r->mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
+}
+
+void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
+{
+    shader_prog_use(r->shader_basic_3d.prog);
+    shader_set_mat4(r->shader_basic_3d.prog, r->shader_basic_3d.model, &transform->col1.x);
+    shader_set_vec4(r->shader_basic_3d.prog, r->shader_basic_3d.color, &color.r);
+    glBindVertexArray(r->mesh_cube.VAO);
+    glDrawElements(GL_TRIANGLES, r->mesh_cube.index_count, GL_UNSIGNED_INT, 0);
 }
 
 int r_renderer_init(RendererContext* r)
@@ -97,7 +107,7 @@ int r_renderer_init(RendererContext* r)
     r->mesh_quad = gpu_load_mesh_quad(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices));
     r->mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     r->mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
-    r->mesh_cube = gpu_load_mesh_3attr(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
+    r->mesh_cube = gpu_load_mesh_cube_only_pos(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
     
     return 0;
 }

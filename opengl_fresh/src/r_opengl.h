@@ -44,13 +44,15 @@ void gl_set_clear_color(Colorek color);
 GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes);
 void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t offset_in_bytes, size_t size_in_bytes, const void* source);
 
-// kinda sus.
+// kinda sus \/.
 GLuint gpu_vao_create_for_text_buffer(GLuint VBO);
+// kinda sus ^. 
 
 GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_teapot(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_3attr(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size); 
+GpuMeshIndexed gpu_load_mesh_cube_only_pos(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size);
 
 void gpu_delete_mesh_indexed(GpuMeshIndexed mesh_indexed);
