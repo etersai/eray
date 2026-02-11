@@ -43,6 +43,15 @@ const char* glsl_basic_3d_fs = "#version 460 core\n"
     "   final_color = color;\n"
     "}\0";
 
+const char* glsl_light_fs = "#version 460 core\n"
+    "uniform vec3 lightColor;\n"
+    "uniform vec3 objectColor;\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(objectColor*lightColor, 1.0);\n"
+    "}\0";
+
 const char* glsl_basic_3d_color_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
