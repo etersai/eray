@@ -31,6 +31,12 @@ void shader_set_vec4(ShaderProgram program, uniform uniform, const float* vec4)
     glUniform4fv(uniform, 1, vec4);
 }
 
+void shader_set_vec3(ShaderProgram program, uniform uniform, const float* vec3)
+{
+    glUseProgram(program.id);
+    glUniform3fv(uniform, 1, vec3);
+}
+
 uniform shader_get_uniform_location(ShaderProgram program, const char* name)
 {
     glUseProgram(program.id);
