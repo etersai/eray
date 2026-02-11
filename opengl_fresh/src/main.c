@@ -254,8 +254,6 @@ int main(void)
     /*******************/
     
 
-
-
     // MEDIA LOADING
     // TODO: create temp texture for any failed to load texture [black/purple checkerboard pattern etc.]
     stbi_set_flip_vertically_on_load(true); // global state 
