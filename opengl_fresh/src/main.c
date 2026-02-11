@@ -308,27 +308,14 @@ int main(void)
     arenka_wipe(&arena);
     arenka_unmap(&arena);
 
-
-
+    
     if (r_renderer_init(&renderer_ctx) != 0) {
         elog_abort("Renderer initialization failed!");
     }
 
 
-    // prepare ground quad transform
-    matf4x4 ground_transform = matf4x4_I_give();
-    matf4x4 ground_scale = matf4x4_I_give();
-    matf4x4 ground_rotate = matf4x4_I_give();
-    matf4x4_scale_set(&ground_scale, 1.0f, 1.0f, 1.0f);
-    matf4x4_rot_x(&ground_rotate, deg_to_rad(-90.0f));
-    matf4x4 ground_translate = matf4x4_I_give();
-    matf4x4 ground_temp = matf4x4_I_give();
-    matf4x4_mul(&ground_temp, &ground_rotate, &ground_scale);
-    matf4x4_mul(&ground_transform, &ground_translate, &ground_temp);
-    shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &ground_transform.col1.x);
-
-    // precalculate planes positions.
-    const int area_size = 200;
+    // GROUND precalculate planes positions.
+    const int area_size = 20;
     vecf3 ground_translations[1600];
     int curr = 0;
     for (int z = -area_size; z < area_size; z++) {
@@ -337,14 +324,13 @@ int main(void)
             curr++;
         }
     }
+
+    matf4x4 ground_transform = lamath_create_transform(VECF3_ZERO, (vecf3){deg_to_rad(-90.0f), 0.0f, 0.0f}, (vecf3){1.0f, 1.0f, 1.0f});
+    shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &ground_transform.col1.x);
     shader_set_3fv(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.offsets, 1600, &ground_translations[0].x); 
 
     // ANCHOR Transform
-    matf4x4 scale_achor = matf4x4_I_give();
-    matf4x4 translate_anchor = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
-    matf4x4_scale_set(&scale_achor, 0.05f, 0.05f, 0.05f);
-    matf4x4 transform_anchor = matf4x4_I_give();
-    matf4x4_mul(&transform_anchor, &translate_anchor, &scale_achor);
+    matf4x4 transform_anchor = lamath_create_transform((vecf3){0.0f, 1.0f, 0.0f}, VECF3_ZERO, (vecf3){0.05f, 0.05f, 0.05f});
 
     // camera setup PROJECTION SET ONCE AT START !!
     vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
@@ -417,21 +403,12 @@ int main(void)
         matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
         matf4x4_rot_y(&r, rotacja);
         matf4x4 full2 = matf4x4_I_give();
-        matf4x4 temp = matf4x4_I_give();
-        matf4x4_mul(&temp, &r, &s2);
-        matf4x4_mul(&full2, &temp, &t2);
+        matf4x4_mul_3(&full2, &t2, &r, &s2);
         rotacja += 0.002f;
 
-        matf4x4 ts = matf4x4_I_give();
-        matf4x4 tr = matf4x4_I_give();
-        matf4x4 tt2 = matf4x4_translate_give((vecf3){0.0f, 5.0f, 0.0f});
-        matf4x4_scale_set(&ts, 1.0f, 1.0f, 1.0f);
-        matf4x4 tfull2 = matf4x4_I_give();
-        matf4x4 ttemp = matf4x4_I_give();
-        matf4x4_mul(&ttemp, &tr, &ts);
-        matf4x4_mul(&tfull2, &ttemp, &tt2);
-
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &full2, *(Colorek*)&teapot_color[0]);
+
+        matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
 
         glfwSwapBuffers(window);

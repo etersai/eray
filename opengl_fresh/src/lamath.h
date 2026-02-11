@@ -117,6 +117,7 @@ static void log_print_prefix(const char* prefix, const char* format, ...);
 static inline float rad_to_deg(float radians);
 static inline float deg_to_rad(float degrees);
 // COMMON
+static inline matf4x4 lamath_create_transform(vecf3 translate, vecf3 rotate, vecf3 scale);
 static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far);
 static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up);
 static inline vecf3 lamath_calc_triangle_normal(const vecf3 triangle[3]);
@@ -142,6 +143,7 @@ static inline void matf4x4_rot_x(matf4x4* m, float angle);
 static inline void matf4x4_rot_y(matf4x4* m, float angle);
 static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
+static inline void matf4x4_mul_3(matf4x4* result, const matf4x4* a, const matf4x4* b, const matf4x4* c);
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
 static inline matf4x4 matf4x4_translate_give(vecf3 translate);
 
@@ -164,6 +166,24 @@ static inline vecf4 matf4x4_mul_vecf4(const matf4x4* m, vecf4 v)
     result.z = m->col1.z * v.x + m->col2.z * v.y + m->col3.z * v.z + m->col4.z * v.w;
     result.w = m->col1.w * v.x + m->col2.w * v.y + m->col3.w * v.z + m->col4.w * v.w;
     return result;
+}
+
+static inline matf4x4 lamath_create_transform(vecf3 t, vecf3 r, vecf3 s)
+{
+    matf4x4 S, Rx, Ry, Rz, R, T, M;
+
+    matf4x4_scale_set(&S, s.x, s.y, s.z);
+
+    matf4x4_rot_x(&Rx, r.x);
+    matf4x4_rot_y(&Ry, r.y);
+    matf4x4_rot_z(&Rz, r.z);
+
+    matf4x4_mul_3(&R, &Rz, &Ry, &Rx);
+    T = matf4x4_translate_give(t);
+
+    matf4x4_mul_3(&M, &T, &R, &S);
+
+    return M;
 }
 
 static vecf3 lamath_triangle_centroid(const vecf3 triangle[3])
@@ -480,6 +500,15 @@ static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4*
     m.col3.w = a->col1.w * b->col3.x + a->col2.w * b->col3.y + a->col3.w * b->col3.z + a->col4.w * b->col3.w;
     m.col4.w = a->col1.w * b->col4.x + a->col2.w * b->col4.y + a->col3.w * b->col4.z + a->col4.w * b->col4.w;
 
+    *result = m;
+}
+
+static inline void matf4x4_mul_3(matf4x4* result, const matf4x4* a, const matf4x4* b, const matf4x4* c)
+{
+    matf4x4 m;
+    matf4x4 temp;
+    matf4x4_mul(&temp, a, b);
+    matf4x4_mul(&m, &temp, c);
     *result = m;
 }
 
