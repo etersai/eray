@@ -48,7 +48,7 @@ void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t offset_in_bytes
 GLuint gpu_vao_create_for_text_buffer(GLuint VBO);
 
 GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
-GpuMeshIndexed gpu_load_mesh_model(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
+GpuMeshIndexed gpu_load_mesh_teapot(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size);
 GpuMeshIndexed gpu_load_mesh_3attr(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size); 
 GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size);

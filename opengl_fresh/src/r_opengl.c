@@ -82,7 +82,7 @@ GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* i
     return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
 }
 
-GpuMeshIndexed gpu_load_mesh_model(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
+GpuMeshIndexed gpu_load_mesh_teapot(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
 {
     GLuint VAO;
     GLuint VBO;

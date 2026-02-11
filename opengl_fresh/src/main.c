@@ -301,6 +301,7 @@ int main(void)
          log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
          abort();
     }
+    program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, obj_teapot->v_count, obj_teapot->i_count); 
 
 
 
@@ -422,7 +423,6 @@ int main(void)
         shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.model, &full2.col1.x);
         shader_set_vec4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.color, teapot_color);
 
-        glPointSize(2.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glBindVertexArray(program_ctx.mesh_teapot.VAO);
         glDrawElements(GL_TRIANGLES, program_ctx.mesh_teapot.index_count, GL_UNSIGNED_INT, 0);
