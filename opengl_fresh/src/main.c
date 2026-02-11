@@ -15,6 +15,7 @@
 #include "r_shader.h"
 #include "obj_loader.h"
 #include "lamath.h"
+#include "common/arena.h"
 #include "common/types.h"
 #include "data_font.h"
 
@@ -251,7 +252,13 @@ int main(void)
     /*******************/
     /* END BOILERPLATE */
     /*******************/
-   
+    
+    Arenka arena = arenka_map(MEBIBYTE(64));
+    if (arena.addr_start == NULL) { 
+        elog_abort("Os failed at giving you memory xd");
+    }
+
+
     // MEDIA LOADING
     // TODO: create temp texture for any failed to load texture [black/purple checkerboard pattern etc.]
     stbi_set_flip_vertically_on_load(true); // global state 
@@ -285,14 +292,18 @@ int main(void)
         abort();
     }
 
+    // font
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
+    
 
-    // maybe malloc it?
-    obj_in_memory teapot_obj = {0};
-    if (load_obj_from_path(&teapot_obj, path_teapot) != 0) {
-        log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
-        abort();
+    obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&arena, sizeof(obj_in_memory));
+    if (load_obj_from_path(obj_teapot, path_teapot) != 0) {
+         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
+         abort();
     }
+
+
+
 
     if (r_renderer_init(&renderer_ctx) != 0) {
         elog_abort("Renderer initialization failed!");
@@ -338,9 +349,9 @@ int main(void)
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.projection, &projection.col1.x);
+    shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
-    shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.projection, &projection.col1.x);
 
     gl_enable_depth_test();
     gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
@@ -426,6 +437,7 @@ int main(void)
         move_d = false;
     }
     r_renderer_shutdown(&renderer_ctx);    
+    arenka_unmap(&arena);
     glfwTerminate();
     return 0;
 }
