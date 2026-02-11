@@ -30,9 +30,14 @@ void r_draw_skybox(RendererContext* r, TextureCubemap texture)
     glDepthMask(GL_TRUE);
 }
 
+void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform)
+{
+    assert(r);
+}
+
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
 {
-
+    assert(r);
 }
 
 void r_draw_anchor(RendererContext* r, const matf4x4* transform)

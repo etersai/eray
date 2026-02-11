@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#include "common/types.h"
 #include "platform.h"
 #include "r_main.h"
 #include "r_opengl.h"
@@ -16,6 +15,7 @@
 #include "r_shader.h"
 #include "obj_loader.h"
 #include "lamath.h"
+#include "common/types.h"
 #include "data_font.h"
 
 // VERY IMPORTANT TODOS //
@@ -300,42 +300,35 @@ int main(void)
 
 
     // prepare ground quad transform
-    matf4x4 transform = matf4x4_I_give();
-    matf4x4 scale = matf4x4_I_give();
-    matf4x4 rotate = matf4x4_I_give();
-    matf4x4_scale_set(&scale, 1.0f, 1.0f, 1.0f);
-    matf4x4_rot_x(&rotate, deg_to_rad(-90.0f));
-    matf4x4 translate = matf4x4_I_give();
-    matf4x4 temp = matf4x4_I_give();
-    matf4x4_mul(&temp, &rotate, &scale);
-    matf4x4_mul(&transform, &translate, &temp);
-    shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &transform.col1.x);
+    matf4x4 ground_transform = matf4x4_I_give();
+    matf4x4 ground_scale = matf4x4_I_give();
+    matf4x4 ground_rotate = matf4x4_I_give();
+    matf4x4_scale_set(&ground_scale, 1.0f, 1.0f, 1.0f);
+    matf4x4_rot_x(&ground_rotate, deg_to_rad(-90.0f));
+    matf4x4 ground_translate = matf4x4_I_give();
+    matf4x4 ground_temp = matf4x4_I_give();
+    matf4x4_mul(&ground_temp, &ground_rotate, &ground_scale);
+    matf4x4_mul(&ground_transform, &ground_translate, &ground_temp);
+    shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &ground_transform.col1.x);
 
     // precalculate planes positions.
     const int area_size = 20;
-    vecf3 translations[1600];
+    vecf3 ground_translations[1600];
     int curr = 0;
     for (int z = -area_size; z < area_size; z++) {
         for (int x = -area_size; x < area_size; x++) {
-            translations[curr] = (vecf3){(float)x+0.5f, 0.0f, (float)z+0.5f};
+            ground_translations[curr] = (vecf3){(float)x+0.5f, 0.0f, (float)z+0.5f};
             curr++;
         }
     }
-    shader_set_3fv(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.offsets, 1600, &translations[0].x); 
+    shader_set_3fv(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.offsets, 1600, &ground_translations[0].x); 
 
     // ANCHOR Transform
-    matf4x4 s = matf4x4_I_give();
-    matf4x4 t = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
-    matf4x4_scale_set(&s, 0.05f, 0.05f, 0.05f);
+    matf4x4 scale_achor = matf4x4_I_give();
+    matf4x4 translate_anchor = matf4x4_translate_give((vecf3){0.0f, 1.0f, 0.0f});
+    matf4x4_scale_set(&scale_achor, 0.05f, 0.05f, 0.05f);
     matf4x4 transform_anchor = matf4x4_I_give();
-    matf4x4_mul(&transform_anchor, &t, &s);
-
-    // ANCHOR Transform
-    matf4x4 ss = matf4x4_I_give();
-    matf4x4 tt = matf4x4_translate_give((vecf3){0.0f, 1.0f, 1.0f});
-    matf4x4_scale_set(&ss, 0.05f, 0.05f, 0.05f);
-    matf4x4 transform_anchor_2 = matf4x4_I_give();
-    matf4x4_mul(&transform_anchor_2, &tt, &ss);
+    matf4x4_mul(&transform_anchor, &translate_anchor, &scale_achor);
 
     // camera setup PROJECTION SET ONCE AT START !!
     vecf3 pos = (vecf3){-5.0f, 2.0f, 0.0f};
@@ -381,7 +374,6 @@ int main(void)
         shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.view, &view.col1.x);
         shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.view, &view.col1.x);
         shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.view, &view.col1.x);
-
         matf4x4 view_no_translation = view;
         view_no_translation.col4.x = 0.0f; // zero out translation
         view_no_translation.col4.y = 0.0f;
@@ -399,8 +391,6 @@ int main(void)
         glDrawElementsInstanced(GL_TRIANGLES, renderer_ctx.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
 
         r_draw_anchor(&renderer_ctx, &transform_anchor);
-        r_draw_anchor(&renderer_ctx, &transform_anchor_2);
-
 
         // teapot
         static float rotacja = 0.0f;

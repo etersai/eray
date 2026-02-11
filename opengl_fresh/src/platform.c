@@ -14,7 +14,7 @@
 #include "tinyobj_loader_c/tinyobj_loader_c.h"
 #endif
 
-char* map_file_into_memory(const char* filename, size_t* out_file_size)
+char* os_map_file_into_memory(const char* filename, size_t* out_file_size)
 {
     struct stat sb;
     char* mapped_file;
@@ -52,7 +52,7 @@ char* map_file_into_memory(const char* filename, size_t* out_file_size)
 }
 
 
-void unmap_file_from_memory(char* file, size_t size)
+void os_unmap_file_from_memory(char* file, size_t size)
 {
     munmap(file, size);
 }

@@ -13,12 +13,12 @@ int load_obj_from_path(obj_in_memory* obj, const char* path)
     assert(obj);
     assert(path);
     size_t size;
-    char* file = map_file_into_memory(path, &size);  
+    char* file = os_map_file_into_memory(path, &size);  
     if (file == NULL) {
         return 1;
     }
     load_obj_to_buffers_not_safe(obj, file, size);
-    unmap_file_from_memory(file, size);
+    os_unmap_file_from_memory(file, size);
     return 0;
 }
 

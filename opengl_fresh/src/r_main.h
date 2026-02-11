@@ -57,6 +57,8 @@ typedef struct {
 void r_begin_frame(RendererContext* r);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
+void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color); // TODO
+void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform);
 int r_renderer_init(RendererContext* r);
 void r_renderer_shutdown(RendererContext* r);
 
