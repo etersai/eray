@@ -253,10 +253,7 @@ int main(void)
     /* END BOILERPLATE */
     /*******************/
     
-    Arenka arena = arenka_map(MEBIBYTE(64));
-    if (arena.addr_start == NULL) { 
-        elog_abort("Os failed at giving you memory xd");
-    }
+
 
 
     // MEDIA LOADING
@@ -295,14 +292,22 @@ int main(void)
     // font
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
     
+    // Rudimentary obj loading.
+    Arenka arena = arenka_map(MEBIBYTE(64));
+    if (arena.addr_start == NULL) { 
+        elog_abort("Os failed at giving you memory xd");
+    }
 
     obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&arena, sizeof(obj_in_memory));
     if (load_obj_from_path(obj_teapot, path_teapot) != 0) {
          log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
          abort();
     }
+
     program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, obj_teapot->v_count, obj_teapot->i_count); 
 
+    arenka_wipe(&arena);
+    arenka_unmap(&arena);
 
 
 
