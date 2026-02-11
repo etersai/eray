@@ -304,7 +304,8 @@ int main(void)
          abort();
     }
 
-    program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int)); 
+    program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, 
+            obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int)); 
 
     arenka_wipe(&arena);
     arenka_unmap(&arena);
@@ -410,28 +411,30 @@ int main(void)
         r_draw_anchor(&renderer_ctx, &transform_anchor);
 
         // teapot
-        static float rotacja = 0.0f;
-
+        local_persist float rotacja = 0.0f;
+        local_persist const float teapot_color[] = {1.0f, 0.0f, 1.0f, 1.0f}; 
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
         matf4x4 t2 = matf4x4_translate_give((vecf3){0.0f, 0.0f, 0.0f});
         matf4x4_scale_set(&s2, 1.0f, 1.0f, 1.0f);
         matf4x4_rot_y(&r, rotacja);
-        rotacja += 0.002f;
         matf4x4 full2 = matf4x4_I_give();
         matf4x4 temp = matf4x4_I_give();
         matf4x4_mul(&temp, &r, &s2);
         matf4x4_mul(&full2, &temp, &t2);
-        const float teapot_color[] = {1.0f, 0.0f, 0.0f, 1.0f}; 
+        rotacja += 0.002f;
 
-        shader_prog_use(renderer_ctx.shader_basic_3d.prog);
-        shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.model, &full2.col1.x);
-        shader_set_vec4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.color, teapot_color);
+        matf4x4 ts = matf4x4_I_give();
+        matf4x4 tr = matf4x4_I_give();
+        matf4x4 tt2 = matf4x4_translate_give((vecf3){0.0f, 5.0f, 0.0f});
+        matf4x4_scale_set(&ts, 1.0f, 1.0f, 1.0f);
+        matf4x4 tfull2 = matf4x4_I_give();
+        matf4x4 ttemp = matf4x4_I_give();
+        matf4x4_mul(&ttemp, &tr, &ts);
+        matf4x4_mul(&tfull2, &ttemp, &tt2);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBindVertexArray(program_ctx.mesh_teapot.VAO);
-        glDrawElements(GL_TRIANGLES, program_ctx.mesh_teapot.index_count, GL_UNSIGNED_INT, 0);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &full2, *(Colorek*)&teapot_color[0]);
+        r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

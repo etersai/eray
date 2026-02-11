@@ -30,14 +30,17 @@ void r_draw_skybox(RendererContext* r, TextureCubemap texture)
     glDepthMask(GL_TRUE);
 }
 
-void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform)
+void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform, Colorek color)
 {
     assert(r);
-}
+    shader_prog_use(r->shader_basic_3d.prog);
+    shader_set_mat4(r->shader_basic_3d.prog, r->shader_basic_3d.model, &transform->col1.x);
+    shader_set_vec4(r->shader_basic_3d.prog, r->shader_basic_3d.color, &color.r);
 
-void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
-{
-    assert(r);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindVertexArray(mesh.VAO);
+    glDrawElements(GL_TRIANGLES, mesh.index_count, GL_UNSIGNED_INT, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void r_draw_anchor(RendererContext* r, const matf4x4* transform)
