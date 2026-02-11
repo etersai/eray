@@ -36,6 +36,15 @@ typedef struct {
 
 typedef struct {
     ShaderProgram prog;
+    uniform model;
+    uniform view;
+    uniform projection;
+    uniform object_color;
+    uniform light_color;
+} ShaderLighting;
+
+typedef struct {
+    ShaderProgram prog;
     uniform view;
     uniform projection;
 } ShaderSkybox;
@@ -44,6 +53,7 @@ typedef struct {
     ShaderBasic shader_basic_3d;
     ShaderBasic shader_basic_3d_color;
     ShaderBasic shader_font;
+    ShaderLighting shader_lighting;
     ShaderInstanced shader_instanced;
     ShaderSkybox shader_skybox;
 

@@ -73,12 +73,19 @@ int r_renderer_init(RendererContext* r)
     shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d, r->shader_basic_3d.prog);
     r->shader_basic_3d.color = shader_get_uniform_location(r->shader_basic_3d.prog, "color");
 
-    // basic 3d color
+    // basic 3d color attribute
     r->shader_basic_3d_color.prog = shader_prog_create_from_memory(glsl_basic_3d_color_vs, glsl_basic_3d_color_fs);
     if (!r_shader_valid(r->shader_basic_3d_color)) {
         return 1;
     }
     shader_basic_get_mvp_uniform_locations(&r->shader_basic_3d_color, r->shader_basic_3d_color.prog);
+
+    // lighting
+    r->shader_lighting.prog = shader_prog_create_from_memory(glsl_basic_3d_vs, glsl_light_fs);
+    if (!r_shader_valid(r->shader_lighting)) {
+        return 1;
+    }
+
     
     // instanced
     r->shader_instanced.prog = shader_prog_create_from_memory(glsl_instanced_vs, glsl_instanced_fs);
@@ -126,6 +133,7 @@ void r_renderer_shutdown(RendererContext* r)
     gpu_delete_mesh_simple(r->mesh_skybox); 
 }
 
+// TODO HOW TO SOLVE THIS POLYOMOPHISMY SHAISE.
 internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program)
 {
     basic->model = shader_get_uniform_location(program, "model");
