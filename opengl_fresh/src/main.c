@@ -328,7 +328,7 @@ int main(void)
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.model, &ground_transform.col1.x);
 
     // precalculate planes positions.
-    const int area_size = 20;
+    const int area_size = 200;
     vecf3 ground_translations[1600];
     int curr = 0;
     for (int z = -area_size; z < area_size; z++) {
@@ -436,7 +436,6 @@ int main(void)
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
         move_w = false;
         move_s = false;
         move_a = false;
