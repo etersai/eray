@@ -294,6 +294,7 @@ int main(void)
     }
 
 
+
     // GROUND precalculate planes positions.
     const int area_size = 20;
     vecf3 ground_translations[1600];

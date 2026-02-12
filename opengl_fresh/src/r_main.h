@@ -18,6 +18,7 @@
 //The depth values stay whatever they were before
 
 #define TEXT_MAX_GLYPHS (16384)
+#define TEXT_FLOATS_PER_GLYPH (24)
 
 typedef GLint uniform;
 
@@ -66,7 +67,8 @@ typedef struct {
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
                                 
     GLuint           text_vao;
-    GpuPMappedBuffer text_buffer;                           
+    float            text_cpu_buffer[TEXT_MAX_GLYPHS*TEXT_FLOATS_PER_GLYPH]; 
+    GpuPMappedBuffer text_gpu_buffer;                           
     unsigned int     text_fv_count; 
 } RendererContext;
 
