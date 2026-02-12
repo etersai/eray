@@ -65,7 +65,7 @@ int r_renderer_init(RendererContext* r)
     ////////////
     // Buffers
     enum {FLOATS_PER_GLYPH = 24};
-    r->buffer_text = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
+    r->text_buffer = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
     
     /////////////
     // SHADERS 
@@ -130,7 +130,7 @@ int r_renderer_init(RendererContext* r)
 void r_renderer_shutdown(RendererContext* r)
 {
     assert(r);
-    gpu_p_mapped_buffer_destroy(&r->buffer_text);
+    gpu_p_mapped_buffer_destroy(&r->text_buffer);
 
     shader_prog_delete(r->shader_basic_3d.prog);
     shader_prog_delete(r->shader_lighting.prog);
@@ -144,7 +144,6 @@ void r_renderer_shutdown(RendererContext* r)
     gpu_delete_mesh_simple(r->mesh_skybox); 
 }
 
-// TODO HOW TO SOLVE THIS POLYOMOPHISMY SHAISE.
 internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program)
 {
     basic->model = shader_get_uniform_location(program, "model");
@@ -158,7 +157,7 @@ void r_draw_text(Fontek* font, float x, float y, const char* text)
     assert(gl_texture_valid(font->texture));
 }
 
-#if 0
+#if 0 // TEST CODE DONT LOOK HERE
 // DRAW FONT STUFF //
 ////////////////////
 #define TEXT_MAX_BYTES (1024*512) // 0.5kib

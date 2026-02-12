@@ -65,8 +65,9 @@ typedef struct {
     GpuMeshIndexed mesh_anchor;
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
                                 
-    GLuint           vao_text;
-    GpuPMappedBuffer buffer_text;                           
+    GLuint           text_vao;
+    GpuPMappedBuffer text_buffer;                           
+    unsigned int     text_fv_count; 
 } RendererContext;
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)
