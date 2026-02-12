@@ -73,8 +73,8 @@ typedef struct {
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
 void r_begin_frame(RendererContext* r);
-void r_draw_text(Fontek* font, float x, float y, const char* text);
-void r_flush_draw_text(void);
+void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char* text);
+void r_flush_draw_text(RendererContext* r);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);

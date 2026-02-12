@@ -62,7 +62,6 @@ int r_renderer_init(RendererContext* r)
 {
     assert(r);
     
-    
     /////////////
     // SHADERS 
     // basic 3d
@@ -115,11 +114,15 @@ int r_renderer_init(RendererContext* r)
         return 1;
     }
 
+    /////////
+    // Mesh
     r->mesh_quad = gpu_load_mesh_quad(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices));
     r->mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     r->mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
     r->mesh_cube = gpu_load_mesh_cube_only_pos(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
 
+    ///////////////////
+    // Text rendering 
     enum {FLOATS_PER_GLYPH = 24};
     r->text_buffer = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
     assert(gl_buffer_valid(r->text_buffer));
@@ -153,11 +156,10 @@ internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderP
     basic->projection = shader_get_uniform_location(program, "projection");
 }
 
-void r_draw_text(Fontek* font, float x, float y, const char* text)
+void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char* text)
 {
     assert(font);
     assert(gl_texture_valid(font->texture));
-
 
 }
 
