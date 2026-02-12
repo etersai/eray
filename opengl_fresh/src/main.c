@@ -88,7 +88,6 @@ typedef struct {
     int format;
 } CpuImage;
 
-
 CpuImage cpu_image_load(const char* path)
 {
     CpuImage img = {0};
@@ -233,14 +232,6 @@ int main(void)
     /* END BOILERPLATE */
     /*******************/
 
-    //glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-    //glm::vec3 toyColor(1.0f, 0.5f, 0.31f);
-    vecf3 a = {1.0f, 1.0f, 1.0f};
-    vecf3 b = {1.0f, 0.5f, 0.31f};
-    vecf3_print(vecf3_mul(a, b));
-    //abort();
-
-
     // MEDIA LOADING
     // TODO: create temp texture for any failed to load texture [black/purple checkerboard pattern etc.]
     stbi_set_flip_vertically_on_load(true); // global state 
@@ -371,6 +362,7 @@ int main(void)
 
         // RENDER START
         r_begin_frame(&renderer_ctx);
+
         r_draw_skybox(&renderer_ctx, program_ctx.texture_skybox);        
 
         // ground
@@ -380,8 +372,9 @@ int main(void)
         glDrawElementsInstanced(GL_TRIANGLES, renderer_ctx.mesh_quad.index_count, GL_UNSIGNED_INT, 0, 1600);
 
         r_draw_anchor(&renderer_ctx, &transform_anchor);
-        matf4x4 ct = lamath_create_transform((vecf3){4.0f, 2.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
-        r_draw_cube(&renderer_ctx, &ct, (Colorek){1.0f, 1.0f, 0.31f, 1.0f});
+
+        matf4x4 cube_trans = lamath_create_transform((vecf3){4.0f, 2.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
+        r_draw_cube(&renderer_ctx, &cube_trans, (Colorek){1.0f, 1.0f, 0.31f, 1.0f});
 
         // teapot
         local_persist float rotacja = 0.0f;

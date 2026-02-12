@@ -672,6 +672,21 @@ ELOGDEF void elog_abort(const char* str)
     elog_s(str);
     abort();
 }
+
+ELOGDEF void elog_bytes_as_kib(size_t bytes)
+{
+    elog_f(bytes*0.0009765625);
+}
+
+ELOGDEF void elog_bytes_as_mib(size_t bytes)
+{
+
+}
+
+ELOGDEF void elog_bytes_as_gib(size_t bytes)
+{
+
+}
 // TODO: windows compatible time funcs.
 ELOGDEF double elog_time_sec(void)
 {

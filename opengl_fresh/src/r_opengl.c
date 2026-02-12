@@ -26,6 +26,7 @@ GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
 GLuint gpu_vao_create_for_text_buffer(GLuint VBO)
 {
     assert(VBO != 0);
+
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
 

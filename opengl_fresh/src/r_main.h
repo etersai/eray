@@ -17,6 +17,8 @@
 //But passing fragments don't update the depth buffer
 //The depth values stay whatever they were before
 
+#define TEXT_MAX_GLYPHS 2048
+
 typedef GLint uniform;
 
 typedef struct {
@@ -62,6 +64,8 @@ typedef struct {
     GpuMeshIndexed mesh_cube;
     GpuMeshIndexed mesh_anchor;
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
+                                
+    GpuPMappedBuffer buffer_text;                           
 } RendererContext;
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)

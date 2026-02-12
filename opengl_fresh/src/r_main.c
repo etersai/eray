@@ -6,8 +6,7 @@
 #include "common/types.h"
 #include "data_vertices.c"
 #include <assert.h>
-
-#define internal static
+#include <stdlib.h>
 
 // kinda sus.
 internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program);
@@ -64,6 +63,15 @@ int r_renderer_init(RendererContext* r)
 {
     assert(r);
     
+    ////////////
+    // Buffers
+    enum {FLOATS_PER_GLYPH = 24};
+    elog_zu(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
+    abort();
+    r->buffer_text = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
+    
+    /////////////
+    // SHADERS 
     // basic 3d
     r->shader_basic_3d.prog = shader_prog_create_from_memory(glsl_basic_3d_vs, glsl_basic_3d_fs);
     if (!r_shader_valid(r->shader_basic_3d)) {
@@ -143,6 +151,12 @@ internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderP
     basic->model = shader_get_uniform_location(program, "model");
     basic->view = shader_get_uniform_location(program, "view");
     basic->projection = shader_get_uniform_location(program, "projection");
+}
+
+void r_draw_text(Fontek* font, float x, float y, const char* text)
+{
+    assert(font);
+    assert(gl_texture_valid(font->texture));
 }
 
 #if 0
