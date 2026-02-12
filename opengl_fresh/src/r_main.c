@@ -6,7 +6,6 @@
 #include "common/types.h"
 #include "data_vertices.c"
 #include <assert.h>
-#include <stdlib.h>
 
 // kinda sus.
 internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program);
@@ -66,9 +65,6 @@ int r_renderer_init(RendererContext* r)
     ////////////
     // Buffers
     enum {FLOATS_PER_GLYPH = 24};
-    elog_zu(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
-    elog_bytes_as_kib(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
-    abort();
     r->buffer_text = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
     
     /////////////
@@ -134,6 +130,8 @@ int r_renderer_init(RendererContext* r)
 void r_renderer_shutdown(RendererContext* r)
 {
     assert(r);
+    gpu_p_mapped_buffer_destroy(&r->buffer_text);
+
     shader_prog_delete(r->shader_basic_3d.prog);
     shader_prog_delete(r->shader_lighting.prog);
     shader_prog_delete(r->shader_skybox.prog);

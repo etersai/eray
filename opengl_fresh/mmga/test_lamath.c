@@ -4,7 +4,6 @@
 
 int main(void)
 {
-
     elog_bytes_as_kib(1024*1024);
     elog_bytes_as_mib(1024*1024);
     elog_bytes_as_gib(1024*1024);

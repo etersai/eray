@@ -23,6 +23,14 @@ GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
     return (GpuPMappedBuffer){VBO_ID, size_in_bytes, ptr_to_mapped_space};
 }
 
+void gpu_p_mapped_buffer_destroy(GpuPMappedBuffer* buffer)
+{
+    if (buffer != NULL) {
+        glDeleteBuffers(1, &buffer->VBO);
+        buffer->mem_start = NULL;
+    }
+}
+
 GLuint gpu_vao_create_for_text_buffer(GLuint VBO)
 {
     assert(VBO != 0);

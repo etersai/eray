@@ -42,6 +42,7 @@ void gl_enable_depth_test(void);
 void gl_set_clear_color(Colorek color);
 
 GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes);
+void gpu_p_mapped_buffer_destroy(GpuPMappedBuffer* buffer);
 void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t offset_in_bytes, size_t size_in_bytes, const void* source);
 
 // kinda sus \/.
