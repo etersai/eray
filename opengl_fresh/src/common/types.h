@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 
+// credit Ryan Fleury
+#define global        static 
+#define internal      static
+#define local_persist static
+
 // BASE TYPES
 typedef uint8_t  U8;
 typedef uint16_t U16;

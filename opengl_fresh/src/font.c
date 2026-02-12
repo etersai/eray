@@ -1,6 +1,19 @@
-#include "data_font.h"
+#include "font.h"
+#include "r_opengl.h"
+#include "common/types.h"
+#include "assert.h"
 
-static internal_font_char characters_arial[] = {
+int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
+{
+    assert(font != NULL);
+    assert(font_metadata.name != NULL); // at least some check XD. 
+    assert(gl_texture_valid(texture));
+    font->metadata = font_metadata;
+    font->texture = texture;
+    return 0;
+}
+
+internal internal_font_char characters_arial[] = {
     {' ', 405, 136, 3, 3, 1, 1},
     {'!', 199, 105, 14, 31, 1, 26},
     {'"', 269, 136, 19, 18, 3, 26},

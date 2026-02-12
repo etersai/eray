@@ -17,18 +17,12 @@
 #include "lamath.h"
 #include "common/arena.h"
 #include "common/types.h"
-#include "data_font.h"
 
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 // TODO: PROPER LOGGING FUNCTIONALITY
 // TODO: SEPERATE PLATFORM LAYER
-
-// credit Ryan Fleury
-#define global        static 
-#define internal      static
-#define local_persist static
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
@@ -94,10 +88,6 @@ typedef struct {
     int format;
 } CpuImage;
 
-typedef struct {
-    internal_font_data metadata;
-    Texture texture;
-} Fontek;
 
 CpuImage cpu_image_load(const char* path)
 {
@@ -149,16 +139,6 @@ Texture texture_load_from_path(const char* path)
         return texture;
     }
     return texture;
-}
-
-int font_create(Fontek* font, internal_font_data font_metadata, Texture texture)
-{
-    assert(font != NULL);
-    assert(font_metadata.name != NULL); // at least some check XD. 
-    assert(gl_texture_valid(texture));
-    font->metadata = font_metadata;
-    font->texture = texture;
-    return 0;
 }
 
 void console_post_cwd(void)

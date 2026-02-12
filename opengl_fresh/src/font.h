@@ -1,5 +1,7 @@
-#ifndef DATA_FONT_H_
-#define DATA_FONT_H_
+#ifndef ERAY_FONT_H_
+#define ERAY_FONT_H_
+
+#include "r_opengl.h"
 
 // Generated using => https://evanw.github.io/font-texture-generator/
 typedef struct internal_font_char {
@@ -25,4 +27,11 @@ typedef struct internal_font_data {
 
 extern const internal_font_data font_arial_white;
 
-#endif /* DATA_FONT_H_ */
+typedef struct {
+    internal_font_data metadata;
+    Texture texture;
+} Fontek;
+
+int font_create(Fontek* font, internal_font_data font_metadata, Texture texture);
+
+#endif /* ERAY_FONT_H_ */

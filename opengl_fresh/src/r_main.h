@@ -2,10 +2,11 @@
 #define R_MAIN_H_
 
 #include <glad/glad.h>
-#include "common/types.h"
-#include "lamath.h"
 #include "r_opengl.h"
 #include "r_shader.h"
+#include "font.h"
+#include "lamath.h"
+#include "common/types.h"
 
 // Frustum culling solution:
 // CPU-side test: For each quad, check if its bounding box intersects the view frustum.
@@ -66,6 +67,8 @@ typedef struct {
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
 void r_begin_frame(RendererContext* r);
+void r_draw_text(Fontek* font, float x, float y, const char* text);
+void r_flush_draw_text(void);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);

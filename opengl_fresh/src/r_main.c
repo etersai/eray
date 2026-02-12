@@ -5,7 +5,6 @@
 #include "r_glsl_shaders.c"
 #include "common/types.h"
 #include "data_vertices.c"
-#include <GL/gl.h>
 #include <assert.h>
 
 #define internal static
@@ -127,6 +126,7 @@ void r_renderer_shutdown(RendererContext* r)
 {
     assert(r);
     shader_prog_delete(r->shader_basic_3d.prog);
+    shader_prog_delete(r->shader_lighting.prog);
     shader_prog_delete(r->shader_skybox.prog);
     shader_prog_delete(r->shader_instanced.prog);
     shader_prog_delete(r->shader_font.prog);
