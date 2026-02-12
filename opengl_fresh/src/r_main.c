@@ -62,10 +62,6 @@ int r_renderer_init(RendererContext* r)
 {
     assert(r);
     
-    ////////////
-    // Buffers
-    enum {FLOATS_PER_GLYPH = 24};
-    r->text_buffer = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
     
     /////////////
     // SHADERS 
@@ -123,6 +119,12 @@ int r_renderer_init(RendererContext* r)
     r->mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
     r->mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
     r->mesh_cube = gpu_load_mesh_cube_only_pos(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
+
+    enum {FLOATS_PER_GLYPH = 24};
+    r->text_buffer = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
+    assert(gl_buffer_valid(r->text_buffer));
+    r->text_vao = gpu_vao_create_for_text_buffer(r->text_buffer.VBO); 
+    assert(r->text_vao != 0);
     
     return 0;
 }
@@ -155,6 +157,8 @@ void r_draw_text(Fontek* font, float x, float y, const char* text)
 {
     assert(font);
     assert(gl_texture_valid(font->texture));
+
+
 }
 
 #if 0 // TEST CODE DONT LOOK HERE
