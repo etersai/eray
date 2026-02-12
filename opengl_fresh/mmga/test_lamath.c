@@ -5,10 +5,9 @@
 int main(void)
 {
 
-    elog_u(LA_KIBIBYTE(1));  
-    elog_u(LA_MEBIBYTE(1));
-    elog_u(LA_GIBIBYTE(1));
-
+    elog_bytes_as_kib(1024*1024);
+    elog_bytes_as_mib(1024*1024);
+    elog_bytes_as_gib(1024*1024);
 
     // matf4x4 m = matf4x4_I_give();
     // m.col1 = (vecf4){1.0f, 2.0f, -1.0f, 2.0f};

@@ -67,6 +67,7 @@ int r_renderer_init(RendererContext* r)
     // Buffers
     enum {FLOATS_PER_GLYPH = 24};
     elog_zu(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
+    elog_bytes_as_kib(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
     abort();
     r->buffer_text = gpu_p_mapped_buffer_create(TEXT_MAX_GLYPHS*FLOATS_PER_GLYPH*sizeof(float));
     
