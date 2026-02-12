@@ -84,4 +84,8 @@ ELOGDEF void elog_abort(const char* str)
     abort();
 }
 
+#define elog_bytes_as_kib(bytes) do { elog_f((bytes)*0.0009765625); } while (0)
+#define elog_bytes_as_mib(bytes) do { elog_f((bytes)*9.5367431640625e-7); } while (0)
+#define elog_bytes_as_gib(bytes) do { elog_f((bytes)*9.3132257461548e-10); } while (0)
+
 #endif /* ELOG_H_ */
