@@ -231,7 +231,7 @@ void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char*
         p++;
     }
 
-    gpu_p_mapped_buffer_write(&r->text_gpu_buffer, byte_offset_into_buffer, r->text_fv_count*sizeof(float), cpu_text_vertices[fv_count]);
+//    gpu_p_mapped_buffer_write(&r->text_gpu_buffer, byte_offset_into_buffer, r->text_fv_count*sizeof(float), cpu_text_vertices[fv_count]);
 
 }
 
