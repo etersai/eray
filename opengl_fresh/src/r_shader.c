@@ -1,11 +1,12 @@
 #include "r_shader.h"
 
+#include "common/types.h"
 #include <stddef.h>
 #include <assert.h>
 
 /* internal error checking */
-static int shader_compile_error(GLuint shader);
-static int shader_program_link_error(GLuint program);
+internal int shader_compile_error(GLuint shader);
+internal int shader_program_link_error(GLuint program);
 
 void shader_prog_delete(ShaderProgram program)
 {
@@ -92,7 +93,7 @@ ShaderProgram shader_prog_create_from_memory(const char* vertex_shader_src, cons
     return (ShaderProgram){.id = program};
 }
 
-static int shader_compile_error(GLuint shader)
+internal int shader_compile_error(GLuint shader)
 {
 	GLint success;
 	char info_log[1024] = {0};
@@ -106,7 +107,7 @@ static int shader_compile_error(GLuint shader)
 	return 0;
 }
 
-static int shader_program_link_error(GLuint program)
+internal int shader_program_link_error(GLuint program)
 {
     GLint success;
     char info_log[1024] = {0};
