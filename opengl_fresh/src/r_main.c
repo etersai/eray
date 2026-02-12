@@ -85,7 +85,11 @@ int r_renderer_init(RendererContext* r)
     if (!r_shader_valid(r->shader_lighting)) {
         return 1;
     }
-
+    r->shader_lighting.model = shader_get_uniform_location(r->shader_lighting.prog, "model");
+    r->shader_lighting.view = shader_get_uniform_location(r->shader_lighting.prog, "view");
+    r->shader_lighting.projection = shader_get_uniform_location(r->shader_lighting.prog, "projection"); 
+    r->shader_lighting.light_color = shader_get_uniform_location(r->shader_lighting.prog, "lightColor");
+    r->shader_lighting.object_color = shader_get_uniform_location(r->shader_lighting.prog, "objectColor"); 
     
     // instanced
     r->shader_instanced.prog = shader_prog_create_from_memory(glsl_instanced_vs, glsl_instanced_fs);
