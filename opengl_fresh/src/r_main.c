@@ -161,6 +161,18 @@ void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char*
     assert(font);
     assert(gl_texture_valid(font->texture));
 
+    // remap
+ //   float norm_x = x/SCR_WIDTH;
+  //  float norm_y = y/SCR_HEIGHT;
+   // float start_ndc_x = norm_x * 2 - 1;
+
+    //float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
+    
+
+
+
+
+
 }
 
 #if 0 // TEST CODE DONT LOOK HERE

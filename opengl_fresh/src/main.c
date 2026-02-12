@@ -30,9 +30,11 @@ global bool move_w;
 global bool move_s;
 global bool move_a;
 global bool move_d;
-global const float mouse_sens = 0.1f;
-global const unsigned int SCR_WIDTH = 1280; // 16:9
-global const unsigned int SCR_HEIGHT = 720; 
+global const float mouse_sens = 0.05f;
+global const unsigned int SCR_WIDTH = 1920; // 16:9
+global const unsigned int SCR_HEIGHT = 1080; 
+//global const unsigned int SCR_WIDTH = 1280; // 16:9
+//global const unsigned int SCR_HEIGHT = 720;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
 void processInput(GLFWwindow *window)
 {
