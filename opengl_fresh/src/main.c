@@ -292,8 +292,7 @@ int main(void)
     if (r_renderer_init(&renderer_ctx) != 0) {
         elog_abort("Renderer initialization failed!");
     }
-
-
+    r_set_font(&renderer_ctx, &program_ctx.font);
 
     // GROUND precalculate planes positions.
     const int area_size = 20;
@@ -348,6 +347,8 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
+        r_draw_text(&renderer_ctx, 20.0f, 20.0f, "IM A WARLORD");
+
         // HANDLE INPUT
         processInput(window);
         update_camera_input(&program_ctx.camera);
@@ -395,6 +396,8 @@ int main(void)
 
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
+
+        r_flush_draw_text(&renderer_ctx);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
