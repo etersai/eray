@@ -66,6 +66,7 @@ typedef struct {
     GpuMeshIndexed mesh_anchor;
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
                                 
+    Fontek*          text_font;
     GLuint           text_vao;
     float            text_cpu_buffer[TEXT_MAX_GLYPHS*TEXT_FLOATS_PER_GLYPH]; 
     GpuPMappedBuffer text_gpu_buffer;                           
@@ -75,13 +76,14 @@ typedef struct {
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
 void r_begin_frame(RendererContext* r);
-void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char* text);
+void r_draw_text(RendererContext* r, float x, float y, const char* text);
 void r_flush_draw_text(RendererContext* r);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);
 void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform, Colorek color);
 int r_renderer_init(RendererContext* r);
+void r_set_font(RendererContext* r, Fontek* font);
 void r_renderer_shutdown(RendererContext* r);
 
 #endif /* R_MAIN_H_ */

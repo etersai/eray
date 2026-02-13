@@ -62,8 +62,24 @@ f64 calculate_shape_area(Shape shape)
     return 0.0;
 }
 
+void test_draw(const char* text)
+{
+    char* p = text;
+    while(*p != '\0') { // points to this null termination after loop
+        
+        putchar(*p);
+        elog_s("am here");
+                        
+        p++;                
+    } 
+}
+
 int main(void)
 {
+    test_draw(""); 
+
+
+#if 0 
     Shape s = {.shape_type = CIRCLE};
     s.data[0] = 5.0;
     f64 area = calculate_shape_area(s);
@@ -72,6 +88,6 @@ int main(void)
     UShape us;
     us.shape_type = CIRCLE;
     us.square.side = 10;
-
+#endif
     return 0;
 }

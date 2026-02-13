@@ -1,4 +1,5 @@
 #include "r_main.h"
+#include "font.h"
 #include "lamath.h"
 #include "r_opengl.h"
 #include "r_shader.h"
@@ -155,10 +156,17 @@ internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderP
     basic->projection = shader_get_uniform_location(program, "projection");
 }
 
-void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char* text)
-{ // one char = 24 floats = 96 bytes.
+void r_set_font(RendererContext* r, Fontek* font)
+{
+    assert(r);
     assert(font);
-    assert(gl_texture_valid(font->texture));
+    r->text_font = font;
+}
+
+void r_draw_text(RendererContext* r, float x, float y, const char* text)
+{ // one char = 24 floats = 96 bytes.
+    assert(r); 
+    assert(r->text_font);
 
     // remap
     float norm_x = x/1920; // hacky
@@ -167,65 +175,67 @@ void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char*
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
     size_t byte_offset_into_buffer = sizeof(float) * r->text_fv_count;
+    unsigned int internal_text_fv_count = 0;
 
     char* p = text;
     while(*p != '\0') { // points to this null termination after loop
-        internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
+        internal_font_char character = r->text_font->metadata.characters[0]; // 0 for space by default.
         char c = *p;    
         if (c >= ' ' && c <= '~') { // printable ascii range
-            character = font_arial_white.characters[(int)c-32];
+            //character = font_arial_white.characters[(int)c-32];
+            character = r->text_font->metadata.characters[(int)c-32];
         }
         
-        float uv_width = (float)character.width/font->texture.width;
-        float uv_height = (float)character.height/font->texture.height;
-        float uv_x = (float)character.x/font->texture.width;
-        float uv_y = (float)character.y/font->texture.height;
+        float uv_width = (float)character.width/r->text_font->texture.width;
+        float uv_height = (float)character.height/r->text_font->texture.height;
+        float uv_x = (float)character.x/r->text_font->texture.width;
+        float uv_y = (float)character.y/r->text_font->texture.height;
 
         float char_width_norm = 2*((float)character.width / 1920); // hacky
         float char_height_norm = 2*((float)character.height / 1080); // wacky
 
         // Generate 2 triangles 
         // box top left. 0
-        r->text_cpu_buffer[r->text_fv_count] = start_ndc_x; 
-        r->text_cpu_buffer[r->text_fv_count+1] = start_ndc_y;
-        r->text_cpu_buffer[r->text_fv_count+2] = uv_x;
-        r->text_cpu_buffer[r->text_fv_count+3] = uv_y;  
+        r->text_cpu_buffer[internal_text_fv_count] = start_ndc_x; 
+        r->text_cpu_buffer[internal_text_fv_count+1] = start_ndc_y;
+        r->text_cpu_buffer[internal_text_fv_count+2] = uv_x;
+        r->text_cpu_buffer[internal_text_fv_count+3] = uv_y;  
 
         // box bottom left. 1
-        r->text_cpu_buffer[r->text_fv_count+4] = start_ndc_x;
-        r->text_cpu_buffer[r->text_fv_count+5] = start_ndc_y-char_height_norm;
-        r->text_cpu_buffer[r->text_fv_count+6] = uv_x;
-        r->text_cpu_buffer[r->text_fv_count+7] = uv_y+uv_height;
+        r->text_cpu_buffer[internal_text_fv_count+4] = start_ndc_x;
+        r->text_cpu_buffer[internal_text_fv_count+5] = start_ndc_y-char_height_norm;
+        r->text_cpu_buffer[internal_text_fv_count+6] = uv_x;
+        r->text_cpu_buffer[internal_text_fv_count+7] = uv_y+uv_height;
 
         // box bottom right. 2
-        r->text_cpu_buffer[r->text_fv_count+8]  = start_ndc_x+char_width_norm;
-        r->text_cpu_buffer[r->text_fv_count+9]  = start_ndc_y-char_height_norm; 
-        r->text_cpu_buffer[r->text_fv_count+10] = uv_x+uv_width; 
-        r->text_cpu_buffer[r->text_fv_count+11] = uv_y+uv_height; 
+        r->text_cpu_buffer[internal_text_fv_count+8]  = start_ndc_x+char_width_norm;
+        r->text_cpu_buffer[internal_text_fv_count+9]  = start_ndc_y-char_height_norm; 
+        r->text_cpu_buffer[internal_text_fv_count+10] = uv_x+uv_width; 
+        r->text_cpu_buffer[internal_text_fv_count+11] = uv_y+uv_height; 
 
 
         // box bottom right. 2
-        r->text_cpu_buffer[r->text_fv_count+12]  = start_ndc_x+char_width_norm;
-        r->text_cpu_buffer[r->text_fv_count+13]  = start_ndc_y-char_height_norm; 
-        r->text_cpu_buffer[r->text_fv_count+14] = uv_x+uv_width; 
-        r->text_cpu_buffer[r->text_fv_count+15] = uv_y+uv_height; 
+        r->text_cpu_buffer[internal_text_fv_count+12]  = start_ndc_x+char_width_norm;
+        r->text_cpu_buffer[internal_text_fv_count+13]  = start_ndc_y-char_height_norm; 
+        r->text_cpu_buffer[internal_text_fv_count+14] = uv_x+uv_width; 
+        r->text_cpu_buffer[internal_text_fv_count+15] = uv_y+uv_height; 
 
         // box top right. 3 
-        r->text_cpu_buffer[r->text_fv_count+16] = start_ndc_x+char_width_norm; 
-        r->text_cpu_buffer[r->text_fv_count+17] = start_ndc_y; 
-        r->text_cpu_buffer[r->text_fv_count+18] = uv_x+uv_width; 
-        r->text_cpu_buffer[r->text_fv_count+19] = uv_y; 
+        r->text_cpu_buffer[internal_text_fv_count+16] = start_ndc_x+char_width_norm; 
+        r->text_cpu_buffer[internal_text_fv_count+17] = start_ndc_y; 
+        r->text_cpu_buffer[internal_text_fv_count+18] = uv_x+uv_width; 
+        r->text_cpu_buffer[internal_text_fv_count+19] = uv_y; 
 
         // top 
-        r->text_cpu_buffer[r->text_fv_count+20] = start_ndc_x;
-        r->text_cpu_buffer[r->text_fv_count+21] = start_ndc_y;
-        r->text_cpu_buffer[r->text_fv_count+22] = uv_x;
-        r->text_cpu_buffer[r->text_fv_count+23] = uv_y;
+        r->text_cpu_buffer[internal_text_fv_count+20] = start_ndc_x;
+        r->text_cpu_buffer[internal_text_fv_count+21] = start_ndc_y;
+        r->text_cpu_buffer[internal_text_fv_count+22] = uv_x;
+        r->text_cpu_buffer[internal_text_fv_count+23] = uv_y;
 
         float xxx = (float)character.originX/1920; // hacky dziadu
 
         start_ndc_x += char_width_norm + xxx;
-        r->text_fv_count+=24;
+        internal_text_fv_count+=TEXT_FLOATS_PER_GLYPH;
         p++;
     }
 
@@ -233,9 +243,27 @@ void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char*
 //size_t offset_in_bytes, size_t size_in_bytes, const void* source);
     gpu_p_mapped_buffer_write(&r->text_gpu_buffer,
                                byte_offset_into_buffer,
-                               r->text_fv_count*sizeof(float),
-                               cpu_text_vertices[fv_count]);
+                               internal_text_fv_count*sizeof(float),
+                               &r->text_cpu_buffer[r->text_fv_count]);
 
+    r->text_fv_count+=internal_text_fv_count; // add acumullated.
+}
+
+void r_flush_draw_text(RendererContext *r)
+{
+    assert(r);
+    assert(r->text_font);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    shader_prog_use(r->shader_font.prog);
+    glBindVertexArray(r->text_vao);
+    glBindTexture(GL_TEXTURE_2D, r->text_font->texture.id);
+    glDrawArrays(GL_TRIANGLES, 0, r->text_fv_count);
+
+    glDisable(GL_BLEND);
+    r->text_fv_count = 0;
 }
 
 #if 0 // TEST CODE DONT LOOK HERE
