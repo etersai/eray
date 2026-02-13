@@ -195,6 +195,8 @@ typedef struct {
     TextureCubemap texture_skybox;
     GpuMeshIndexed mesh_teapot;
     Camerka camera;
+    Arenka arena_obj_loading;
+    Arenka arena_scratch;
 } ProgramContext;
 
 global ProgramContext program_ctx;
@@ -209,7 +211,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Light Cubes", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Clonecraft", NULL, NULL);
     if (window == NULL) {
         fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
@@ -233,6 +235,15 @@ int main(void)
     /*******************/
     /* END BOILERPLATE */
     /*******************/
+    
+    program_ctx.arena_scratch = arenka_map(MB(8));
+    if (program_ctx.arena_scratch.addr_start == NULL) { 
+        elog_abort("Os failed at giving you memory xd");
+    }
+    program_ctx.arena_obj_loading = arenka_map(MB(8));
+    if (program_ctx.arena_obj_loading.addr_start == NULL) { 
+        elog_abort("Os failed at giving you memory xd");
+    }
 
     // MEDIA LOADING
     // TODO: create temp texture for any failed to load texture [black/purple checkerboard pattern etc.]
@@ -271,12 +282,7 @@ int main(void)
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
     
     // Rudimentary obj loading.
-    Arenka arena = arenka_map(MB(64));
-    if (arena.addr_start == NULL) { 
-        elog_abort("Os failed at giving you memory xd");
-    }
-
-    obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&arena, sizeof(obj_in_memory));
+    obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&program_ctx.arena_obj_loading, sizeof(obj_in_memory));
     if (load_obj_from_path(obj_teapot, path_teapot) != 0) {
          log_print_prefix("asset_load_error", "failed to load '%s'\n", path_teapot);
          abort();
@@ -284,9 +290,6 @@ int main(void)
 
     program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, 
             obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int)); 
-
-    arenka_wipe(&arena);
-    arenka_unmap(&arena);
 
     
     if (r_renderer_init(&renderer_ctx) != 0) {
@@ -346,7 +349,7 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
-        r_draw_text(&renderer_ctx, 0.0f, 0.0f, "Idiokracja xd");
+        r_draw_text(&renderer_ctx, 0.0f, 0.0f, "Clonecraft v0.01");
 
         // HANDLE INPUT
         processInput(window);
@@ -406,6 +409,8 @@ int main(void)
         move_d = false;
     }
     r_renderer_shutdown(&renderer_ctx);    
+    arenka_unmap(&program_ctx.arena_obj_loading);
+    arenka_unmap(&program_ctx.arena_scratch);
     glfwTerminate();
     return 0;
 }
