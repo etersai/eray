@@ -68,10 +68,5 @@ int main(void)
     s.data[0] = 5.0;
     f64 area = calculate_shape_area(s);
     elog_f(area);
-
-    UShape us;
-    us.shape_type = CIRCLE;
-    us.square.side = 10;
-
     return 0;
 }
