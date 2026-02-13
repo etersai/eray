@@ -1,7 +1,9 @@
-#ifndef ERAY_COMMON_H_
-#define ERAY_COMMON_H_
+#ifndef ERAY_TYPES_H_
+#define ERAY_TYPES_H_
 
 #include <stdint.h>
+
+#define unused(var) ((void)(var))
 
 // credit Ryan Fleury
 #define global static 
@@ -27,4 +29,4 @@ typedef struct {
     f32 a;
 } Colorek;
 
-#endif /* ERAY_COMMON_H_ */
+#endif /* ERAY_TYPES_H_ */
