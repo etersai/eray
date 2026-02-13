@@ -44,13 +44,8 @@ global Arenka string_arena;
 
 int main(void)
 {
-    string_arena = arenka_map(MB(10));
-
     elog_s("PROGRAM INIT...");
-    string8 ret = str8_format("Niech zacznie padac %d, %.2f\n", 14, 14.4f);
-    str8_print(ret);    
-    free(ret.bytes);
-
-    arenka_unmap(&a);
+    string_arena = arenka_map(MB(10));
+    arenka_unmap(&string_arena);
     return 0;
 }
