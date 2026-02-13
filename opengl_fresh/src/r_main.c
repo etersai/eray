@@ -156,7 +156,7 @@ internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderP
 }
 
 void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char* text)
-{
+{ // one char = 24 floats = 96 bytes.
     assert(font);
     assert(gl_texture_valid(font->texture));
 
@@ -181,10 +181,8 @@ void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char*
         float uv_x = (float)character.x/font->texture.width;
         float uv_y = (float)character.y/font->texture.height;
 
-
         float char_width_norm = 2*((float)character.width / 1920); // hacky
         float char_height_norm = 2*((float)character.height / 1080); // wacky
-        // one char = 24 floats = 96 bytes.
 
         // Generate 2 triangles 
         // box top left. 0
@@ -231,7 +229,12 @@ void r_draw_text(RendererContext* r, Fontek* font, float x, float y, const char*
         p++;
     }
 
-//    gpu_p_mapped_buffer_write(&r->text_gpu_buffer, byte_offset_into_buffer, r->text_fv_count*sizeof(float), cpu_text_vertices[fv_count]);
+//void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, 
+//size_t offset_in_bytes, size_t size_in_bytes, const void* source);
+    gpu_p_mapped_buffer_write(&r->text_gpu_buffer,
+                               byte_offset_into_buffer,
+                               r->text_fv_count*sizeof(float),
+                               cpu_text_vertices[fv_count]);
 
 }
 
