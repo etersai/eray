@@ -333,7 +333,7 @@ int main(void)
     double prev_time = glfwGetTime();
     double prev_frame_time = prev_time;
     while (!glfwWindowShouldClose(window)) {
-
+        r_draw_text(&renderer_ctx, 200.0f, 200.0f, "Dziadyyyy jebane szmaty i szmaragdy!!!!");
         // TIMING STUFF.
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
@@ -347,7 +347,9 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
-        r_draw_text(&renderer_ctx, 20.0f, 20.0f, "IM A WARLORD");
+        r_draw_text(&renderer_ctx, 20.0f, 20.0f, "Idiokracja xd");
+        r_draw_text(&renderer_ctx, 50.0f, 50.0f, "ABCDEFGHIJKLMNOP");
+        //r_draw_text(&renderer_ctx, 50.0f, 50.0f, "THE FLOOR BOARDS");
 
         // HANDLE INPUT
         processInput(window);
@@ -396,8 +398,8 @@ int main(void)
 
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
-
-        r_flush_draw_text(&renderer_ctx);
+    
+        r_flush_text(&renderer_ctx);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

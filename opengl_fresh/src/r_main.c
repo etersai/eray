@@ -156,7 +156,7 @@ internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderP
     basic->projection = shader_get_uniform_location(program, "projection");
 }
 
-void r_set_font(RendererContext* r, Fontek* font)
+inline void r_set_font(RendererContext* r, Fontek* font)
 {
     assert(r);
     assert(font);
@@ -182,7 +182,6 @@ void r_draw_text(RendererContext* r, float x, float y, const char* text)
         internal_font_char character = r->text_font->metadata.characters[0]; // 0 for space by default.
         char c = *p;    
         if (c >= ' ' && c <= '~') { // printable ascii range
-            //character = font_arial_white.characters[(int)c-32];
             character = r->text_font->metadata.characters[(int)c-32];
         }
         
@@ -232,24 +231,20 @@ void r_draw_text(RendererContext* r, float x, float y, const char* text)
         r->text_cpu_buffer[internal_text_fv_count+22] = uv_x;
         r->text_cpu_buffer[internal_text_fv_count+23] = uv_y;
 
-        float xxx = (float)character.originX/1920; // hacky dziadu
-
-        start_ndc_x += char_width_norm + xxx;
+        start_ndc_x += char_width_norm;
         internal_text_fv_count+=TEXT_FLOATS_PER_GLYPH;
         p++;
     }
 
-//void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, 
-//size_t offset_in_bytes, size_t size_in_bytes, const void* source);
     gpu_p_mapped_buffer_write(&r->text_gpu_buffer,
-                               byte_offset_into_buffer,
-                               internal_text_fv_count*sizeof(float),
-                               &r->text_cpu_buffer[r->text_fv_count]);
-
-    r->text_fv_count+=internal_text_fv_count; // add acumullated.
+                              byte_offset_into_buffer,
+                              internal_text_fv_count*sizeof(float),
+                              &r->text_cpu_buffer);
+     
+    r->text_fv_count+=internal_text_fv_count;
 }
 
-void r_flush_draw_text(RendererContext *r)
+void r_flush_text(RendererContext *r)
 {
     assert(r);
     assert(r->text_font);
@@ -265,122 +260,3 @@ void r_flush_draw_text(RendererContext *r)
     glDisable(GL_BLEND);
     r->text_fv_count = 0;
 }
-
-#if 0 // TEST CODE DONT LOOK HERE
-// DRAW FONT STUFF //
-////////////////////
-#define TEXT_MAX_BYTES (1024*512) // 0.5kib
-// relic of the ancient wisdom.
-//static unsigned char cpu_text_vertices[TEXT_MAX_BYTES];
-static float cpu_text_vertices[TEXT_MAX_BYTES/sizeof(float)]; // 5461.33 CHARS.                                                //
-unsigned int fv_count = 0; 
-static GLuint vao_text;
-static GpuPMappedBuffer gpu_pmbuffer_text_vertices;
-void r_draw_text_immediate(Fontek* font, float x, float y, const char* text)
-{
-    assert(font);
-    assert(gl_texture_valid(font->texture));
-
-    // kickstart it's self kinda thing.
-    if (!gl_buffer_valid(gpu_pmbuffer_text_vertices)) { // if not created
-        gpu_pmbuffer_text_vertices = gpu_p_mapped_buffer_create(TEXT_MAX_BYTES);
-        assert(gl_buffer_valid(gpu_pmbuffer_text_vertices));
-        vao_text = gpu_vao_create_for_text_buffer(gpu_pmbuffer_text_vertices.VBO);
-        assert(vao_text != 0);
-    }
-
-    // struct uv { // you can create struct inside functions :D
-    //     float x;
-    //     float y;
-    //     float w;
-    //     float h;
-    // };
-
-    // remap
-    float norm_x = x/SCR_WIDTH;
-    float norm_y = y/SCR_HEIGHT;
-    float start_ndc_x = norm_x * 2 - 1;
-    float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
-    
-    size_t byte_buffer_offset = sizeof(float) * fv_count;
-
-    char* p = text;
-    while(*p != '\0') { // points to this null termination after loop
-        internal_font_char character = font->metadata.characters[0]; // 0 for space by default.
-        char c = *p;    
-        if (c >= ' ' && c <= '~') { // printable ascii range
-            character = font_arial_white.characters[(int)c-32];
-        }
-        
-        float uv_width = (float)character.width/font->texture.width;
-        float uv_height = (float)character.height/font->texture.height;
-        float uv_x = (float)character.x/font->texture.width;
-        float uv_y = (float)character.y/font->texture.height;
-
-
-        float char_width_norm = 2*((float)character.width / SCR_WIDTH);
-        float char_height_norm = 2*((float)character.height / SCR_HEIGHT);
-        // one char = 24 floats = 96 bytes.
-
-        // Generate 2 triangles 
-        // box top left. 0
-        cpu_text_vertices[fv_count] = start_ndc_x; 
-        cpu_text_vertices[fv_count+1] = start_ndc_y;
-        cpu_text_vertices[fv_count+2] = uv_x;
-        cpu_text_vertices[fv_count+3] = uv_y;  
-
-        // box bottom left. 1
-        cpu_text_vertices[fv_count+4] = start_ndc_x;
-        cpu_text_vertices[fv_count+5] = start_ndc_y-char_height_norm;
-        cpu_text_vertices[fv_count+6] = uv_x;
-        cpu_text_vertices[fv_count+7] = uv_y+uv_height;
-
-        // box bottom right. 2
-        cpu_text_vertices[fv_count+8] = start_ndc_x+char_width_norm;
-        cpu_text_vertices[fv_count+9] = start_ndc_y-char_height_norm; 
-        cpu_text_vertices[fv_count+10] = uv_x+uv_width; 
-        cpu_text_vertices[fv_count+11] = uv_y+uv_height; 
-
-
-        // box bottom right. 2
-        cpu_text_vertices[fv_count+12] = start_ndc_x+char_width_norm;
-        cpu_text_vertices[fv_count+13] = start_ndc_y-char_height_norm; 
-        cpu_text_vertices[fv_count+14] = uv_x+uv_width; 
-        cpu_text_vertices[fv_count+15] = uv_y+uv_height; 
-
-        // box top right. 3 
-        cpu_text_vertices[fv_count+16] = start_ndc_x+char_width_norm; 
-        cpu_text_vertices[fv_count+17] = start_ndc_y; 
-        cpu_text_vertices[fv_count+18] = uv_x+uv_width; 
-        cpu_text_vertices[fv_count+19] = uv_y; 
-
-        // top 
-        cpu_text_vertices[fv_count+20] = start_ndc_x;
-        cpu_text_vertices[fv_count+21] = start_ndc_y;
-        cpu_text_vertices[fv_count+22] = uv_x;
-        cpu_text_vertices[fv_count+23] = uv_y;
-
-        float xxx = (float)character.originX/SCR_WIDTH;
-
-        start_ndc_x += char_width_norm + xxx;
-        fv_count+=24;
-        p++;
-    } 
-    
-    gpu_p_mapped_buffer_write(&gpu_pmbuffer_text_vertices, byte_buffer_offset, fv_count*sizeof(float), cpu_text_vertices);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // draw.
-   // assert(r_shader_valid(shader_font));
-   // shader_prog_use(shader_font.prog);
-    glBindVertexArray(vao_text);
-    glBindTexture(GL_TEXTURE_2D, font->texture.id);
-    glDrawArrays(GL_TRIANGLES, 0, fv_count);
-
-    glDisable(GL_BLEND);
-
-    fv_count = 0;
-}
-#endif
