@@ -156,7 +156,7 @@ internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderP
     basic->projection = shader_get_uniform_location(program, "projection");
 }
 
-inline void r_set_font(RendererContext* r, Fontek* font)
+void r_set_font(RendererContext* r, Fontek* font)
 {
     assert(r);
     assert(font);

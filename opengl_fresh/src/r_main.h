@@ -83,7 +83,7 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);
 void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform, Colorek color);
 int r_renderer_init(RendererContext* r);
-inline void r_set_font(RendererContext* r, Fontek* font);
+void r_set_font(RendererContext* r, Fontek* font);
 void r_renderer_shutdown(RendererContext* r);
 
 #endif /* R_MAIN_H_ */

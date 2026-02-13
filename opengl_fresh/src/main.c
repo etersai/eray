@@ -333,7 +333,6 @@ int main(void)
     double prev_time = glfwGetTime();
     double prev_frame_time = prev_time;
     while (!glfwWindowShouldClose(window)) {
-        r_draw_text(&renderer_ctx, 200.0f, 200.0f, "Dziadyyyy jebane szmaty i szmaragdy!!!!");
         // TIMING STUFF.
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
@@ -347,9 +346,7 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
-        r_draw_text(&renderer_ctx, 20.0f, 20.0f, "Idiokracja xd");
-        r_draw_text(&renderer_ctx, 50.0f, 50.0f, "ABCDEFGHIJKLMNOP");
-        //r_draw_text(&renderer_ctx, 50.0f, 50.0f, "THE FLOOR BOARDS");
+        r_draw_text(&renderer_ctx, 0.0f, 0.0f, "Idiokracja xd");
 
         // HANDLE INPUT
         processInput(window);
