@@ -271,7 +271,7 @@ int main(void)
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
     
     // Rudimentary obj loading.
-    Arenka arena = arenka_map(MEBIBYTE(64));
+    Arenka arena = arenka_map(MB(64));
     if (arena.addr_start == NULL) { 
         elog_abort("Os failed at giving you memory xd");
     }

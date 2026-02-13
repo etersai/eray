@@ -5,9 +5,9 @@
 #include <sys/mman.h>                      
 #include <stddef.h>
 
-#define KIBIBYTE(val) ((val)*1024)
-#define MEBIBYTE(val) ((val)*1024*1024)
-#define GIBIBYTE(val) ((val)*1024*1024*1024) 
+#define KB(val) ((val)*1024)
+#define MB(val) ((val)*1024*1024)
+#define GB(val) ((val)*1024*1024*1024) 
 
 typedef struct {
     unsigned char* addr_start;
