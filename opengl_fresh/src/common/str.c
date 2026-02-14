@@ -2,6 +2,7 @@
 #include "../lamath.h"
 #include "types.h"
 #include "arena.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -25,15 +26,15 @@ internal inline void str8_print(string8 str)
 
 internal string8 str8_fmt(Arenka* arena, char* fmt, ...)
 {
-    unused(arena);
-    u8 buf[4];//[][][][]
+    enum {BUFFER_SIZE = 1024};
+    u8 buf[BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);
-    int num_chars_wo_null_byte = vsnprintf((char*)buf, sizeof(buf), fmt, args);
+    int num_chars_wo_null_byte = vsnprintf((char*)buf, BUFFER_SIZE, fmt, args);
     va_end(args);
 
     if ((size_t)num_chars_wo_null_byte >= sizeof(buf)) {
-        num_chars_wo_null_byte = sizeof(buf) - 1;
+        num_chars_wo_null_byte = BUFFER_SIZE-1;
     }
 
     u8* bytes = (u8*)malloc(num_chars_wo_null_byte);
@@ -50,11 +51,8 @@ int main(void)
         elog_abort("memory mapping failed");
     }
     
-#define MY_STR "absfdsfds"
-
-    string8 s = str8_fmt(NULL, MY_STR);  
+    string8 s = str8_fmt(NULL, "hehe %d", 5);  
     
-    elog_pfx_zu("size of float: ", sizeof(float));
 
     arenka_unmap(&scratch_arena);
     free(s.bytes);
