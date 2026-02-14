@@ -609,63 +609,41 @@ static void log_print_n_flush(const char* format, ...)
 #define ELOG_TAG "[elog]: "
 #endif /* ELOG_TAG */
 
-ELOGDEF void elog_zu(size_t val)
+ELOGDEF void elog_fmt(const char *fmt, ...)
 {
-    fprintf(ELOG_TARGET, ELOG_TAG "%zu\n", val);
-    fflush(ELOG_TARGET);
-}
-ELOGDEF void elog_d(int val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%d\n", val);
-    fflush(ELOG_TARGET);
-}
-ELOGDEF void elog_f(float val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%f\n", val);
+    va_list args;
+    va_start(args, fmt);
+    fprintf(ELOG_TARGET, ELOG_TAG);
+    vfprintf(ELOG_TARGET, fmt, args);
+    fprintf(ELOG_TARGET, "\n");
+    va_end(args);
     fflush(ELOG_TARGET);
 }
 
-ELOGDEF void elog_s(const char* str)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%s\n", str);
-    fflush(ELOG_TARGET);
-}
+#define elog_zu(val)  elog_fmt("%zu", (val)) 
+#define elog_d(val)   elog_fmt("%d", (val))
+#define elog_f(val)   elog_fmt("%f", (val))
+#define elog_s(s)     elog_fmt("%s", (s))
+#define elog_u(val)   elog_fmt("%u", (val))
+#define elog_llu(val) elog_fmt("%llu", (val))
+#define elog_lld(val) elog_fmt("%lld", (val))
+#define elog_p(p)     elog_fmt("%p", (p))
+#define elog_lu(val)  elog_fmt("%lu", (val))
+#define elog_ld(val)  elog_fmt("%ld", (val))
 
-ELOGDEF void elog_u(unsigned int val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%u\n", val);
-    fflush(ELOG_TARGET);
-}
+#define elog_pfx_d(prefix, d)     elog_fmt("%s%d", prefix, d)
+#define elog_pfx_zu(prefix, zu)   elog_fmt("%s%zu", prefix, zu)
+#define elog_pfx_f(prefix, f)     elog_fmt("%s%f",  prefix, f)
+#define elog_pfx_u(prefix, u)     elog_fmt("%s%u",  prefix, u)
+#define elog_pfx_llu(prefix, llu) elog_fmt("%s%llu", prefix, llu)
+#define elog_pfx_lld(prefix, lld) elog_fmt("%s%lld", prefix, lld)
+#define elog_pfx_p(prefix, p)     elog_fmt("%s%p",  prefix, p)
+#define elog_pfx_lu(prefix, lu)   elog_fmt("%s%lu",  prefix, lu)
+#define elog_pfx_ld(prefix, ld)   elog_fmt("%s%ld",  prefix, ld)
 
-ELOGDEF void elog_llu(unsigned long long val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%llu\n", val);
-    fflush(ELOG_TARGET);
-}
-
-ELOGDEF void elog_lld(long long val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%lld\n", val);
-    fflush(ELOG_TARGET);
-}
-
-ELOGDEF void elog_p(const void* p)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%p\n", p);
-    fflush(ELOG_TARGET);
-}
-
-ELOGDEF void elog_lu(unsigned long val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%lu\n", val);
-    fflush(ELOG_TARGET);
-}
-
-ELOGDEF void elog_ld(long val)
-{
-    fprintf(ELOG_TARGET, ELOG_TAG "%ld\n", val);
-    fflush(ELOG_TARGET);
-}
+#define elog_bytes_as_kib(bytes) do { elog_f((bytes)*0.0009765625); } while (0)
+#define elog_bytes_as_mib(bytes) do { elog_f((bytes)*9.5367431640625e-7); } while (0)
+#define elog_bytes_as_gib(bytes) do { elog_f((bytes)*9.3132257461548e-10); } while (0)
 
 ELOGDEF void elog_abort(const char* str)
 {
@@ -673,11 +651,7 @@ ELOGDEF void elog_abort(const char* str)
     abort();
 }
 
-#define elog_bytes_as_kib(bytes) do { elog_f((bytes)*0.0009765625); } while (0)
-#define elog_bytes_as_mib(bytes) do { elog_f((bytes)*9.5367431640625e-7); } while (0)
-#define elog_bytes_as_gib(bytes) do { elog_f((bytes)*9.3132257461548e-10); } while (0)
-
-// TODO: windows compatible time funcs.
+// TODO: windows compatible time functions.
 ELOGDEF double elog_time_sec(void)
 {
     struct timespec ts;
