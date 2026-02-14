@@ -16,6 +16,7 @@
 #include "obj_loader.h"
 #include "lamath.h"
 #include "common/arena.h"
+#include "common/str.h"
 #include "common/types.h"
 
 // VERY IMPORTANT TODOS //
