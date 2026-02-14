@@ -203,14 +203,22 @@ typedef struct {
     Arenka arena_obj_loading;
     Arenka arena_scratch;
 
+    string8 player_pos;
+    string8 player_orient;
     string8 time_fps;
     string8 time_dt;   
 } ProgramContext;
 
-internal void update_timing_strings(ProgramContext* ctx, u32 frames, f64 delta_time)
+internal inline void update_timing_strings(ProgramContext* ctx, u32 frames, f64 delta_time)
 {
     ctx->time_fps = str8_fmt(&ctx->arena_scratch, "FPS: %d", frames);
     ctx->time_dt = str8_fmt(&ctx->arena_scratch, "DELTA TIME: %f", delta_time);
+}
+
+internal inline void update_camera_info_strings(ProgramContext* ctx)
+{
+    ctx->player_pos = str8_fmt(&ctx->arena_scratch,"[CAMERA POS] X: %f, Y: %f, Z: %f", ctx->camera.pos.x, ctx->camera.pos.y, ctx->camera.pos.z);
+    ctx->player_orient = str8_fmt(&ctx->arena_scratch,"[CAMERA DIR] X: %f, Y: %f, Z: %f", ctx->camera.orientation.x, ctx->camera.orientation.y, ctx->camera.orientation.z); 
 }
 
 global ProgramContext program_ctx;
@@ -356,18 +364,10 @@ int main(void)
         prev_time = curr_time;
         frames++;
         if (curr_time - prev_frame_time >= 1.0) {
-            string8 str_fps = str8_fmt(&program_ctx.arena_scratch, "[FPS: %d | DELTA TIME: %f]", frames, delta_time);
-            string8 str_cam_pos = str8_fmt(&program_ctx.arena_scratch,"[CAMERA POS] X: %f, Y: %f, Z: %f", program_ctx.camera.pos.x, program_ctx.camera.pos.y, program_ctx.camera.pos.z);
-            string8 str_cam_dir = str8_fmt(&program_ctx.arena_scratch,"[CAMERA DIR] X: %f, Y: %f, Z: %f", program_ctx.camera.orientation.x, program_ctx.camera.orientation.y, program_ctx.camera.orientation.z); 
-#if 0
-            str8_print(str_fps);
-            str8_print(str_cam_pos);
-            str8_print(str_cam_dir);
-#endif
+            update_timing_strings(&program_ctx, frames, delta_time);
             frames = 0;
             prev_frame_time = curr_time;
         }
-        r_draw_text(&renderer_ctx, 0.0f, 0.0f, "Clonecraft v0.01");
 
         // HANDLE INPUT
         processInput(window);
@@ -386,6 +386,7 @@ int main(void)
 
         // RENDER START
         r_begin_frame(&renderer_ctx);
+        r_draw_text(&renderer_ctx, 0.0f, 0.0f, "CLONECRAFT V0.01");
 
         r_draw_skybox(&renderer_ctx, program_ctx.texture_skybox);        
 

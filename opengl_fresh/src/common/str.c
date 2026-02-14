@@ -18,7 +18,7 @@ void str8_print(string8 str)
 
 string8 str8_fmt(Arenka* arena, char* fmt, ...)
 {
-    enum {BUFFER_SIZE = 1024};
+    enum {BUFFER_SIZE = 2048};
     u8 buf[BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);
