@@ -74,6 +74,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     last_x = xpos;
     last_y = ypos;
 }
+
+
+
 // END PLATFORM ////////////////////////////////////////
 
 typedef enum {
@@ -189,6 +192,7 @@ void update_camera_input(Camerka* camera)
     }
 }
 
+
 typedef struct {
     Fontek font;
     Texture texture_font;
@@ -198,7 +202,15 @@ typedef struct {
     Camerka camera;
     Arenka arena_obj_loading;
     Arenka arena_scratch;
+
+    string8 time_fps;
+    string8 time_dt;   
 } ProgramContext;
+
+internal void make_timing_strings(ProgramContext* ctx)
+{
+//frames, delta_time
+}
 
 global ProgramContext program_ctx;
 global RendererContext renderer_ctx;
@@ -331,8 +343,8 @@ int main(void)
     gl_enable_depth_test();
     gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
 
-    unsigned int frames = 0;
-    double delta_time;
+    u32 frames = 0;
+    f64 delta_time;
     double curr_time;
     double prev_time = glfwGetTime();
     double prev_frame_time = prev_time;
@@ -343,13 +355,17 @@ int main(void)
         prev_time = curr_time;
         frames++;
         if (curr_time - prev_frame_time >= 1.0) {
-            log_print_n_flush("[FPS: %d | DELTA TIME: %f]\n", frames, delta_time);
-            log_print_n_flush("[CAMERA POS] X: %f, Y: %f, Z: %f\n", program_ctx.camera.pos.x, program_ctx.camera.pos.y, program_ctx.camera.pos.z);
-            log_print_n_flush("[CAMERA DIR] X: %f, Y: %f, Z: %f\n", program_ctx.camera.orientation.x, program_ctx.camera.orientation.y, program_ctx.camera.orientation.z);
+            string8 str_fps = str8_fmt(&program_ctx.arena_scratch, "[FPS: %d | DELTA TIME: %f]", frames, delta_time);
+            string8 str_cam_pos = str8_fmt(&program_ctx.arena_scratch,"[CAMERA POS] X: %f, Y: %f, Z: %f", program_ctx.camera.pos.x, program_ctx.camera.pos.y, program_ctx.camera.pos.z);
+            string8 str_cam_dir = str8_fmt(&program_ctx.arena_scratch,"[CAMERA DIR] X: %f, Y: %f, Z: %f", program_ctx.camera.orientation.x, program_ctx.camera.orientation.y, program_ctx.camera.orientation.z); 
+#if 0
+            str8_print(str_fps);
+            str8_print(str_cam_pos);
+            str8_print(str_cam_dir);
+#endif
             frames = 0;
             prev_frame_time = curr_time;
         }
-
         r_draw_text(&renderer_ctx, 0.0f, 0.0f, "Clonecraft v0.01");
 
         // HANDLE INPUT

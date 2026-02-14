@@ -15,5 +15,6 @@ void str8_print(string8 str);
 string8 str8_fmt(Arenka* arena, char* fmt, ...);
 
 #define str8_lit(str) str8((u8*)(str), sizeof(str) - 1)
+#define STR8_NULL (string8){NULL, 0};
 
 #endif /* STR_H_ */
