@@ -394,8 +394,6 @@ int main(void)
         r_draw_text_str8(&renderer_ctx, 0.0f, 108.0f, program_ctx.player_pos); 
         r_draw_text_str8(&renderer_ctx, 0.0f, 144.0f, program_ctx.player_orient); 
 
-        //r_draw_text(&renderer_ctx, 0.0f, 36.0f, "Eterek sweterek");
-
         r_draw_skybox(&renderer_ctx, program_ctx.texture_skybox);        
 
         // ground
