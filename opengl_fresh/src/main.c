@@ -207,9 +207,10 @@ typedef struct {
     string8 time_dt;   
 } ProgramContext;
 
-internal void make_timing_strings(ProgramContext* ctx)
+internal void update_timing_strings(ProgramContext* ctx, u32 frames, f64 delta_time)
 {
-//frames, delta_time
+    ctx->time_fps = str8_fmt(&ctx->arena_scratch, "FPS: %d", frames);
+    ctx->time_dt = str8_fmt(&ctx->arena_scratch, "DELTA TIME: %f", delta_time);
 }
 
 global ProgramContext program_ctx;
