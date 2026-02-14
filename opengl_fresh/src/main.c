@@ -373,6 +373,8 @@ int main(void)
         processInput(window);
         update_camera_input(&program_ctx.camera);
 
+        update_camera_info_strings(&program_ctx);
+
         // UPDATE VIEW MATRICES.
         matf4x4 view = camerka_view_matrix(&program_ctx.camera); // you can use shader uniforms that can be shared across multiple shaders.
         shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.view, &view.col1.x);
@@ -386,7 +388,13 @@ int main(void)
 
         // RENDER START
         r_begin_frame(&renderer_ctx);
-        r_draw_text(&renderer_ctx, 0.0f, 0.0f, "CLONECRAFT V0.01");
+        r_draw_text_str8(&renderer_ctx, 0.0f, 0.0f, str8_lit("CLONECRAFT V0.001")); 
+        r_draw_text_str8(&renderer_ctx, 0.0f, 36.0f, program_ctx.time_fps); 
+        r_draw_text_str8(&renderer_ctx, 0.0f, 72.0f, program_ctx.time_dt); 
+        r_draw_text_str8(&renderer_ctx, 0.0f, 108.0f, program_ctx.player_pos); 
+        r_draw_text_str8(&renderer_ctx, 0.0f, 144.0f, program_ctx.player_orient); 
+
+        //r_draw_text(&renderer_ctx, 0.0f, 36.0f, "Eterek sweterek");
 
         r_draw_skybox(&renderer_ctx, program_ctx.texture_skybox);        
 
