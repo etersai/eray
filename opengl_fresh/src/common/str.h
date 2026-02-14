@@ -3,11 +3,17 @@
 
 #include "types.h"
 
+typedef struct Arenka Arenka; 
+
 typedef struct {
-    u8 *str;    
+    u8* bytes;    
     u64 size;
 } string8;
 
-#define str8_lit(S) str8((U8*)(S), sizeof(S) - 1)
+string8 str8(u8* str, u64 size);
+void str8_print(string8 str);
+string8 str8_fmt(Arenka* arena, char* fmt, ...);
+
+#define str8_lit(str) str8((u8*)(str), sizeof(str) - 1)
 
 #endif /* STR_H_ */

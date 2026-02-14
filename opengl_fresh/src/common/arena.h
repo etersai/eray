@@ -9,7 +9,7 @@
 #define MB(val) ((val)*1024*1024)
 #define GB(val) ((val)*1024*1024*1024) 
 
-typedef struct {
+typedef struct Arenka {
     unsigned char* addr_start;
     size_t         offset;
     size_t         capacity;
