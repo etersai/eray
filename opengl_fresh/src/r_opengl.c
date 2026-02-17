@@ -6,6 +6,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+GpuMeshIndexed gpu_load_mesh_indexed(const float* v, const unsigned int* i, size_t v_size, size_t i_size, VertexLayout layout)
+{
+
+}
+
+GpuMeshSimple gpu_load_mesh_simple(const float* v, const unsigned int* i, size_t v_size, size_t i_size, VertexLayout layout)
+{
+
+}
+
 GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
 {
     GLuint VBO_ID;
