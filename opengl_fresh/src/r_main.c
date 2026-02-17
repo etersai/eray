@@ -51,6 +51,11 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
     glDrawElements(GL_TRIANGLES, r->mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 }
 
+void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture)
+{
+    
+}
+
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
 {
     shader_prog_use(r->shader_basic_3d.prog);

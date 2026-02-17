@@ -85,6 +85,7 @@ void r_flush_text(RendererContext* r);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);
+void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture);
 void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, Colorek light_color);
 void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform, Colorek color);
 int r_renderer_init(RendererContext* r);
