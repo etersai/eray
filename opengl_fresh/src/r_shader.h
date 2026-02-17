@@ -17,5 +17,6 @@ void shader_set_vec3(ShaderProgram program, uniform uniform, const float* vec3);
 void shader_set_vec4(ShaderProgram program, uniform uniform, const float* vec4);
 void shader_set_3fv(ShaderProgram program, uniform uniform, int count, const float* fv);
 void shader_set_mat4(ShaderProgram program, uniform unifrom, const float* matrix);
+void shader_set_float(ShaderProgram program, uniform uniform, const float f);
 
 #endif /* ERAY_SHADER_H_ */

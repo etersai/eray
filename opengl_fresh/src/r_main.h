@@ -46,6 +46,7 @@ typedef struct {
     uniform projection;
     uniform object_color;
     uniform light_color;
+    uniform ambient_strength;
 } ShaderLighting;
 
 typedef struct {

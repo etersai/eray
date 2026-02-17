@@ -207,6 +207,8 @@ typedef struct {
     string8 player_orient;
     string8 time_fps;
     string8 time_dt;   
+
+    f32 ambient_light_strength;
 } ProgramContext;
 
 internal inline void update_timing_strings(ProgramContext* ctx, u32 frames, f64 delta_time)
@@ -350,10 +352,15 @@ int main(void)
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
 
-
     // GL CALLS BUT WRAPPED 
     gl_enable_depth_test();
     gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
+
+    // "should i put it here?" section
+    program_ctx.ambient_light_strength = 0.1f;
+    shader_set_float(renderer_ctx.shader_lighting.prog,
+                     renderer_ctx.shader_lighting.ambient_strength,
+                     program_ctx.ambient_light_strength);
 
     u32 frames = 0;
     f64 delta_time;
@@ -372,6 +379,7 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
+        program_ctx.ambient_light_strength = 1.0f;
         // HANDLE INPUT
         processInput(window);
         update_camera_input(&program_ctx.camera);
@@ -410,11 +418,11 @@ int main(void)
 
         // LIGHT FIRST CONTACT
         matf4x4 bulb_trans = lamath_create_transform((vecf3){4.0f, 2.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
-        Colorek bulb_color = (Colorek){0.0f, 1.0f, 0.0f, 1.0f};
+        Colorek bulb_color = (Colorek){1.0f, 1.0f, 1.0f, 1.0f};
         r_draw_cube(&renderer_ctx, &bulb_trans, bulb_color);
 
         matf4x4 receiver_trans = lamath_create_transform((vecf3){6.0f, 3.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
-        Colorek receiver_color = (Colorek){1.0f, 0.5f, 0.31f, 1.0f}; // NOTE colore 4 components shader set vec3 inside func.
+        Colorek receiver_color = (Colorek){0.5f, 1.0f, 0.3f, 1.0f}; // NOTE colore 4 components shader set vec3 inside func.
         r_draw_cube_light_receiver(&renderer_ctx, &receiver_trans, receiver_color, bulb_color);
 
         // teapot
