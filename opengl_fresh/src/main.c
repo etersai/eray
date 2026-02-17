@@ -220,8 +220,8 @@ internal inline void update_timing_strings(ProgramContext* ctx, u32 frames, f64 
 
 internal inline void update_camera_info_strings(ProgramContext* ctx)
 {
-    ctx->player_pos = str8_fmt(&ctx->arena_scratch,"[CAMERA POS] X: %f, Y: %f, Z: %f", ctx->camera.pos.x, ctx->camera.pos.y, ctx->camera.pos.z);
-    ctx->player_orient = str8_fmt(&ctx->arena_scratch,"[CAMERA DIR] X: %f, Y: %f, Z: %f", ctx->camera.orientation.x, ctx->camera.orientation.y, ctx->camera.orientation.z); 
+    ctx->player_pos = str8_fmt(&ctx->arena_scratch,"[CAMERA POS] X: %.3f, Y: %.3f, Z: %.3f", ctx->camera.pos.x, ctx->camera.pos.y, ctx->camera.pos.z);
+    ctx->player_orient = str8_fmt(&ctx->arena_scratch,"[CAMERA DIR] X: %.3f, Y: %.3f, Z: %.3f", ctx->camera.orientation.x, ctx->camera.orientation.y, ctx->camera.orientation.z); 
 }
 
 global ProgramContext program_ctx;
@@ -325,7 +325,7 @@ int main(void)
             obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int), VERTEX_LAYOUT_POS);
 
     
-    if (r_renderer_init(&renderer_ctx) != 0) {
+    if (r_renderer_init(&renderer_ctx, SCR_WIDTH, SCR_HEIGHT) != 0) {
         elog_abort("Renderer initialization failed!");
     }
     r_set_font(&renderer_ctx, &program_ctx.font);
