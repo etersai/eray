@@ -27,6 +27,8 @@
 
 const char* glsl_basic_3d_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec3 aNorm;\n"
+    "layout (location = 2) in vec2 aTex;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
