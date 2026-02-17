@@ -6,14 +6,94 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#define GPU_MESH_INDEXED_NULL (GpuMeshIndexed){0, 0, 0, 0}
+#define GPU_MESH_SIMPLE_NULL (GpuMeshSimple){0, 0, 0}
+
 GpuMeshIndexed gpu_load_mesh_indexed(const float* v, const unsigned int* i, size_t v_size, size_t i_size, VertexLayout layout)
 {
+    GLuint VAO;
+    GLuint VBO;
+    GLuint EBO;
 
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
+    // and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, v_size, v, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, i_size, i, GL_STATIC_DRAW);
+    
+    switch (layout)
+    {
+    case VERTEX_LAYOUT_POS_TEX: // quad tex
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+    break;
+    case VERTEX_LAYOUT_POS_COLOR: // anchor
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+    break;
+    case VERTEX_LAYOUT_POS_NORM_TEX: // cube full pos/norm/tex
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 3));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 6));
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+    break;
+    case VERTEX_LAYOUT_CUBE_POS: // cube only pos
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+    break;
+    case VERTEX_LAYOUT_POS: // teapot
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+    break;
+    default:
+        return GPU_MESH_INDEXED_NULL;
+    break;
+    }
+
+    // this is unnecesary but for now i leave it.
+    // glBindVertexArray(0); 
+    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return (GpuMeshIndexed){VAO, VBO, EBO, i_size/sizeof(unsigned int)};
 }
 
-GpuMeshSimple gpu_load_mesh_simple(const float* v, const unsigned int* i, size_t v_size, size_t i_size, VertexLayout layout)
+GpuMeshSimple gpu_load_mesh_simple(const float* v, size_t v_size)
 {
+    GLuint VBO;
+    GLuint VAO;
 
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
+    // and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, v_size, v, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
+    // the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO,
+    // but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally
+    // don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    glBindVertexArray(0); 
+    
+    return (GpuMeshSimple){VAO, VBO, v_size/(sizeof(float)*3)};
 }
 
 GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes)
@@ -68,183 +148,6 @@ void* gpu_p_mapped_buffer_write(GpuPMappedBuffer* buffer, size_t offset_in_bytes
     assert(buffer->VBO != 0); 
     assert(offset_in_bytes+size_in_bytes <= buffer->size_in_bytes);
     return memcpy(buffer->mem_start+offset_in_bytes, source, size_in_bytes);
-}
-
-GpuMeshIndexed gpu_load_mesh_anchor(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // this is unnecesary but for now i leave it.
-    // glBindVertexArray(0); 
-    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-GpuMeshIndexed gpu_load_mesh_teapot(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // this is unnecesary but for now i leave it.
-    glBindVertexArray(0); 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-
-GpuMeshIndexed gpu_load_mesh_quad(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-GpuMeshIndexed gpu_load_mesh_3attr(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 3));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 6));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-    // this is unnecesary but for now i leave it.
-    // glBindVertexArray(0); 
-    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-GpuMeshIndexed gpu_load_mesh_cube_only_pos(const float* vertices, const unsigned int* indices, size_t vertices_size, size_t indices_size)
-{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // this is unnecesary but for now i leave it.
-    // glBindVertexArray(0); 
-    // glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    return (GpuMeshIndexed){VAO, VBO, EBO, indices_size/sizeof(unsigned int)};
-}
-
-
-
-GpuMeshSimple gpu_load_mesh_simple_1attr(const float* vertices, size_t vertices_size)
-{
-    GLuint VBO;
-    GLuint VAO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as 
-    // the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO,
-    // but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally
-    // don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0); 
-    
-    return (GpuMeshSimple){VAO, VBO, vertices_size/(sizeof(float)*3)};
 }
 
 void gpu_delete_mesh_indexed(GpuMeshIndexed mesh_indexed)

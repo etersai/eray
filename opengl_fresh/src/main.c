@@ -312,8 +312,8 @@ int main(void)
          abort();
     }
 
-    program_ctx.mesh_teapot = gpu_load_mesh_teapot(obj_teapot->vertices, obj_teapot->indices, 
-            obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int)); 
+    program_ctx.mesh_teapot = gpu_load_mesh_indexed(obj_teapot->vertices, obj_teapot->indices, 
+            obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int), VERTEX_LAYOUT_POS);
 
     
     if (r_renderer_init(&renderer_ctx) != 0) {

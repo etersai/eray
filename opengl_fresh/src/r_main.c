@@ -129,10 +129,10 @@ int r_renderer_init(RendererContext* r)
 
     /////////
     // Mesh
-    r->mesh_quad = gpu_load_mesh_quad(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices));
-    r->mesh_anchor = gpu_load_mesh_anchor(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices));
-    r->mesh_skybox = gpu_load_mesh_simple_1attr(skybox_vertices, sizeof(skybox_vertices));
-    r->mesh_cube = gpu_load_mesh_cube_only_pos(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices));
+    r->mesh_skybox = gpu_load_mesh_simple(skybox_vertices, sizeof(skybox_vertices));
+    r->mesh_quad = gpu_load_mesh_indexed(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices), VERTEX_LAYOUT_POS_TEX);
+    r->mesh_anchor = gpu_load_mesh_indexed(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices), VERTEX_LAYOUT_POS_COLOR);
+    r->mesh_cube = gpu_load_mesh_indexed(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices), VERTEX_LAYOUT_CUBE_POS);
 
     ///////////////////
     // Text rendering 
