@@ -197,6 +197,7 @@ typedef struct {
     Fontek font;
     Texture texture_font;
     Texture texture_grass;
+    Texture texture_crosshair;
     TextureCubemap texture_skybox;
     GpuMeshIndexed mesh_teapot;
     Camerka camera;
@@ -276,6 +277,7 @@ int main(void)
     const char* path_teapot = "./assets/models/teapot.obj";
     const char* path_grass = "./assets/textures/grass.jpg";
     const char* path_font = "./assets/textures/font.png";
+    const char* path_crosshair = "./assets/textures/crosshair.png";
     const char* paths_cubemap[] = {  
         "./assets/skybox/right.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_X
         "./assets/skybox/left.jpg",   // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
@@ -284,10 +286,12 @@ int main(void)
         "./assets/skybox/front.jpg",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
         "./assets/skybox/back.jpg"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     }; 
-
+    
+    // I don't deleteTextures.
     program_ctx.texture_grass = texture_load_from_path(path_grass);
     program_ctx.texture_font = texture_load_from_path(path_font); 
     program_ctx.texture_skybox = texture_cubemap_create_from_paths(paths_cubemap);
+    program_ctx.texture_crosshair = texture_load_from_path(path_crosshair);
 
     if (!gl_texture_valid(program_ctx.texture_grass)) {
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_grass);
@@ -297,10 +301,15 @@ int main(void)
         log_print_prefix("asset_load_error", "failed to load '%s'\n", path_font);
         abort();
     }
+    if (!gl_texture_valid(program_ctx.texture_crosshair)) {
+        log_print_prefix("asset_load_error", "failed to load '%s'\n", path_crosshair);
+        abort();
+    }
     if (!gl_texture_valid(program_ctx.texture_skybox)) {
         log_print_prefix("asset_load_error", "failed to load cubemap/skybox\n");
         abort();
     }
+
 
     // font
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  

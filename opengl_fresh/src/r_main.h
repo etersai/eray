@@ -74,21 +74,27 @@ typedef struct {
     float            text_cpu_buffer[TEXT_MAX_GLYPHS*TEXT_FLOATS_PER_GLYPH]; 
     GpuPMappedBuffer text_gpu_buffer;                           
     unsigned int     text_fv_count; 
+
+    int              viewport_width;
+    int              viewport_height;
 } RendererContext;
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
 void r_begin_frame(RendererContext* r);
+
 void r_draw_text(RendererContext* r, float x, float y, const char* text);
 void r_draw_text_str8(RendererContext* r, float x, float y, string8 str);
 void r_flush_text(RendererContext* r);
+
+void r_draw_quad(RendererContext* r, float x, float y, Texture texture);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);
-void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture);
+void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture); // <= shell of a function
 void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, Colorek light_color);
 void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform, Colorek color);
-int r_renderer_init(RendererContext* r);
+int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height);
 void r_set_font(RendererContext* r, Fontek* font);
 void r_renderer_shutdown(RendererContext* r);
 

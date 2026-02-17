@@ -51,6 +51,18 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
     glDrawElements(GL_TRIANGLES, r->mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 }
 
+void r_draw_quad(RendererContext* r, float x, float y, Texture texture)
+{
+     // remap
+    float norm_x = x/1920; // hacky
+    float norm_y = y/1080; // wacky
+    float ndc_x = norm_x * 2 - 1;
+    float ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
+    
+     
+
+}
+
 void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture)
 {
     
@@ -75,9 +87,17 @@ void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Co
     glDrawElements(GL_TRIANGLES, r->mesh_cube.index_count, GL_UNSIGNED_INT, 0);
 }
 
-int r_renderer_init(RendererContext* r)
+int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height)
 {
     assert(r);
+    assert(viewport_width > 0);
+    assert(viewport_height > 0);
+
+    r->viewport_width = viewport_width;
+    r->viewport_height = viewport_height;
+
+    elog_d(r->viewport_width);
+    elog_d(r->viewport_height);
     
     /////////////
     // SHADERS 
