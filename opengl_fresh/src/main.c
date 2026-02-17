@@ -379,7 +379,6 @@ int main(void)
             prev_frame_time = curr_time;
         }
 
-        program_ctx.ambient_light_strength = 1.0f;
         // HANDLE INPUT
         processInput(window);
         update_camera_input(&program_ctx.camera);
