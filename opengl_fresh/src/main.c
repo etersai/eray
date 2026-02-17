@@ -364,6 +364,7 @@ int main(void)
 
     program_ctx.time_fps = str8_lit("FPS:");
     program_ctx.time_dt = str8_lit("DELTA TIME:");
+    // End section
 
     u32 frames = 0;
     f64 delta_time;
