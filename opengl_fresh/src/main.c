@@ -362,6 +362,9 @@ int main(void)
                      renderer_ctx.shader_lighting.ambient_strength,
                      program_ctx.ambient_light_strength);
 
+    program_ctx.time_fps = str8_lit("FPS:");
+    program_ctx.time_dt = str8_lit("DELTA TIME:");
+
     u32 frames = 0;
     f64 delta_time;
     double curr_time;
