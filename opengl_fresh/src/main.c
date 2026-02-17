@@ -410,7 +410,7 @@ int main(void)
 
         // LIGHT FIRST CONTACT
         matf4x4 bulb_trans = lamath_create_transform((vecf3){4.0f, 2.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
-        Colorek bulb_color = (Colorek){1.0f, 1.0f, 1.0f, 1.0f};
+        Colorek bulb_color = (Colorek){0.0f, 1.0f, 0.0f, 1.0f};
         r_draw_cube(&renderer_ctx, &bulb_trans, bulb_color);
 
         matf4x4 receiver_trans = lamath_create_transform((vecf3){6.0f, 3.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
