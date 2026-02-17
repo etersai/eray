@@ -65,6 +65,7 @@ typedef struct {
 
     GpuMeshIndexed mesh_quad;
     GpuMeshIndexed mesh_cube;
+    GpuMeshIndexed mesh_block; // cube [pos|norm|tex]
     GpuMeshIndexed mesh_anchor;
     GpuMeshSimple  mesh_skybox; // -1 to 1 cube at (0,0,0) [36 vertices, only pos]
                                 

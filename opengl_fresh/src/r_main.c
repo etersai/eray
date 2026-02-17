@@ -133,6 +133,7 @@ int r_renderer_init(RendererContext* r)
     r->mesh_quad = gpu_load_mesh_indexed(quad_vertices, quad_indices, sizeof(quad_vertices), sizeof(quad_indices), VERTEX_LAYOUT_POS_TEX);
     r->mesh_anchor = gpu_load_mesh_indexed(anchor_vertices, anchor_indices, sizeof(anchor_vertices), sizeof(anchor_indices), VERTEX_LAYOUT_POS_COLOR);
     r->mesh_cube = gpu_load_mesh_indexed(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices), VERTEX_LAYOUT_CUBE_POS);
+    r->mesh_block = gpu_load_mesh_indexed(cube_vertices, cube_indices, sizeof(cube_vertices), sizeof(cube_indices), VERTEX_LAYOUT_POS_NORM_TEX);
 
     ///////////////////
     // Text rendering 
@@ -158,6 +159,7 @@ void r_renderer_shutdown(RendererContext* r)
     gpu_delete_mesh_indexed(r->mesh_quad); 
     gpu_delete_mesh_indexed(r->mesh_cube); 
     gpu_delete_mesh_indexed(r->mesh_anchor); 
+    gpu_delete_mesh_indexed(r->mesh_block);
     gpu_delete_mesh_simple(r->mesh_skybox); 
 }
 
