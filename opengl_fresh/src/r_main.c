@@ -60,6 +60,16 @@ void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
     glDrawElements(GL_TRIANGLES, r->mesh_cube.index_count, GL_UNSIGNED_INT, 0);
 }
 
+void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, Colorek light_color)
+{
+    shader_prog_use(r->shader_lighting.prog);
+    shader_set_mat4(r->shader_lighting.prog, r->shader_lighting.model, &transform->col1.x);
+    shader_set_vec3(r->shader_lighting.prog, r->shader_lighting.object_color, &color.r);
+    shader_set_vec3(r->shader_lighting.prog, r->shader_lighting.light_color, &light_color.r);
+    glBindVertexArray(r->mesh_cube.VAO);
+    glDrawElements(GL_TRIANGLES, r->mesh_cube.index_count, GL_UNSIGNED_INT, 0);
+}
+
 int r_renderer_init(RendererContext* r)
 {
     assert(r);

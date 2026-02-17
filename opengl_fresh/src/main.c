@@ -345,10 +345,13 @@ int main(void)
     float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.projection, &projection.col1.x);
+    shader_set_mat4(renderer_ctx.shader_lighting.prog, renderer_ctx.shader_lighting.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
 
+
+    // GL CALLS BUT WRAPPED 
     gl_enable_depth_test();
     gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
 
@@ -378,6 +381,7 @@ int main(void)
         // UPDATE VIEW MATRICES.
         matf4x4 view = camerka_view_matrix(&program_ctx.camera); // you can use shader uniforms that can be shared across multiple shaders.
         shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.view, &view.col1.x);
+        shader_set_mat4(renderer_ctx.shader_lighting.prog, renderer_ctx.shader_lighting.view, &view.col1.x);
         shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.view, &view.col1.x);
         shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.view, &view.col1.x);
         matf4x4 view_no_translation = view;
@@ -404,8 +408,14 @@ int main(void)
 
         r_draw_anchor(&renderer_ctx, &transform_anchor);
 
-        matf4x4 cube_trans = lamath_create_transform((vecf3){4.0f, 2.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
-        r_draw_cube(&renderer_ctx, &cube_trans, (Colorek){1.0f, 1.0f, 0.31f, 1.0f});
+        // LIGHT FIRST CONTACT
+        matf4x4 bulb_trans = lamath_create_transform((vecf3){4.0f, 2.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
+        Colorek bulb_color = (Colorek){1.0f, 1.0f, 1.0f, 1.0f};
+        r_draw_cube(&renderer_ctx, &bulb_trans, bulb_color);
+
+        matf4x4 receiver_trans = lamath_create_transform((vecf3){6.0f, 3.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
+        Colorek receiver_color = (Colorek){1.0f, 0.5f, 0.31f, 1.0f}; // NOTE colore 4 components shader set vec3 inside func.
+        r_draw_cube_light_receiver(&renderer_ctx, &receiver_trans, receiver_color, bulb_color);
 
         // teapot
         local_persist float rotacja = 0.0f;
