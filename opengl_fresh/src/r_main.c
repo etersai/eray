@@ -54,8 +54,8 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
 void r_draw_quad(RendererContext* r, float x, float y, Texture texture)
 {
      // remap
-    float norm_x = x/1920; // hacky
-    float norm_y = y/1080; // wacky
+    float norm_x = x/r->viewport_width; // hacky
+    float norm_y = y/r->viewport_height; // wacky
     float ndc_x = norm_x * 2 - 1;
     float ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
@@ -96,9 +96,6 @@ int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height)
     r->viewport_width = viewport_width;
     r->viewport_height = viewport_height;
 
-    elog_d(r->viewport_width);
-    elog_d(r->viewport_height);
-    
     /////////////
     // SHADERS 
     // basic 3d
@@ -208,8 +205,8 @@ void r_draw_text_str8(RendererContext* r, float x, float y, string8 str)
     assert(r->text_font);
 
     // remap
-    float norm_x = x/1920; // hacky
-    float norm_y = y/1080; // wacky
+    float norm_x = x/r->viewport_width; // hacky
+    float norm_y = y/r->viewport_height; // wacky
     float start_ndc_x = norm_x * 2 - 1;
     float start_ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
  
@@ -228,8 +225,8 @@ void r_draw_text_str8(RendererContext* r, float x, float y, string8 str)
         float uv_x = (float)character.x/r->text_font->texture.width;
         float uv_y = (float)character.y/r->text_font->texture.height;
 
-        float char_width_norm = 2*((float)character.width / 1920); // hacky
-        float char_height_norm = 2*((float)character.height / 1080); // wacky
+        float char_width_norm = 2*((float)character.width / r->viewport_width); // hacky
+        float char_height_norm = 2*((float)character.height / r->viewport_height); // wacky
 
         // Generate 2 triangles 
         // box top left. 0
