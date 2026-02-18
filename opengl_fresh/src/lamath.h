@@ -218,25 +218,13 @@ static inline void lamath_orthographic_matrix(matf4x4* m, float l, float r, floa
 {
     matf4x4 ortho = {0};
 
-    ortho.col1.x = 2/(r-l);
-    ortho.col1.y = 0;
-    ortho.col1.z = 0;
-    ortho.col1.w = 0;
-
-    ortho.col2.x = 0;
-    ortho.col2.y = 2/(t-b);
-    ortho.col2.w = 0;
-    ortho.col2.z = 0;
-
-    ortho.col3.x = 0;
-    ortho.col3.y = 0;
-    ortho.col3.z = -2/(far-near);
-    ortho.col3.w = 0;
-
-    ortho.col4.x = -r-l/r-l;
-    ortho.col4.y = -t-b/t-b;
-    ortho.col4.z = -far-near/far-near;
-    ortho.col4.w = 1;
+    ortho.col1.x = 2.0f/(r-l);
+    ortho.col2.y = 2.0f/(t-b);
+    ortho.col3.z = -2.0f/(far-near);
+    ortho.col4.x = -(r-l)/r-l;
+    ortho.col4.y = -(t-b)/t-b;
+    ortho.col4.z = -(far-near)/far-near;
+    ortho.col4.w = 1.0f;
 
     *m = ortho;
 }

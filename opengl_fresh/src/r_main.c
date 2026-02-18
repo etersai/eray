@@ -58,8 +58,6 @@ void r_draw_quad(RendererContext* r, float x, float y, Texture texture)
     float norm_y = y/r->viewport_height; // wacky
     float ndc_x = norm_x * 2 - 1;
     float ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
-    
-
 }
 
 void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture)
