@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <iso646.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -364,6 +365,7 @@ int main(void)
 
     matf4x4 ortho;
     lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
+    shader_set_mat4(renderer_ctx.shader_basic_2d.prog, renderer_ctx.shader_basic_2d.projection, &ortho.col1.x);
 
     // GL CALLS BUT WRAPPED 
     gl_enable_depth_test();
