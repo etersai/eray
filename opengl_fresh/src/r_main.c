@@ -9,6 +9,7 @@
 #include "common/str.h"
 #include <stdbool.h>
 #include <assert.h>
+#include <stdlib.h>
 
 // kinda sus.
 internal void shader_basic_get_mvp_uniform_locations(ShaderBasic* basic, ShaderProgram program);
@@ -52,18 +53,28 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
     glDrawElements(GL_TRIANGLES, r->mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 }
 
-void r_draw_quad(RendererContext* r, float x, float y, Texture texture, Colorek color)
+void r_draw_quad(RendererContext* r, float x, float y, float w, float h, Texture texture, Colorek color)
 {
-    matf4x4 transform = lamath_create_transform((vecf3){x, y, 0.2f}, VECF3_ZERO, (vecf3){1.0f, 1.0f, 1.0f});
-    bool use_tex = gl_texture_valid(texture) ? 1 : 0;     
-    shader_set_boolean(r->shader_basic_2d.prog, r->shader_basic_2d.use_tex, use_tex);
-    shader_set_mat4(r->shader_basic_2d.prog, r->shader_basic_2d.model, &transform.col1.x);
+    shader_prog_use(r->shader_basic_2d.prog); 
     matf4x4 view = matf4x4_I_give();
+    matf4x4 model = lamath_create_transform((vecf3){x, y, 0.0f}, VECF3_ZERO, (vecf3){w, h, 1.0f});
+
+    shader_set_mat4(r->shader_basic_2d.prog, r->shader_basic_2d.model, &model.col1.x);
     shader_set_mat4(r->shader_basic_2d.prog, r->shader_basic_2d.view, &view.col1.x);
 
-    shader_prog_use(r->shader_basic_2d.prog); 
+    shader_set_boolean(r->shader_basic_2d.prog, r->shader_basic_2d.use_tex, 1);
+    shader_set_vec4(r->shader_basic_2d.prog, r->shader_basic_2d.color, (float*)&color);
+
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glBindTexture(GL_TEXTURE_2D, texture.id);
     glBindVertexArray(r->mesh_quad.VAO); 
     glDrawElements(GL_TRIANGLES, r->mesh_quad.index_count, GL_UNSIGNED_INT, 0);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture)

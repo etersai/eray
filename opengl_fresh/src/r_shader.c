@@ -28,46 +28,59 @@ void shade_set_mat4_by_name(ShaderProgram program, const char* name, const float
 
 void shader_set_vec4(ShaderProgram program, uniform uniform, const float* vec4)
 {
+    if (uniform != -1) {
     glUseProgram(program.id);
     glUniform4fv(uniform, 1, vec4);
+    }
 }
 
 void shader_set_boolean(ShaderProgram program, uniform uniform, int boolean)
 {
+    if (uniform != -1) {
     glUseProgram(program.id);
     glUniform1i(uniform, boolean);
+    }
 }
 
 void shader_set_float(ShaderProgram program, uniform uniform, float f)
 {
+    if (uniform != -1) {
     glUseProgram(program.id);
     glUniform1f(uniform, f);
+    }
 }
 
 void shader_set_vec3(ShaderProgram program, uniform uniform, const float* vec3)
 {
+    if (uniform != -1) {
     glUseProgram(program.id);
     glUniform3fv(uniform, 1, vec3);
+    }
 }
 
 uniform shader_get_uniform_location(ShaderProgram program, const char* name)
 {
     glUseProgram(program.id);
     GLint loc = glGetUniformLocation(program.id, name);
+    // not assert just log, return -1 if uniform optimized out!;
     if (loc == -1) { assert(0 && "[SHADER]: Uniform name probably invalid."); }
     return loc;
 }
 
 void shader_set_3fv(ShaderProgram program, uniform uniform, int count, const float* fv)
 {
+    if (uniform != -1) {
     glUseProgram(program.id);
     glUniform3fv(uniform, count, fv);
+    }
 }
 
 void shader_set_mat4(ShaderProgram program, uniform uniform, const float* matrix)
 {
+    if (uniform != -1) {
     glUseProgram(program.id);
     glUniformMatrix4fv(uniform, 1, GL_FALSE, matrix);
+    }
 }
 
 ShaderProgram shader_prog_create_from_memory(const char* vertex_shader_src, const char* fragment_shader_src)

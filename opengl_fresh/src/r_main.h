@@ -97,7 +97,7 @@ void r_draw_text(RendererContext* r, float x, float y, const char* text);
 void r_draw_text_str8(RendererContext* r, float x, float y, string8 str);
 void r_flush_text(RendererContext* r);
 
-void r_draw_quad(RendererContext* r, float x, float y, Texture texture, Colorek color);
+void r_draw_quad(RendererContext* r, float x, float y, float w, float h, Texture texture, Colorek color);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);

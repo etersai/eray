@@ -463,7 +463,7 @@ int main(void)
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
 
         // crosshair
-        r_draw_quad(&renderer_ctx, 300.0f, 300.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 0.0f, 0.0f, 1.0f});
+        r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 16.0f, 16.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
 
         r_flush_text(&renderer_ctx);
 

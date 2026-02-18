@@ -221,9 +221,9 @@ static inline void lamath_orthographic_matrix(matf4x4* m, float l, float r, floa
     ortho.col1.x = 2.0f/(r-l);
     ortho.col2.y = 2.0f/(t-b);
     ortho.col3.z = -2.0f/(far-near);
-    ortho.col4.x = -(r-l)/r-l;
-    ortho.col4.y = -(t-b)/t-b;
-    ortho.col4.z = -(far-near)/far-near;
+    ortho.col4.x = -(r+l)/(r-l);
+    ortho.col4.y = -(t+b)/(t-b);
+    ortho.col4.z = -(far+near)/(far-near);
     ortho.col4.w = 1.0f;
 
     *m = ortho;

@@ -51,10 +51,8 @@ const char* glsl_basic_2d_fs = "#version 460 core\n"
     "out vec4 frag_color;\n"
     "void main()\n"
     "{\n"
-    "   frag_color = color;\n"
+    "   frag_color = (use_tex ? texture(tex, pass_uv) : vec4(1.0)) * color;\n"
     "}\0";
-
-   // "   frag_color = (use_tex ? texture(tex, pass_uv) : vec4(1.0)) * vec4(1.0);\n"
 
 const char* glsl_basic_3d_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
