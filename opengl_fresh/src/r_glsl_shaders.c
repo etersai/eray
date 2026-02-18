@@ -25,6 +25,13 @@
 //     "   final_color = texture(textureSampler, pass_texture_uv) * pass_color;\n"
 //     "}\0";
 
+
+// const char* glsl_basic_2d = "#version 460 core\n"
+//     "layout (location = 0) in vec3 position;\n"
+//     "layout (location = 1) in vec2 uv;\n"
+//     "layout (location = 2) in vec4 color;\n"
+//
+
 const char* glsl_basic_3d_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aNorm;\n"

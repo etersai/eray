@@ -53,13 +53,12 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
 
 void r_draw_quad(RendererContext* r, float x, float y, Texture texture)
 {
-     // remap
+    // remap // viewport to ndc
     float norm_x = x/r->viewport_width; // hacky
     float norm_y = y/r->viewport_height; // wacky
     float ndc_x = norm_x * 2 - 1;
     float ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
     
-     
 
 }
 
