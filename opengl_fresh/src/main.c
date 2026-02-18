@@ -365,6 +365,7 @@ int main(void)
 
     // 2d camera kinda setup.
     matf4x4 ortho;
+
     lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
     shader_set_mat4(renderer_ctx.shader_basic_2d.prog, renderer_ctx.shader_basic_2d.projection, &ortho.col1.x);
     
@@ -463,7 +464,7 @@ int main(void)
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
 
         // crosshair
-        r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 0.0f, 1.0f, 1.0f});
+        r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
 
         r_flush_text(&renderer_ctx);
 

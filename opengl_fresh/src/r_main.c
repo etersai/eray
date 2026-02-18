@@ -56,7 +56,11 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
 void r_draw_quad(RendererContext* r, float x, float y, float w, float h, Texture texture, Colorek color)
 {
     shader_prog_use(r->shader_basic_2d.prog); 
-    matf4x4 view = matf4x4_I_give();
+
+    float cam_x = 0.0f;
+    float cam_y = 0.0f;
+    vecf3 cam_pos = {cam_x, cam_y, 0};
+    matf4x4 view = matf4x4_translate_give((vecf3){-cam_pos.x, -cam_pos.y, 0});
     matf4x4 model = lamath_create_transform((vecf3){x, y, 0.0f}, VECF3_ZERO, (vecf3){w, h, 1.0f});
 
     shader_set_mat4(r->shader_basic_2d.prog, r->shader_basic_2d.model, &model.col1.x);
