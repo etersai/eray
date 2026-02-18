@@ -56,6 +56,7 @@ typedef struct {
 } ShaderSkybox;
 
 typedef struct {
+    ShaderBasic     shader_basic_2d;
     ShaderBasic     shader_basic_3d;
     ShaderBasic     shader_basic_3d_color;
     ShaderBasic     shader_font;

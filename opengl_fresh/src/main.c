@@ -261,6 +261,7 @@ int main(void)
     /* END BOILERPLATE */
     /*******************/
     
+    // GET MEMORY
     program_ctx.arena_scratch = arenka_map(MB(8));
     if (program_ctx.arena_scratch.addr_start == NULL) { 
         elog_abort("Os failed at giving you memory xd");
@@ -360,6 +361,9 @@ int main(void)
     shader_set_mat4(renderer_ctx.shader_basic_3d_color.prog, renderer_ctx.shader_basic_3d_color.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
+
+    matf4x4 ortho;
+    lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
 
     // GL CALLS BUT WRAPPED 
     gl_enable_depth_test();

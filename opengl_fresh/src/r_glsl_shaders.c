@@ -26,11 +26,32 @@
 //     "}\0";
 
 
-// const char* glsl_basic_2d = "#version 460 core\n"
-//     "layout (location = 0) in vec3 position;\n"
-//     "layout (location = 1) in vec2 uv;\n"
-//     "layout (location = 2) in vec4 color;\n"
-//
+const char* glsl_basic_2d_vs = "#version 460 core\n"
+    "layout (location = 0) in vec3 position;\n"
+    "layout (location = 1) in vec2 uv;\n"
+    "layout (location = 2) in vec4 color;\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "out vec4 pass_color;\n"
+    "out vec2 pass_uv;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = projection * view * model * vec4(position, 1.0);\n"
+    "   pass_uv = uv;\n"
+    "   pass_color = color;\n"
+    "}\0";
+
+const char* glsl_basic_2d_fs = "#version 460 core\n"
+    "uniform sampler2D tex;\n"
+    "uniform bool use_tex;\n"
+    "in vec4 pass_color;\n"
+    "in vec2 pass_uv;\n"
+    "out vec4 frag_color;\n"
+    "void main()\n"
+    "{\n"
+    "   frag_color = (use_tex ? texture(tex, pass_uv) : vec4(1.0)) * pass_color;\n"
+    "}\0";
 
 const char* glsl_basic_3d_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"

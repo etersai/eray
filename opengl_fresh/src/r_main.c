@@ -95,6 +95,14 @@ int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height)
 
     /////////////
     // SHADERS 
+
+    // basic 2d
+    r->shader_basic_2d.prog = shader_prog_create_from_memory(glsl_basic_2d_vs, glsl_basic_2d_fs);
+    if (!r_shader_valid(r->shader_basic_2d)) {
+        return 1;
+    }
+    shader_basic_get_mvp_uniform_locations(&r->shader_basic_2d, r->shader_basic_2d.prog);
+
     // basic 3d
     r->shader_basic_3d.prog = shader_prog_create_from_memory(glsl_basic_3d_vs, glsl_basic_3d_fs);
     if (!r_shader_valid(r->shader_basic_3d)) {
@@ -169,6 +177,7 @@ void r_renderer_shutdown(RendererContext* r)
     assert(r);
     gpu_p_mapped_buffer_destroy(&r->text_gpu_buffer);
 
+    shader_prog_delete(r->shader_basic_2d.prog);
     shader_prog_delete(r->shader_basic_3d.prog);
     shader_prog_delete(r->shader_lighting.prog);
     shader_prog_delete(r->shader_skybox.prog);
