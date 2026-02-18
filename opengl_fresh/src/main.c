@@ -363,9 +363,11 @@ int main(void)
     shader_set_mat4(renderer_ctx.shader_instanced.prog, renderer_ctx.shader_instanced.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_skybox.prog, renderer_ctx.shader_skybox.projection, &projection.col1.x);
 
+    // 2d camera kinda setup.
     matf4x4 ortho;
     lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
     shader_set_mat4(renderer_ctx.shader_basic_2d.prog, renderer_ctx.shader_basic_2d.projection, &ortho.col1.x);
+    
 
     // GL CALLS BUT WRAPPED 
     gl_enable_depth_test();
@@ -459,7 +461,10 @@ int main(void)
 
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
-    
+
+        // crosshair
+        r_draw_quad(&renderer_ctx, 300.0f, 300.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 0.0f, 0.0f, 1.0f});
+
         r_flush_text(&renderer_ctx);
 
         glfwSwapBuffers(window);

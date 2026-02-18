@@ -7,6 +7,7 @@
 #include "data_vertices.c"
 #include "common/types.h"
 #include "common/str.h"
+#include <stdbool.h>
 #include <assert.h>
 
 // kinda sus.
@@ -51,13 +52,18 @@ void r_draw_anchor(RendererContext* r, const matf4x4* transform)
     glDrawElements(GL_TRIANGLES, r->mesh_anchor.index_count, GL_UNSIGNED_INT, 0);
 }
 
-void r_draw_quad(RendererContext* r, float x, float y, Texture texture)
+void r_draw_quad(RendererContext* r, float x, float y, Texture texture, Colorek color)
 {
-    // remap // viewport to ndc
-    float norm_x = x/r->viewport_width; // hacky
-    float norm_y = y/r->viewport_height; // wacky
-    float ndc_x = norm_x * 2 - 1;
-    float ndc_y = -(norm_y * 2 - 1); // flip for it to match opengl.
+    matf4x4 transform = lamath_create_transform((vecf3){x, y, 0.2f}, VECF3_ZERO, (vecf3){1.0f, 1.0f, 1.0f});
+    bool use_tex = gl_texture_valid(texture) ? 1 : 0;     
+    shader_set_boolean(r->shader_basic_2d.prog, r->shader_basic_2d.use_tex, use_tex);
+    shader_set_mat4(r->shader_basic_2d.prog, r->shader_basic_2d.model, &transform.col1.x);
+    matf4x4 view = matf4x4_I_give();
+    shader_set_mat4(r->shader_basic_2d.prog, r->shader_basic_2d.view, &view.col1.x);
+
+    shader_prog_use(r->shader_basic_2d.prog); 
+    glBindVertexArray(r->mesh_quad.VAO); 
+    glDrawElements(GL_TRIANGLES, r->mesh_quad.index_count, GL_UNSIGNED_INT, 0);
 }
 
 void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture)
@@ -101,7 +107,11 @@ int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height)
     if (!r_shader_valid(r->shader_basic_2d)) {
         return 1;
     }
-    shader_basic_get_mvp_uniform_locations(&r->shader_basic_2d, r->shader_basic_2d.prog);
+    r->shader_basic_2d.model = shader_get_uniform_location(r->shader_basic_2d.prog, "model");
+    r->shader_basic_2d.view = shader_get_uniform_location(r->shader_basic_2d.prog, "view");
+    r->shader_basic_2d.projection = shader_get_uniform_location(r->shader_basic_2d.prog, "projection");
+    r->shader_basic_2d.color = shader_get_uniform_location(r->shader_basic_2d.prog, "color");
+    r->shader_basic_2d.use_tex = shader_get_uniform_location(r->shader_basic_2d.prog, "use_tex");
 
     // basic 3d
     r->shader_basic_3d.prog = shader_prog_create_from_memory(glsl_basic_3d_vs, glsl_basic_3d_fs);

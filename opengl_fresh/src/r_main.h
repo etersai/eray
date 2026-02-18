@@ -44,6 +44,15 @@ typedef struct {
     uniform model;
     uniform view;
     uniform projection;
+    uniform color;
+    uniform use_tex;
+} ShaderBasic2D;
+
+typedef struct {
+    ShaderProgram prog;
+    uniform model;
+    uniform view;
+    uniform projection;
     uniform object_color;
     uniform light_color;
     uniform ambient_strength;
@@ -56,7 +65,7 @@ typedef struct {
 } ShaderSkybox;
 
 typedef struct {
-    ShaderBasic     shader_basic_2d;
+    ShaderBasic2D   shader_basic_2d;
     ShaderBasic     shader_basic_3d;
     ShaderBasic     shader_basic_3d_color;
     ShaderBasic     shader_font;
@@ -88,7 +97,7 @@ void r_draw_text(RendererContext* r, float x, float y, const char* text);
 void r_draw_text_str8(RendererContext* r, float x, float y, string8 str);
 void r_flush_text(RendererContext* r);
 
-void r_draw_quad(RendererContext* r, float x, float y, Texture texture);
+void r_draw_quad(RendererContext* r, float x, float y, Texture texture, Colorek color);
 void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);
