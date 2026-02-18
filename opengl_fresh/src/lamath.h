@@ -658,8 +658,6 @@ ELOGDEF void elog_fmt(const char *fmt, ...)
 #define elog_pfx_lu(prefix, lu)   elog_fmt("%s%lu",  prefix, lu)
 #define elog_pfx_ld(prefix, ld)   elog_fmt("%s%ld",  prefix, ld)
 
-#define xd elog_pfx_zu
-
 #define elog_bytes_as_kib(bytes) do { elog_f((bytes)*0.0009765625); } while (0)
 #define elog_bytes_as_mib(bytes) do { elog_f((bytes)*9.5367431640625e-7); } while (0)
 #define elog_bytes_as_gib(bytes) do { elog_f((bytes)*9.3132257461548e-10); } while (0)

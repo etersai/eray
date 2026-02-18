@@ -1,6 +1,7 @@
 #include "r_shader.h"
 
 #include "common/types.h"
+#include "common/elog.h"
 #include <stddef.h>
 #include <assert.h>
 
@@ -22,7 +23,9 @@ void shade_set_mat4_by_name(ShaderProgram program, const char* name, const float
 {
     glUseProgram(program.id); 
     GLint loc = glGetUniformLocation(program.id, name);
-    if (loc == -1) { assert(0 && "[SHADER]: Uniform name probably invalid."); }
+    if (loc == -1) {
+        elog_s("Uniform name invalid or uniform optimized out");
+    }
     glUniformMatrix4fv(loc, 1, GL_FALSE, matrix);
 }
 
@@ -62,8 +65,9 @@ uniform shader_get_uniform_location(ShaderProgram program, const char* name)
 {
     glUseProgram(program.id);
     GLint loc = glGetUniformLocation(program.id, name);
-    // not assert just log, return -1 if uniform optimized out!;
-    if (loc == -1) { assert(0 && "[SHADER]: Uniform name probably invalid."); }
+    if (loc == -1) {
+        elog_s("Uniform name invalid or uniform optimized out");
+    }
     return loc;
 }
 
