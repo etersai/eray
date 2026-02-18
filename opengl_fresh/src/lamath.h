@@ -27,6 +27,7 @@
 // Feel free to contribute, though. Still learning myself.
 
 #include <assert.h>
+#include <iso646.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -119,6 +120,7 @@ static inline float deg_to_rad(float degrees);
 // COMMON
 static inline matf4x4 lamath_create_transform(vecf3 translate, vecf3 rotate, vecf3 scale);
 static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect, float near, float far);
+static inline void lamath_orthographic_matrix(matf4x4* m, float l, float r, float b, float t, float near, float far);
 static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up);
 static inline vecf3 lamath_calc_triangle_normal(const vecf3 triangle[3]);
 static vecf3 lamath_triangle_centroid(const vecf3 triangle[3]);
@@ -210,6 +212,33 @@ static inline void lamath_projection_matrix(matf4x4* m, float fov, float aspect,
     proj.col4.z = -(2.0f * far * near) / (far - near);
 
     *m = proj;
+}
+
+static inline void lamath_orthographic_matrix(matf4x4* m, float l, float r, float b, float t, float near, float far)
+{
+    matf4x4 ortho = {0};
+
+    ortho.col1.x = 2/(r-l);
+    ortho.col1.y = 0;
+    ortho.col1.z = 0;
+    ortho.col1.w = 0;
+
+    ortho.col2.x = 0;
+    ortho.col2.y = 2/(t-b);
+    ortho.col2.w = 0;
+    ortho.col2.z = 0;
+
+    ortho.col3.x = 0;
+    ortho.col3.y = 0;
+    ortho.col3.z = -2/(far-near);
+    ortho.col3.w = 0;
+
+    ortho.col4.x = -r-l/r-l;
+    ortho.col4.y = -t-b/t-b;
+    ortho.col4.z = -far-near/far-near;
+    ortho.col4.w = 1;
+
+    *m = ortho;
 }
 
 static inline void lamath_lookat_matrix(matf4x4* lookat, vecf3 eye, vecf3 center, vecf3 up)
