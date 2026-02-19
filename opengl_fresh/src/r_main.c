@@ -92,14 +92,18 @@ void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
     glDrawElements(GL_TRIANGLES, r->mesh_cube.index_count, GL_UNSIGNED_INT, 0);
 }
 
-void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, Colorek light_color)
+void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, LightSource light_src, f32 ambient_light_strength)
 {
     shader_prog_use(r->shader_lighting.prog);
     shader_set_mat4(r->shader_lighting.prog, r->shader_lighting.model, &transform->col1.x);
     shader_set_vec3(r->shader_lighting.prog, r->shader_lighting.object_color, &color.r);
-    shader_set_vec3(r->shader_lighting.prog, r->shader_lighting.light_color, &light_color.r);
-    glBindVertexArray(r->mesh_cube.VAO);
-    glDrawElements(GL_TRIANGLES, r->mesh_cube.index_count, GL_UNSIGNED_INT, 0);
+
+    shader_set_vec3(r->shader_lighting.prog, r->shader_lighting.light_pos, &light_src.pos.x);
+    shader_set_vec3(r->shader_lighting.prog, r->shader_lighting.light_color, &light_src.color.r);
+    shader_set_float(r->shader_lighting.prog, r->shader_lighting.ambient_strength, ambient_light_strength);
+
+    glBindVertexArray(r->mesh_block.VAO);
+    glDrawElements(GL_TRIANGLES, r->mesh_block.index_count, GL_UNSIGNED_INT, 0);
 }
 
 int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height)
@@ -151,6 +155,7 @@ int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height)
     r->shader_lighting.ambient_strength = shader_get_uniform_location(r->shader_lighting.prog, "ambientStrength");
     r->shader_lighting.light_color = shader_get_uniform_location(r->shader_lighting.prog, "lightColor");
     r->shader_lighting.object_color = shader_get_uniform_location(r->shader_lighting.prog, "objectColor"); 
+    r->shader_lighting.light_pos = shader_get_uniform_location(r->shader_lighting.prog, "light_pos");
     
     // instanced
     r->shader_instanced.prog = shader_prog_create_from_memory(glsl_instanced_vs, glsl_instanced_fs);

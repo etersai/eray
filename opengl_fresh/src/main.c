@@ -372,13 +372,9 @@ int main(void)
 
     // "should i put it here?" section // kinda game init ???
     program_ctx.ambient_light_strength = 0.2f;
-    shader_set_float(renderer_ctx.shader_lighting.prog,
-                     renderer_ctx.shader_lighting.ambient_strength,
-                     program_ctx.ambient_light_strength);
 
-    program_ctx.bulb.pos = (vecf3){4.0f, 6.0f, 1.0f};
+    program_ctx.bulb.pos = (vecf3){20.0f, 6.0f, 1.0f};
     program_ctx.bulb.color = (Colorek){1.0f, 1.0f, 1.0f, 1.0f};
-    program_ctx.bulb.intensity = 1.0f;
 
     program_ctx.time_fps = str8_lit("FPS:");
     program_ctx.time_dt = str8_lit("DELTA TIME:");
@@ -444,11 +440,11 @@ int main(void)
         // bulb render
         matf4x4 bulb_trans = lamath_create_transform(program_ctx.bulb.pos, VECF3_ZERO, (vecf3){0.2f, 0.2f, 0.2f});
         r_draw_cube(&renderer_ctx, &bulb_trans, program_ctx.bulb.color);
-
+    
         matf4x4 receiver_trans = lamath_create_transform((vecf3){6.0f, 3.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
-        Colorek receiver_color = (Colorek){0.5f, 1.0f, 0.3f, 1.0f}; 
-        shader_set_float(renderer_ctx.shader_lighting.prog, renderer_ctx.shader_lighting.ambient_strength, program_ctx.ambient_light_strength * program_ctx.bulb.intensity);
-        r_draw_cube_light_receiver(&renderer_ctx, &receiver_trans, receiver_color, program_ctx.bulb.color);
+        Colorek receiver_color = (Colorek){1.0f, 0.5f, 0.3f, 1.0f}; 
+        r_draw_cube_light_receiver(&renderer_ctx, &receiver_trans, receiver_color, 
+                program_ctx.bulb, program_ctx.ambient_light_strength);
 
         // teapot
         local_persist float rotacja = 0.0f;

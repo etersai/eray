@@ -56,6 +56,7 @@ typedef struct {
     uniform object_color;
     uniform light_color;
     uniform ambient_strength;
+    uniform light_pos;
 } ShaderLighting;
 
 typedef struct {
@@ -67,7 +68,6 @@ typedef struct {
 typedef struct {
     vecf3   pos;
     Colorek color;
-    f32     intensity;
 } LightSource;
 
 typedef struct {
@@ -108,7 +108,7 @@ void r_draw_skybox(RendererContext* r, TextureCubemap texture);
 void r_draw_anchor(RendererContext* r, const matf4x4* transform);
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color);
 void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture); // <= shell of a function
-void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, Colorek light_color);
+void r_draw_cube_light_receiver(RendererContext* r, const matf4x4* transform, Colorek color, LightSource light_src, f32 ambient_light_strength);
 void r_draw_mesh_indexed(RendererContext* r, GpuMeshIndexed mesh, const matf4x4* transform, Colorek color);
 int r_renderer_init(RendererContext* r, int viewport_width, int viewport_height);
 void r_set_font(RendererContext* r, Fontek* font);

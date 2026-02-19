@@ -40,7 +40,7 @@ const char* glsl_basic_2d_vs = "#version 460 core\n"
     "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
     "   pass_uv = aUV;\n"
     "   pass_color = aColor;\n"
-    "}\0";
+    "}";
 
 const char* glsl_basic_2d_fs = "#version 460 core\n"
     "uniform sampler2D tex;\n"
@@ -52,7 +52,7 @@ const char* glsl_basic_2d_fs = "#version 460 core\n"
     "void main()\n"
     "{\n"
     "   frag_color = (use_tex ? texture(tex, pass_uv) : vec4(1.0)) * color;\n"
-    "}\0";
+    "}";
 
 const char* glsl_basic_3d_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -63,12 +63,14 @@ const char* glsl_basic_3d_vs = "#version 460 core\n"
     "uniform mat4 projection;\n"
     "out vec3 pass_norm;\n"
     "out vec2 pass_uv;\n"
+    "out vec3 FragPos;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+    "   FragPos = vec3(model * vec4(aPos, 1.0));\n"
     "   pass_norm = aNorm;\n"
     "   pass_uv = aUV;\n"
-    "}\0";
+    "}";
 
 const char* glsl_basic_3d_fs = "#version 460 core\n"
     "uniform vec4 color;\n"
@@ -76,22 +78,27 @@ const char* glsl_basic_3d_fs = "#version 460 core\n"
     "void main()\n"
     "{\n"
     "   final_color = color;\n"
-    "}\0";
+    "}";
 
 const char* glsl_light_fs = "#version 460 core\n"
     "uniform vec3 lightColor;\n"
     "uniform vec3 objectColor;\n"
-    "unifrom vec3 lightPos;\n"
+    "uniform vec3 light_pos;\n"
     "uniform float ambientStrength;\n"
     "in vec3 pass_norm;\n"
     "in vec2 pass_uv;\n"
+    "in vec3 FragPos;\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
+    "   vec3 norm = normalize(pass_norm);\n"
+    "   vec3 light_dir = normalize(light_pos - FragPos);\n"
+    "   float diff = max(dot(norm, light_dir), 0.0);\n"
     "   vec3 ambient = ambientStrength * lightColor;\n"
-    "   vec3 final = ambient * objectColor;\n"
+    "   vec3 diffuse = diff * lightColor;\n"
+    "   vec3 final = (ambient + diffuse) * objectColor;\n"
     "   FragColor = vec4(final, 1.0);\n"
-    "}\0";
+    "}";
 
 const char* glsl_basic_3d_color_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -104,7 +111,7 @@ const char* glsl_basic_3d_color_vs = "#version 460 core\n"
     "{\n"
     "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
     "   pass_color = vec4(aColor, 1.0);\n"
-    "}\0";
+    "}";
 
 const char* glsl_basic_3d_color_fs = "#version 460 core\n"
     "in vec4 pass_color;\n"
@@ -112,7 +119,7 @@ const char* glsl_basic_3d_color_fs = "#version 460 core\n"
     "void main()\n"
     "{\n"
     "   final_color = pass_color;\n"
-    "}\0";
+    "}";
 
 const char* glsl_font_vs = "#version 460 core\n"
     "layout (location = 0) in vec2 aPos;\n"
@@ -122,7 +129,7 @@ const char* glsl_font_vs = "#version 460 core\n"
     "{\n"
     "   gl_Position = vec4(aPos, -1.0, 1.0);\n"
     "   pass_texture_uv = aTex;\n"
-    "}\0";
+    "}";
 
 const char* glsl_font_fs = "#version 460 core\n"
     "in vec2 pass_texture_uv;\n"              
@@ -131,7 +138,7 @@ const char* glsl_font_fs = "#version 460 core\n"
     "void main()\n"
     "{\n"
     "   final_color = texture(textureSampler, vec2(pass_texture_uv.x, -pass_texture_uv.y));\n"
-    "}\0";
+    "}";
 
 const char* glsl_skybox_vs = "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -142,7 +149,7 @@ const char* glsl_skybox_vs = "#version 460 core\n"
     "{\n"
     "   TexCoords = aPos;\n"
     "   gl_Position = projection * view * vec4(aPos, 1.0);\n"
-    "}\0";
+    "}";
 
 const char* glsl_skybox_fs = "#version 460 core\n"
     "out vec4 FragColor;\n"
@@ -150,7 +157,7 @@ const char* glsl_skybox_fs = "#version 460 core\n"
     "uniform samplerCube skybox;\n"
     "void main() {\n"
     "    FragColor = texture(skybox, TexCoords);\n"
-    "}\n";
+    "}";
 
 
 const char* glsl_instanced_vs = "#version 460 core\n"
@@ -167,7 +174,7 @@ const char* glsl_instanced_vs = "#version 460 core\n"
     "   vec4 transformed = model * vec4(aPos, 1.0);\n"
     "   gl_Position = projection * view * vec4(transformed.xyz + offset, 1.0);\n"
     "   TexCoord = aTexCoord;\n"
-    "}\0";
+    "}";
 
 const char* glsl_instanced_fs = "#version 460 core\n"
     "out vec4 final_color;\n"
@@ -176,4 +183,4 @@ const char* glsl_instanced_fs = "#version 460 core\n"
     "void main()\n"
     "{\n"
     "   final_color = texture(Texture, TexCoord);\n"
-    "}\0";
+    "}";
