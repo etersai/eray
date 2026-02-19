@@ -368,7 +368,6 @@ int main(void)
     matf4x4 ortho;
     lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
     shader_set_mat4(renderer_ctx.shader_basic_2d.prog, renderer_ctx.shader_basic_2d.projection, &ortho.col1.x);
-    
 
     // "should i put it here?" section // kinda game init ???
     program_ctx.ambient_light_strength = 0.8f;
@@ -478,7 +477,7 @@ int main(void)
         // UI
         r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
         r_flush_text(&renderer_ctx);
-        rotacja += 0.02f;
+        rotacja += 0.002f;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
