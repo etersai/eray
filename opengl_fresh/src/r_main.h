@@ -65,6 +65,12 @@ typedef struct {
 } ShaderSkybox;
 
 typedef struct {
+    vecf3   pos;
+    Colorek color;
+    f32     intensity;
+} LightSource;
+
+typedef struct {
     ShaderBasic2D   shader_basic_2d;
     ShaderBasic     shader_basic_3d;
     ShaderBasic     shader_basic_3d_color;
@@ -93,7 +99,7 @@ typedef struct {
 
 void r_begin_frame(RendererContext* r);
 
-void r_draw_text(RendererContext* r, float x, float y, const char* text);
+void r_draw_text(RendererContext* r, float x, float y, const char* text); // deprecated
 void r_draw_text_str8(RendererContext* r, float x, float y, string8 str);
 void r_flush_text(RendererContext* r);
 

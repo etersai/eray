@@ -211,6 +211,7 @@ typedef struct {
     string8 time_dt;   
 
     f32 ambient_light_strength;
+    LightSource bulb;
 } ProgramContext;
 
 internal inline void update_timing_strings(ProgramContext* ctx, u32 frames, f64 delta_time)
@@ -365,17 +366,12 @@ int main(void)
 
     // 2d camera kinda setup.
     matf4x4 ortho;
-
     lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
     shader_set_mat4(renderer_ctx.shader_basic_2d.prog, renderer_ctx.shader_basic_2d.projection, &ortho.col1.x);
     
 
-    // GL CALLS BUT WRAPPED 
-    gl_enable_depth_test();
-    gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
-
-    // "should i put it here?" section
-    program_ctx.ambient_light_strength = 0.1f;
+    // "should i put it here?" section // kinda game init ???
+    program_ctx.ambient_light_strength = 0.2f;
     shader_set_float(renderer_ctx.shader_lighting.prog,
                      renderer_ctx.shader_lighting.ambient_strength,
                      program_ctx.ambient_light_strength);
@@ -383,6 +379,10 @@ int main(void)
     program_ctx.time_fps = str8_lit("FPS:");
     program_ctx.time_dt = str8_lit("DELTA TIME:");
     // End section
+
+    // GL CALLS BUT WRAPPED 
+    gl_enable_depth_test();
+    gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
 
     u32 frames = 0;
     f64 delta_time;
@@ -463,7 +463,7 @@ int main(void)
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
 
-        // crosshair
+        // UI
         r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
 
         r_flush_text(&renderer_ctx);
