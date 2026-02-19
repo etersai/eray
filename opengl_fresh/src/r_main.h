@@ -91,15 +91,15 @@ typedef struct {
     GpuPMappedBuffer text_gpu_buffer;                           
     unsigned int     text_fv_count; 
 
-    int              viewport_width;
-    int              viewport_height;
+    i32              viewport_width;
+    i32              viewport_height;
 } RendererContext;
 
 #define r_shader_valid(shader) ((shader).prog.id != 0)
 
 void r_begin_frame(RendererContext* r);
 
-void r_draw_text(RendererContext* r, float x, float y, const char* text); // deprecated
+void r_draw_text(RendererContext* r, float x, float y, const char* text); //deprecated
 void r_draw_text_str8(RendererContext* r, float x, float y, string8 str);
 void r_flush_text(RendererContext* r);
 
