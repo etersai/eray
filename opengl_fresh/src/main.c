@@ -371,7 +371,7 @@ int main(void)
     
 
     // "should i put it here?" section // kinda game init ???
-    program_ctx.ambient_light_strength = 0.2f;
+    program_ctx.ambient_light_strength = 0.8f;
 
     program_ctx.bulb.pos = (vecf3){20.0f, 6.0f, 1.0f};
     program_ctx.bulb.color = (Colorek){1.0f, 1.0f, 1.0f, 1.0f};
@@ -405,6 +405,7 @@ int main(void)
         processInput(window);
         update_camera_input(&program_ctx.camera);
 
+        local_persist float rotacja = 0.0f;
         update_camera_info_strings(&program_ctx);
 
         // UPDATE VIEW MATRICES.
@@ -438,8 +439,20 @@ int main(void)
         r_draw_anchor(&renderer_ctx, &transform_anchor);
 
         // bulb render
-        matf4x4 bulb_trans = lamath_create_transform(program_ctx.bulb.pos, VECF3_ZERO, (vecf3){0.2f, 0.2f, 0.2f});
-        r_draw_cube(&renderer_ctx, &bulb_trans, program_ctx.bulb.color);
+        matf4x4 bulb_scale = matf4x4_scale_give(0.2f, 0.2f, 0.2f);
+        matf4x4 bulb_translate = matf4x4_translate_give((vecf3){2.0f, 0.0f, 0.0f});
+        matf4x4 bulb_orbit_rotate; 
+        matf4x4_rot_y(&bulb_orbit_rotate, rotacja);
+        matf4x4 temp;
+        matf4x4_mul_3(&temp, &bulb_orbit_rotate, &bulb_translate, &bulb_scale);
+        matf4x4 bulb_transform;
+        matf4x4 temp_translate = matf4x4_translate_give((vecf3){6.0f, 3.0f, 1.0f});
+        matf4x4_mul(&bulb_transform, &temp_translate, &temp);
+        program_ctx.bulb.pos.x = bulb_transform.col4.x; 
+        program_ctx.bulb.pos.y = bulb_transform.col4.y; 
+        program_ctx.bulb.pos.z = bulb_transform.col4.z; 
+
+        r_draw_cube(&renderer_ctx, &bulb_transform, program_ctx.bulb.color);
     
         matf4x4 receiver_trans = lamath_create_transform((vecf3){6.0f, 3.0f, 1.0f}, VECF3_ZERO, (vecf3){0.5f, 0.5f, 0.5f});
         Colorek receiver_color = (Colorek){1.0f, 0.5f, 0.3f, 1.0f}; 
@@ -447,7 +460,6 @@ int main(void)
                 program_ctx.bulb, program_ctx.ambient_light_strength);
 
         // teapot
-        local_persist float rotacja = 0.0f;
         local_persist const float teapot_color[] = {1.0f, 0.5f, 0.31f, 1.0f}; 
         matf4x4 s2 = matf4x4_I_give();
         matf4x4 r = matf4x4_I_give();
@@ -456,17 +468,17 @@ int main(void)
         matf4x4_rot_y(&r, rotacja);
         matf4x4 full2 = matf4x4_I_give();
         matf4x4_mul_3(&full2, &t2, &r, &s2);
-        rotacja += 0.002f;
 
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &full2, *(Colorek*)&teapot_color[0]);
 
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
 
+
         // UI
         r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
-
         r_flush_text(&renderer_ctx);
+        rotacja += 0.02f;
 
         glfwSwapBuffers(window);
         glfwPollEvents();

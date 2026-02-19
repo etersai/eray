@@ -105,6 +105,7 @@ typedef struct {
 
 // SHORTCUTS
 #define VECF3_ZERO (vecf3){0.0f, 0.0f, 0.0f}
+#define VECF3_111  (vecf3){1.0f, 1.0f, 1.0f}
 #define VECF4_ZERO (vecf4){0.0f, 0.0f, 0.0f, 0.0f}
 
 // DEBUG
@@ -148,6 +149,7 @@ static inline void matf4x4_rot_z(matf4x4* m, float angle);
 static inline void matf4x4_mul(matf4x4* result, const matf4x4* a, const matf4x4* b);
 static inline void matf4x4_mul_3(matf4x4* result, const matf4x4* a, const matf4x4* b, const matf4x4* c);
 static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z);
+static inline matf4x4 matf4x4_scale_give(float x, float y, float z);
 static inline matf4x4 matf4x4_translate_give(vecf3 translate);
 
 static inline matf3x3 matf3x3_I_give(void);
@@ -412,6 +414,13 @@ static inline void matf4x4_scale_set(matf4x4* m, float x, float y, float z)
     m->col4 = (vecf4){0.0f, 0.0f, 0.0f, 1.0f};
 }
 
+static inline matf4x4 matf4x4_scale_give(float x, float y, float z)
+{
+    return (matf4x4){.col1.x = x,    .col2.x = 0.0f, .col3.x = 0.0f, .col4.x = 0.0f,
+                     .col1.y = 0.0f, .col2.y = y,    .col3.y = 0.0f, .col4.y = 0.0f,
+                     .col1.z = 0.0f, .col2.z = 0.0f, .col3.z = z,    .col4.z = 0.0f,
+                     .col1.w = 0.0f, .col2.w = 0.0f, .col3.w = 0.0f, .col4.w = 1.0f,};
+}
 
 static inline matf4x4 matf4x4_translate_give(vecf3 translate)
 {
