@@ -276,8 +276,11 @@ int main(void)
     // MEDIA LOADING
     // TODO: create temp texture for any failed to load texture [black/purple checkerboard pattern etc.]
     stbi_set_flip_vertically_on_load(true); // global state 
-    
+   
+
+    // PROVIDE JUST THE FILEPATH AND LET THE SYSTEM GET WHAT IS CAN!!!!
     const char* path_teapot = "./assets/models/teapot.obj";
+    const char* path_suzanne = "./assets/models/suzanne.obj";
     const char* path_grass = "./assets/textures/grass.jpg";
     const char* path_font = "./assets/textures/font.png";
     const char* path_crosshair = "./assets/textures/crosshair.png";
@@ -316,6 +319,14 @@ int main(void)
 
     // font
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
+  
+    obj_in_memory_v2* obj_suzanne = (obj_in_memory_v2*)malloc(sizeof(obj_in_memory_v2)); 
+    MappedFile suzi = os_map_file(path_suzanne);
+    load_obj_test(obj_suzanne, suzi.data, suzi.size);
+    
+
+
+    os_unmap_file(&suzi);
     
     // Rudimentary obj loading.
     obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&program_ctx.arena_obj_loading, sizeof(obj_in_memory));
@@ -327,7 +338,8 @@ int main(void)
     program_ctx.mesh_teapot = gpu_load_mesh_indexed(obj_teapot->vertices, obj_teapot->indices, 
             obj_teapot->v_count*sizeof(float), obj_teapot->i_count*sizeof(unsigned int), VERTEX_LAYOUT_POS);
 
-    
+  
+    // RENDERER INIT
     if (r_renderer_init(&renderer_ctx, SCR_WIDTH, SCR_HEIGHT) != 0) {
         elog_abort("Renderer initialization failed!");
     }
@@ -381,7 +393,7 @@ int main(void)
 
     // GL CALLS BUT WRAPPED 
     gl_enable_depth_test();
-    gl_set_clear_color((Colorek){0.5f, 0.5f, 0.5f, 1.0f});
+    gl_set_clear_color((Colorek){0.0f, 0.0f, 0.0f, 1.0f});
 
     u32 frames = 0;
     f64 delta_time;
@@ -477,7 +489,7 @@ int main(void)
         // UI
         r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
         r_flush_text(&renderer_ctx);
-        rotacja += 0.002f;
+        rotacja += 0.01f;
 
         glfwSwapBuffers(window);
         glfwPollEvents();

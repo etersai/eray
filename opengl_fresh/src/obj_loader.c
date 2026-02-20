@@ -7,19 +7,44 @@
 #include <assert.h>
 
 #include "platform.h" // for file mapping
+#include "common/elog.h"
 
 int load_obj_from_path(obj_in_memory* obj, const char* path)
 {
     assert(obj);
     assert(path);
-    size_t size;
-    char* file = os_map_file_into_memory(path, &size);  
-    if (file == NULL) {
+    MappedFile file = os_map_file(path);
+    if (file.data == NULL) {
         return 1;
     }
-    load_obj_to_buffers_not_safe(obj, file, size);
-    os_unmap_file_from_memory(file, size);
+    load_obj_to_buffers_not_safe(obj, file.data, file.size);
+    os_unmap_file(&file);
     return 0;
+}
+
+void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
+{
+    assert(obj);
+    assert(file);
+    char* ptr = file;
+    char* end = file + size;
+    while (ptr < end) {
+        
+        if (*ptr == 'v' && *(ptr+1) == ' ') { // vertex
+            elog_s("v"); 
+        }
+        else if (*ptr == 'v' && *(ptr+1) == 't') { // texcoord
+            elog_s("vt"); 
+        }
+        else if (*ptr == 'v' && *(ptr+1) == 'n') { // normal
+            elog_s("vn"); 
+        }
+        else if (*ptr == 'f') { // face
+            elog_s("f");
+        }
+
+        ptr++;
+    }
 }
 
 void load_obj_to_buffers_not_safe(obj_in_memory* obj, char* file, size_t size)

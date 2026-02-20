@@ -1,5 +1,6 @@
 #include "platform.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <unistd.h>
@@ -14,47 +15,48 @@
 #include "tinyobj_loader_c/tinyobj_loader_c.h"
 #endif
 
-char* os_map_file_into_memory(const char* filename, size_t* out_file_size)
+MappedFile os_map_file(const char* path)
 {
+    MappedFile file = {0};
     struct stat sb;
-    char* mapped_file;
     int fd;
 
-    fd = open(filename, O_RDONLY);
+    fd = open(path, O_RDONLY);
     if (fd == -1) {
         perror("open");
-        return NULL;
+        return file;
     }
 
     if (fstat(fd, &sb) == -1) {
         close(fd);
         perror("fstat");
-        return NULL;
+        return file;
     }
 
     if (!S_ISREG(sb.st_mode)) { // if not a regular file.
-        fprintf(stderr, "%s is not a file\n", filename);
+        fprintf(stderr, "%s is not a file\n", path);
         close(fd);
-        return NULL;
+        return file;
     }
 
-    mapped_file = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0); 
-    if (mapped_file == MAP_FAILED) {
-        perror("mmap"); // NOTE: perror not cross platform with windows. as well as mmap XD
+    file.data = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0); 
+    if (file.data == MAP_FAILED) {
+        perror("mmap"); 
         close(fd);
-        return NULL;
+        file.data = NULL;
+        return file;
     }
 
     close(fd);
-
-    (*out_file_size) = sb.st_size;
-    return mapped_file;
+    file.size = sb.st_size;
+    return file;
 }
 
-
-void os_unmap_file_from_memory(char* file, size_t size)
-{
-    munmap(file, size);
+void os_unmap_file(MappedFile* file)
+{ 
+    if (file) {
+        munmap(file->data, file->size);
+    }
 }
 
 char* os_get_cwd(char* buf, size_t size)
