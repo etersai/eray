@@ -37,7 +37,6 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
             }           
             putchar(*ptr);
             fflush(stdout);
-            abort();
         }
         else if (*ptr == 'v' && *(ptr+1) == 't') { // texcoord
             elog_s("vt"); 
