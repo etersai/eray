@@ -1,5 +1,6 @@
 #include "obj_loader.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -31,7 +32,12 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
     while (ptr < end) {
         
         if (*ptr == 'v' && *(ptr+1) == ' ') { // vertex
-            elog_s("v"); 
+            while (isdigit(*ptr) == 0 || *ptr == '-') {
+                ptr++;
+            }           
+            putchar(*ptr);
+            fflush(stdout);
+            abort();
         }
         else if (*ptr == 'v' && *(ptr+1) == 't') { // texcoord
             elog_s("vt"); 
