@@ -64,15 +64,23 @@ void dalog(DaF32 da)
     elog_zu(da_size_in_bytes(&da));
 }
 
+void dalogalien(DaObjFaceIdx da)
+{
+    elog_p(da.data);
+    elog_zu(da.count);
+    elog_zu(da.capacity);
+    elog_zu(da_size_in_bytes(&da));
+}
 
-void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
+
+void load_obj_not_safe(obj_in_memory_v2* obj, char* file, u64 size)
 {
     assert(obj);
     assert(file);
 
     char* ptr = file;
     char* end = file + size;
-    while (ptr < end) {
+    while (ptr < end) { 
         if (*ptr == 'v' && *(ptr+1) == ' ') { // vertex
             while (isdigit(*ptr) == 0 && *ptr != '-') { // stop at first digit or -
                 ptr++;
@@ -132,14 +140,36 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
             while (isdigit(*ptr) == 0) { // stop at first digit (indices can't be negative)
                 ptr++;
             } 
-            char* endPtr = NULL;
-            u32 i = strtoul(ptr, &endPtr, 0);
 
+            u32 temp[3] = {0};
+            u32 count = 0;
+            char* endPtr = ptr;
             while (*endPtr != '\n') {
-                elog_s("he");
-            }
 
-            abort();
+                if (*endPtr == '/') {
+                    count++;
+                    endPtr++;
+                    continue;
+                }
+
+                temp[count] = strtoul(endPtr, &endPtr, 10); 
+                if (*endPtr == ' ' || *endPtr == '\n') {
+                    obj_face_index ofi;
+                    ofi.v  = temp[0];
+                    ofi.vt = temp[1];
+                    ofi.vn = temp[2];
+                    da_append(&obj->faces, ofi);
+                    count = 0;
+                    if (*endPtr == ' ') endPtr++;
+                    continue;
+                }
+            }
+            
+            assert(*endPtr=='\n'); // this lives on this premise xd
+            size_t dst = endPtr-ptr;
+            ptr+=dst+1; // +1 to skip to next line
+                        
+            continue;
         }
 
         ptr++;
