@@ -73,7 +73,7 @@ void dalogalien(DaObjFaceIdx da)
 }
 
 
-void load_obj_not_safe(obj_in_memory_v2* obj, char* file, u64 size)
+void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
 {
     assert(obj);
     assert(file);
@@ -152,7 +152,8 @@ void load_obj_not_safe(obj_in_memory_v2* obj, char* file, u64 size)
                     continue;
                 }
 
-                temp[count] = strtoul(endPtr, &endPtr, 10); 
+                u32 i = strtoul(endPtr, &endPtr, 10); 
+                temp[count] = i-1; // opengl starts indices at 0, while obj 1.
                 if (*endPtr == ' ' || *endPtr == '\n') {
                     obj_face_index ofi;
                     ofi.v  = temp[0];
