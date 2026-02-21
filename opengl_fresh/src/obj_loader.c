@@ -130,7 +130,7 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
         }
         else if (*ptr == 'f') { // face
             elog_s("f");
- //           abort();
+            abort();
         }
 
         ptr++;
