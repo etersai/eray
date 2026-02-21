@@ -166,7 +166,9 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
     Dau32 gl_index_data = {0};
     enum { FLOATS_PER_VERTEX = 8 }; // shaky shaky.
     da_init(&gl_vertex_data, align_to_the_next_power_of_two(obj->faces.count*FLOATS_PER_VERTEX));
-    da_init(&gl_index_data, align_to_the_next_power_of_two(obj->faces.count/3));
+    da_init(&gl_index_data, align_to_the_next_power_of_two(obj->faces.count));
+
+    elog_zu(gl_index_data.capacity);
 
     for (u64 i = 0; i < obj->faces.count; i++) {
         elog_u(obj->faces.data[i].v);
