@@ -134,13 +134,10 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
             } 
             char* endPtr = NULL;
             u32 i = strtoul(ptr, &endPtr, 0);
-            elog_d(i);
+
             while (*endPtr != '\n') {
-                if (*endPtr == '/') {
-                    elog_c(*endPtr);
-                    abort();
-                }              
-            } 
+                elog_s("he");
+            }
 
             abort();
         }
