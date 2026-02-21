@@ -5,6 +5,13 @@
 
 typedef struct {
     int* data;
+    u64 count; 
+    u64 capacity;
 } intda;
+
+#define da_append(da, val) do { \
+    (da).                                 \
+} while (0)
+
 
 #endif /* DA_H_ */
