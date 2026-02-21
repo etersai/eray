@@ -155,29 +155,26 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
         ptr++;
     }
         
+
+    // 2904 structs each 3 v,vt,vn.
+    // 2904*8 = 23232 :D vertex array. 
+    // 2904/3 = 968 index array.
+    // 1 opengl vertex = 3 floats pos, 2 floats texture, 3 floats normals = 8 per vertex. 
+
     // NOW FLATTEN!  
     Daf32 gl_vertex_data = {0};
     Dau32 gl_index_data = {0};
-    
-    elog_zu(align_to_the_next_power_of_two(obj->faces.count/3));
-   abort(); 
     enum { FLOATS_PER_VERTEX = 8 }; // shaky shaky.
     da_init(&gl_vertex_data, align_to_the_next_power_of_two(obj->faces.count*FLOATS_PER_VERTEX));
-    da_init(&gl_index_data, 1024);
+    da_init(&gl_index_data, align_to_the_next_power_of_two(obj->faces.count/3));
 
-// 2904 structs each 3 v,vt,vn.
-// 2904*8 = 23232 :D vertex array. 
-// 2904/3 = 968 index array.
-// 1 opengl vertex = 3 floats pos, 2 floats texture, 3 floats normals = 8 per vertex. 
-    
     for (u64 i = 0; i < obj->faces.count; i++) {
         elog_u(obj->faces.data[i].v);
         elog_u(obj->faces.data[i].vt);
         elog_u(obj->faces.data[i].vn);
+    abort();
     }
 
-
-    abort();
 
 }
 
