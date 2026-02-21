@@ -20,6 +20,8 @@
 #include "common/str.h"
 #include "common/types.h"
 
+#include "string.h" // memset test.
+
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
@@ -320,10 +322,12 @@ int main(void)
     // font
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
   
-    obj_in_memory_v2* obj_suzanne = (obj_in_memory_v2*)malloc(sizeof(obj_in_memory_v2)); 
+    obj_in_memory_v2* obj_suzanne = (obj_in_memory_v2*)calloc(1,sizeof(obj_in_memory_v2)); 
+
     MappedFile suzi = os_map_file(path_suzanne);
     load_obj_test(obj_suzanne, suzi.data, suzi.size);
     
+//    elog_abort("STOP RIGHT THERE CRIMINAL SCUM!");
 
 
     os_unmap_file(&suzi);

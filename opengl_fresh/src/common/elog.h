@@ -35,6 +35,7 @@ ELOGDEF void elog_fmt(const char *fmt, ...)
 #define elog_d(val)   elog_fmt("%d", (val))
 #define elog_f(val)   elog_fmt("%f", (val))
 #define elog_s(s)     elog_fmt("%s", (s))
+#define elog_c(c)     elog_fmt("%c", (c))
 #define elog_u(val)   elog_fmt("%u", (val))
 #define elog_llu(val) elog_fmt("%llu", (val))
 #define elog_lld(val) elog_fmt("%lld", (val))
@@ -55,6 +56,8 @@ ELOGDEF void elog_fmt(const char *fmt, ...)
 #define elog_bytes_as_kib(bytes) do { elog_f((bytes)*0.0009765625); } while (0)
 #define elog_bytes_as_mib(bytes) do { elog_f((bytes)*9.5367431640625e-7); } while (0)
 #define elog_bytes_as_gib(bytes) do { elog_f((bytes)*9.3132257461548e-10); } while (0)
+
+#define elog_perma_assert(x) do { if (!x) { elog_fmt("Perma assertion: %s, %s:%d", #x, __FILE__, __LINE__); abort(); }} while (0)
 
 ELOGDEF void elog_abort(const char* str)
 {

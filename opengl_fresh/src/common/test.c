@@ -10,6 +10,8 @@ typedef struct {
     size_t capacity;
 } intda;
 
+
+
 void log_da(intda da)
 {
     elog_p(da.data);

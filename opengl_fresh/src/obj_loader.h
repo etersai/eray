@@ -20,14 +20,22 @@ typedef struct {
 } obj_face_index;
 
 typedef struct {
-    f32 vertices[OBJ_BUFFERS_BYTE_SIZE/sizeof(f32)];
-    f32 texcoords[OBJ_BUFFERS_BYTE_SIZE/sizeof(f32)];
-    f32 normals[OBJ_BUFFERS_BYTE_SIZE/sizeof(f32)];
-    obj_face_index faces[OBJ_BUFFERS_BYTE_SIZE/sizeof(obj_face_index)];
-    unsigned int num_vertices;
-    unsigned int num_texcoords;
-    unsigned int num_normals;
-    unsigned int num_faces;
+    f32* data;
+    u64 count;
+    u64 capacity;
+} DaF32;
+
+typedef struct {
+    obj_face_index* data;
+    u64 count;
+    u64 capacity;
+} DaObjFaceIdx;
+
+typedef struct {
+    DaF32 vertices;
+    DaF32 texcoords;
+    DaF32 normals;
+    DaObjFaceIdx faces;
 } obj_in_memory_v2;
 
 int load_obj_from_path(obj_in_memory* obj, const char* path);
