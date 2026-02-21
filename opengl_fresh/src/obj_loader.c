@@ -7,32 +7,21 @@
 #include <string.h>
 #include <assert.h>
 
-#include "common/types.h"
+#include "common/da.h"
 #include "platform.h" // for file mapping
+#include "common/types.h"
 #include "common/elog.h"
 
-// Dynamic array.
-#define DA_INIT_CAP 1024
-#define da_size_in_bytes(da) ((da)->count*sizeof(*(da)->data))
-#define da_free(da) do { free((da)->data); (da)->count = 0; (da)->capacity = 0; } while (0)
-#define da_append(da, val) do { \
-     if ((da)->count >= (da)->capacity) { \
-        if ((da)->data == NULL) { \
-            (da)->data = malloc(DA_INIT_CAP*sizeof(*(da)->data)); \
-            elog_perma_assert((da)->data); \
-            (da)->capacity = DA_INIT_CAP; \
-        } \
-        else \
-        { \
-            (da)->data = realloc((da)->data, da_size_in_bytes(da)*2); \
-            elog_perma_assert((da)->data); \
-            (da)->capacity = (da)->capacity*2; \
-        } \
-    } \
-    (da)->data[(da)->count++] = (val); \
-} while (0) 
+internal u64 align_to_the_next_power_of_two(u64 num)
+{
+    for (uint64_t i = 0; i < 64; i++) {
+        if (num <= 1ull<<i) {
+            return 1ull<<i;  
+        }
+    }
+    return num;
+}
 
-// (da)->data = realloc((da)->data, (da)->capacity*2*sizeof(*(da)->data));
 int load_obj_from_path(obj_in_memory* obj, const char* path)
 {
     assert(obj);
@@ -46,31 +35,21 @@ int load_obj_from_path(obj_in_memory* obj, const char* path)
     return 0;
 }
 
-// float strtof(const char *nptr, char **endptr);
-// char szOrbits[] = "686.97 365.24";
-// char* pEnd;
-// float f1, f2;
-// f1 = strtof (szOrbits, &pEnd);
-// f2 = strtof (pEnd, NULL);
-// printf ("One martian year takes %.2f Earth years.\n", f1/f2);
-// return 0;
-
-
-void dalog(DaF32 da)
-{
-    elog_p(da.data);
-    elog_zu(da.count);
-    elog_zu(da.capacity);
-    elog_zu(da_size_in_bytes(&da));
-}
-
-void dalogalien(DaObjFaceIdx da)
-{
-    elog_p(da.data);
-    elog_zu(da.count);
-    elog_zu(da.capacity);
-    elog_zu(da_size_in_bytes(&da));
-}
+// internal void dalog(DaF32 da)
+// {
+//     elog_p(da.data);
+//     elog_zu(da.count);
+//     elog_zu(da.capacity);
+//     elog_zu(da_size_in_bytes(&da));
+// }
+//
+// internal void dalogalien(DaObjFaceIdx da)
+// {
+//     elog_p(da.data);
+//     elog_zu(da.count);
+//     elog_zu(da.capacity);
+//     elog_zu(da_size_in_bytes(&da));
+// }
 
 
 void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
@@ -175,6 +154,32 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
 
         ptr++;
     }
+        
+    // NOW FLATTEN!  
+    Daf32 gl_vertex_data = {0};
+    Dau32 gl_index_data = {0};
+    
+    elog_zu(align_to_the_next_power_of_two(28333));
+    abort();
+    
+    
+    da_init(&gl_vertex_data, 32768);
+    da_init(&gl_index_data, 1024);
+
+// 2904 structs each 3 v,vt,vn.
+// 2904*8 = 23232 :D vertex array. 
+// 2904/3 = 968 index array.
+// 1 opengl vertex = 3 floats pos, 2 floats texture, 3 floats normals = 8 per vertex. 
+    
+    for (u64 i = 0; i < obj->faces.count; i++) {
+        elog_u(obj->faces.data[i].v);
+        elog_u(obj->faces.data[i].vt);
+        elog_u(obj->faces.data[i].vn);
+    }
+
+
+    abort();
+
 }
 
 void load_obj_to_buffers_not_safe(obj_in_memory* obj, char* file, size_t size)

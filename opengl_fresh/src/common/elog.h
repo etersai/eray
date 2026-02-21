@@ -57,7 +57,7 @@ ELOGDEF void elog_fmt(const char *fmt, ...)
 #define elog_bytes_as_mib(bytes) do { elog_f((bytes)*9.5367431640625e-7); } while (0)
 #define elog_bytes_as_gib(bytes) do { elog_f((bytes)*9.3132257461548e-10); } while (0)
 
-#define elog_perma_assert(x) do { if (!x) { elog_fmt("Perma assertion: %s, %s:%d", #x, __FILE__, __LINE__); abort(); }} while (0)
+//#define elog_perma_assert(x) do { if (!x) { elog_fmt("Perma assertion: %s, %s:%d", #x, __FILE__, __LINE__); abort(); }} while (0)
 
 ELOGDEF void elog_abort(const char* str)
 {

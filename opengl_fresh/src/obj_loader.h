@@ -1,6 +1,7 @@
 #ifndef OBJ_LOADER_H_
 #define OBJ_LOADER_H_
 
+#include "common/da.h"
 #include "common/types.h"
 #include <stddef.h>
                             // 1/2 mib
@@ -19,23 +20,17 @@ typedef struct {
     u32 vn; 
 } obj_face_index;
 
-typedef struct {
-    f32* data;
-    u64 count;
-    u64 capacity;
-} DaF32;
+
+// expand dynamic arrays.
+DA_TYPE(f32)
+DA_TYPE(u32)
+DA_TYPE(obj_face_index)
 
 typedef struct {
-    obj_face_index* data;
-    u64 count;
-    u64 capacity;
-} DaObjFaceIdx;
-
-typedef struct {
-    DaF32 vertices;
-    DaF32 texcoords;
-    DaF32 normals;
-    DaObjFaceIdx faces;
+    Daf32 vertices;
+    Daf32 texcoords;
+    Daf32 normals;
+    Daobj_face_index faces;
 } obj_in_memory_v2;
 
 int load_obj_from_path(obj_in_memory* obj, const char* path);

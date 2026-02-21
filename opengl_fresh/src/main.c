@@ -323,9 +323,9 @@ int main(void)
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
   
     obj_in_memory_v2* obj_suzanne = (obj_in_memory_v2*)calloc(1,sizeof(obj_in_memory_v2)); 
-
     MappedFile suzi = os_map_file(path_suzanne);
     load_obj_test(obj_suzanne, suzi.data, suzi.size);
+
     
 //    elog_abort("STOP RIGHT THERE CRIMINAL SCUM!");
 

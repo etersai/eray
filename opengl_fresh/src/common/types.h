@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #define unused(var) ((void)(var))
+#define perma_assert(x) do { if (!x) { fprintf(stderr,"Perma assertion: %s, %s:%d", #x, __FILE__, __LINE__); abort(); }} while (0)
 
 // credit Ryan Fleury
 #define global static 
