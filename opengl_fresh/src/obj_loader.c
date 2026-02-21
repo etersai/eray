@@ -14,8 +14,8 @@
 
 internal u64 align_to_the_next_power_of_two(u64 num)
 {
-    for (uint64_t i = 0; i < 64; i++) {
-        if (num <= 1ull<<i) {
+    for (i32 i=0;i<64;i++) {
+        if (num<=1ull<<i) {
             return 1ull<<i;  
         }
     }
@@ -159,11 +159,10 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
     Daf32 gl_vertex_data = {0};
     Dau32 gl_index_data = {0};
     
-    elog_zu(align_to_the_next_power_of_two(28333));
-    abort();
-    
-    
-    da_init(&gl_vertex_data, 32768);
+    elog_zu(align_to_the_next_power_of_two(obj->faces.count/3));
+   abort(); 
+    enum { FLOATS_PER_VERTEX = 8 }; // shaky shaky.
+    da_init(&gl_vertex_data, align_to_the_next_power_of_two(obj->faces.count*FLOATS_PER_VERTEX));
     da_init(&gl_index_data, 1024);
 
 // 2904 structs each 3 v,vt,vn.
