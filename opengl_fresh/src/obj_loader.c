@@ -129,7 +129,19 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
             continue;
         }
         else if (*ptr == 'f') { // face
-            elog_s("f");
+            while (isdigit(*ptr) == 0) { // stop at first digit (indices can't be negative)
+                ptr++;
+            } 
+            char* endPtr = NULL;
+            u32 i = strtoul(ptr, &endPtr, 0);
+            elog_d(i);
+            while (*endPtr != '\n') {
+                if (*endPtr == '/') {
+                    elog_c(*endPtr);
+                    abort();
+                }              
+            } 
+
             abort();
         }
 
