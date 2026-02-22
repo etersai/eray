@@ -231,6 +231,14 @@ internal inline void update_camera_info_strings(ProgramContext* ctx)
 global ProgramContext program_ctx;
 global RendererContext renderer_ctx;
 
+//credit: https://www.gingerbill.org/article/2019/02/01/memory-allocation-strategies-001/
+//"The biggest difference is realizing that the memory is 
+// virtually-mapped and linear, and that you can split that linear memory space in sections."
+// When it comes to allocation, there are three main aspects to think about
+// 1. The size of the allocation
+// 2. The lifetime of that memory
+// 3. The usage of that memory
+
 int main(void)
 {
     console_post_cwd();
