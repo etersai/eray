@@ -249,18 +249,26 @@ int main(int argc, char* argv[])
     // TODO(eter): make .ini with defaults parser.
     unused(argc);
     unused(argv);
-
     console_post_cwd();
-    {
+    {// MIC TEST MIC TEST.
+        Arenka scratch_asset_arena = arenka_map(MB(64));
+        if (scratch_asset_arena.addr_start == NULL) { 
+            elog_abort("Os failed at giving you memory xd");
+        }
+        
+        //scratch space.
         string8 defaults[3] = {0};
         defaults[0] = str8_lit(PATH_SHADERS_DEFAULT); 
         defaults[1] = str8_lit(PATH_TEXTURES_DEFAULT); 
         defaults[2] = str8_lit(PATH_MODELS_DEFAULT); 
-
+        
         for (i32 i = 0; i < arrlen(defaults); i++) {
             os_list_directory(defaults[i]);
         }
-
+        
+        // load assets.
+        
+        arenka_unmap(&scratch_asset_arena);
         abort();
     }
 
