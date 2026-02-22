@@ -1,7 +1,7 @@
+#define _DEFAULT_SOURCE /* for DT_REG, DT_DIR etc. */
 #include "platform.h"
 #include "common/elog.h"
 #include "common/str.h"
-#include "common/types.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -19,7 +19,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "STB/stb_image.h" 
 
-#if 0 /* made my own XD */
+#if 0 /* building my own XD */
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tinyobj_loader_c/tinyobj_loader_c.h"
 #endif
@@ -43,6 +43,9 @@ typedef enum {
 // top of win32_platform.c
 // #define _CRT_SECURE_NO_WARNINGS
 // MSVC thing => scanf - scanf_s WINDOWS THINGS XD
+//
+// dev/null — write to it: discarded. Read from it: EOF.
+// dev/zero — read from it: infinite 0x00 bytes.
 
 void os_list_directory(string8 path)
 {
@@ -51,18 +54,41 @@ void os_list_directory(string8 path)
 
     DIR* dir = opendir(path_as_cstr);
     if (dir == NULL) {
-        elog_abort("dir null");
+        elog_fmt("opendir failed: %s", strerror(errno)); // TODO(eter).
+        return;
     }
     
     errno = 0;
     struct dirent* ent;
     while ((ent = readdir(dir)) != NULL) {
-        if (strcmp(ent->d_name, ".") == 0) continue;
+        if (strcmp(ent->d_name, ".") == 0)  continue;
         if (strcmp(ent->d_name, "..") == 0) continue;
+        
+        switch (ent->d_type) {
+/*symlink*/ case DT_LNK: /*fallthrough*/ 
+            case DT_REG: 
+                elog_s("REGULAR OR SYMLINK:");
+                elog_s(ent->d_name); 
+            break;
+
+            case DT_DIR:
+                elog_s("DIR:");
+                elog_s(ent->d_name);
+            break;
+
+            case DT_BLK:/*fallthrough*/
+            case DT_CHR: 
+            case DT_FIFO:
+            case DT_SOCK:
+            case DT_UNKNOWN:
+            default:
+                elog_s("SOMETHING ELSE:");
+                elog_s(ent->d_name);
+        }
 
     }
     if (errno != 0) {
-        elog_abort("Problem reading dir");
+        elog_fmt("readdir failed: %s", strerror(errno)); // TODO(eter).
     }
 
     closedir(dir); // returns -1 on error, but that shoudl not happen?
