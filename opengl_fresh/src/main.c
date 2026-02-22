@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
         // load assets.
         
         arenka_unmap(&scratch_asset_arena);
-        abort();
+//        abort();
     }
 
     // Setup GLFW and OpenGL Context
