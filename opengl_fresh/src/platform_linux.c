@@ -1,13 +1,16 @@
 #include "platform.h"
+#include "common/elog.h"
 #include "common/str.h"
 #include "common/types.h"
 
 #include <assert.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -21,15 +24,48 @@
 #include "tinyobj_loader_c/tinyobj_loader_c.h"
 #endif
 
+#define str8_to_cstr_buffer(buffer, str8) do { \
+    assert((str8).size < sizeof((buffer))); \
+    memcpy((buffer), (str8).bytes, (str8).size); \
+    (buffer)[(str8).size] = '\0'; \
+} while (0)
+
+typedef enum {
+    OS_DIR_ERROR_NONE = 0,
+    OS_DIR_ERROR_BAD_DIRECTORY,
+    OS_DIR_ERROR_NAME_TOO_LONG,
+    OS_DIR_ERROR_PERMISSION_DENIED,
+    OS_DIR_ERROR_LIMIT_REACHED,
+    OS_DIR_ERROR_NOT_A_DIRECTORY,
+    OS_DIR_ERROR_MEM_FAIL
+} OS_DIR_ERROR;
+
+// top of win32_platform.c
+// #define _CRT_SECURE_NO_WARNINGS
+// MSVC thing => scanf - scanf_s WINDOWS THINGS XD
+
 void os_list_directory(string8 path)
 {
-    assert(path.size < OS_MAX_PATH);
     char path_as_cstr[OS_MAX_PATH];
+    str8_to_cstr_buffer(path_as_cstr, path); // assert should be handled diffrently.
 
-    memcpy(path_as_cstr, path.bytes, path.size);
-    path_as_cstr[path.size] = 'A';
+    DIR* dir = opendir(path_as_cstr);
+    if (dir == NULL) {
+        elog_abort("dir null");
+    }
+    
+    errno = 0;
+    struct dirent* ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0) continue;
+        if (strcmp(ent->d_name, "..") == 0) continue;
 
-    printf("%s\n", path_as_cstr);
+    }
+    if (errno != 0) {
+        elog_abort("Problem reading dir");
+    }
+
+    closedir(dir); // returns -1 on error, but that shoudl not happen?
 }
 
 MappedFile os_map_file(const char* path)

@@ -244,7 +244,7 @@ int main(void)
     console_post_cwd();
 
     {
-        string8 s = str8_lit("hello"); 
+        string8 s = str8_lit("./assets"); 
         os_list_directory(s); 
 
         abort();
