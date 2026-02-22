@@ -91,6 +91,8 @@ void os_list_directory(string8 path)
         elog_fmt("readdir failed: %s", strerror(errno)); // TODO(eter).
     }
 
+
+
     closedir(dir); // returns -1 on error, but that shoudl not happen?
 }
 

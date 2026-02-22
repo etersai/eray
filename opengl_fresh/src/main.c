@@ -239,13 +239,27 @@ global RendererContext renderer_ctx;
 // 2. The lifetime of that memory
 // 3. The usage of that memory
 
-int main(void)
-{
-    console_post_cwd();
+// make it CLI
+#define PATH_SHADERS_DEFAULT "./assets/shaders"
+#define PATH_TEXTURES_DEFAULT "./assets/textures"
+#define PATH_MODELS_DEFAULT "./assets/models"
 
+int main(int argc, char* argv[])
+{
+    // TODO(eter): make .ini with defaults parser.
+    unused(argc);
+    unused(argv);
+
+    console_post_cwd();
     {
-        string8 s = str8_lit("./assets"); 
-        os_list_directory(s); 
+        string8 defaults[3] = {0};
+        defaults[0] = str8_lit(PATH_SHADERS_DEFAULT); 
+        defaults[1] = str8_lit(PATH_TEXTURES_DEFAULT); 
+        defaults[2] = str8_lit(PATH_MODELS_DEFAULT); 
+
+        for (i32 i = 0; i < arrlen(defaults); i++) {
+            os_list_directory(defaults[i]);
+        }
 
         abort();
     }
