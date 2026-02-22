@@ -242,6 +242,14 @@ global RendererContext renderer_ctx;
 int main(void)
 {
     console_post_cwd();
+
+    {
+        string8 s = str8_lit("hello"); 
+        os_list_directory(s); 
+
+        abort();
+    }
+
     // Setup GLFW and OpenGL Context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

@@ -11,7 +11,8 @@ typedef struct {
 } string8;
 
 string8 str8(u8* str, u64 size);
-void str8_print(string8 str);
+string8 str8_cstr(const char* cstr);
+void str8_print(string8 str); // just for debug rn.
 string8 str8_fmt(Arenka* arena, char* fmt, ...);
 
 #define str8_lit(str) str8((u8*)(str), sizeof(str) - 1)

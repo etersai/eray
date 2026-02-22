@@ -10,6 +10,11 @@ string8 str8(u8* str, u64 size)
     return (string8){str,size};
 }
 
+string8 str8_cstr(const char* cstr)
+{
+    return (string8){(u8*)cstr, strlen(cstr)};
+}
+
 void str8_print(string8 str)
 {
     fwrite(str.bytes, 1, str.size, stderr);
