@@ -263,23 +263,12 @@ int main(int argc, char* argv[])
         defaults[1] = str8_lit(PATH_TEXTURES_DEFAULT); 
         defaults[2] = str8_lit(PATH_MODELS_DEFAULT); 
         
-        for (i32 i = 0; i < arrlen(defaults); i++) {
-            os_list_directory(defaults[i]);
-        }
+        os_get_directory_contets(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
         
-        // load assets.
-        string8 str;
-        string8 file = str8_lit("basic2d.fs");
-        str8_get_extension_after_dot(file, &str);        
-        str8_print(str);
-
-
-
+        
+        
+        
         arenka_unmap(&scratch_asset_arena);
-
- //       OsDirectoryContents c = os_get_directory_contents(defaults[0]);
-        
-
         abort();
     }
 
