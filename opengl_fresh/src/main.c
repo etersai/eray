@@ -266,6 +266,18 @@ int main(int argc, char* argv[])
         OsDirectoryContents content = os_get_directory_contents(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
         elog_p(content.entries);
         elog_zu(content.count);
+
+        for (int i = 0; i < content.count; i++) {
+            str8_print(content.entries[i].name);
+            switch (content.entries[i].type)
+            {
+                case OS_FILE_SYMLINK:
+                case OS_FILE_DIRECTORY:
+                case OS_FILE_REGULAR:
+                case OS_FILE_UNKNOWN:
+                case OS_FILE_SOMETHING_ELSE_TODO_BASICALLY:
+            }
+        }
         
         
         arenka_unmap(&scratch_asset_arena);

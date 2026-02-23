@@ -17,9 +17,12 @@ string8 str8_cstr(const char* cstr)
     return (string8){(u8*)cstr, strlen(cstr)};
 }
 
-string8 str8_from_cstr(Arenka* arenka, const char* cstr)
+string8 str8_from_cstr(Arenka* arena, const char* cstr)
 {
-    
+    u64 len = strlen(cstr);
+    u8* bytes = arenka_get_piece(arena, len); 
+    memcpy(bytes, cstr, len);
+    return (string8){bytes, len};
 }
 
 void str8_print(string8 str)

@@ -34,7 +34,8 @@ static Arenka arenka_map(size_t size_in_bytes)
     return arena;
 }
 
-static unsigned char* arenka_get_piece(Arenka* arena, size_t size_in_bytes)
+// USE VOID*
+static void* arenka_get_piece(Arenka* arena, size_t size_in_bytes)
 {
     if (arena->offset + size_in_bytes > arena->capacity) { 
         return NULL;

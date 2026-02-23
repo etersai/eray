@@ -46,8 +46,6 @@ OsDirectoryContents os_get_directory_contents(Arenka* arena, string8 dirpath)
     }/*Thanks GOD*/
     
     u64 file_count = os_count_files_in_driectory(dir);
-    elog_pfx_zu("file count: ", file_count);
-    
     OsDirectoryEntry* entries = (OsDirectoryEntry*)arenka_get_piece(arena, sizeof(OsDirectoryEntry)*file_count);
 
     u64 count = 0;
@@ -70,21 +68,22 @@ OsDirectoryContents os_get_directory_contents(Arenka* arena, string8 dirpath)
                 entries[count].name = str8_from_cstr(arena, ent->d_name); 
                 entries[count].type = OS_FILE_DIRECTORY; 
             break;
+            case DT_UNKNOWN:
+                entries[count].name = str8_from_cstr(arena, ent->d_name); 
+                entries[count].type = OS_FILE_UNKNOWN;  
+            break;
             case DT_BLK: /*fallthrough*/
             case DT_CHR:
             case DT_FIFO:
             case DT_SOCK:
-            case DT_UNKNOWN:
             default:
                 entries[count].name = str8_from_cstr(arena, ent->d_name); 
                 entries[count].type = OS_FILE_SOMETHING_ELSE_TODO_BASICALLY;  
         }
         count++;
     }
-              
-
     closedir(dir);
-    return (OsDirectoryContents){NULL, 0};
+    return (OsDirectoryContents){entries, file_count};
 }
 
 void os_list_directory(string8 path)
