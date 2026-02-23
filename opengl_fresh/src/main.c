@@ -250,10 +250,11 @@ int main(int argc, char* argv[])
     unused(argc);
     unused(argv);
     console_post_cwd();
+
     {// MIC TEST MIC TEST.
         Arenka scratch_asset_arena = arenka_map(MB(64));
         if (scratch_asset_arena.addr_start == NULL) { 
-            elog_abort("Os failed at giving you memory xd");
+            elog_abort("OS failed at giving you memory xd");
         }
         
         //scratch space.
@@ -267,9 +268,19 @@ int main(int argc, char* argv[])
         }
         
         // load assets.
-        
+        string8 str;
+        string8 file = str8_lit("basic2d.fs");
+        str8_get_extension_after_dot(file, &str);        
+        str8_print(str);
+
+
+
         arenka_unmap(&scratch_asset_arena);
-//        abort();
+
+ //       OsDirectoryContents c = os_get_directory_contents(defaults[0]);
+        
+
+        abort();
     }
 
     // Setup GLFW and OpenGL Context

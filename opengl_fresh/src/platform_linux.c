@@ -1,5 +1,7 @@
 #define _DEFAULT_SOURCE /* for DT_REG, DT_DIR etc. */
 #include "platform.h"
+#include "common/types.h"
+#include "common/arena.h"
 #include "common/elog.h"
 #include "common/str.h"
 
@@ -30,22 +32,25 @@
     (buffer)[(str8).size] = '\0'; \
 } while (0)
 
-typedef enum {
-    OS_DIR_ERROR_NONE = 0,
-    OS_DIR_ERROR_BAD_DIRECTORY,
-    OS_DIR_ERROR_NAME_TOO_LONG,
-    OS_DIR_ERROR_PERMISSION_DENIED,
-    OS_DIR_ERROR_LIMIT_REACHED,
-    OS_DIR_ERROR_NOT_A_DIRECTORY,
-    OS_DIR_ERROR_MEM_FAIL
-} OS_DIR_ERROR;
+                                                        // RADgametoolz wannabe style comments XD
+internal u64 os_count_files_in_driectory(DIR* dir);/*TODO(eter):this should be abstracted for windows/linux somehow*/
 
-// top of win32_platform.c
-// #define _CRT_SECURE_NO_WARNINGS
-// MSVC thing => scanf - scanf_s WINDOWS THINGS XD
-//
-// dev/null — write to it: discarded. Read from it: EOF.
-// dev/zero — read from it: infinite 0x00 bytes.
+OsDirectoryContents os_get_directory_contents(Arenka* arena, string8 dirpath)
+{
+    char dirpath_as_cstr[OS_MAX_PATH];
+    str8_to_cstr_buffer(dirpath_as_cstr, dirpath); // assert should be handled diffrently.
+
+    DIR* dir = opendir(dirpath_as_cstr);
+    if (dir == NULL){
+        return (OsDirectoryContents){NULL, 0};
+    }/*Thanks GOD*/
+    
+    u64 file_count = os_count_files_in_driectory(dir);
+    elog_zu(file_count);
+    rewinddir(dir);
+
+    return (OsDirectoryContents){NULL, 0};
+}
 
 void os_list_directory(string8 path)
 {
@@ -57,6 +62,7 @@ void os_list_directory(string8 path)
         elog_fmt("opendir failed: %s", strerror(errno)); // TODO(eter).
         return;
     }
+
     
     errno = 0;
     struct dirent* ent;
@@ -142,6 +148,33 @@ char* os_get_cwd(char* buf, size_t size)
 { // TODO: windows idef _getcwd() ?
     return getcwd(buf, size);
 }
-
-
+                                                        // RADgametoolz wannabe style comments XD
+internal u64 os_count_files_in_driectory(DIR* dir) /*TODO(eter):this should be abstracted for windows/linux somehow*/
+{
+    u64 count = 0;
+    errno = 0;
+    struct dirent* ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0)  continue;
+        if (strcmp(ent->d_name, "..") == 0) continue;
+        switch (ent->d_type)
+        {
+            case DT_LNK: /*fallthrough*/ 
+            case DT_REG: 
+            case DT_DIR:
+            case DT_BLK:
+            case DT_CHR: 
+            case DT_FIFO:
+            case DT_SOCK:
+            case DT_UNKNOWN:
+            default:
+                count++;
+        } /*switch*/
+    } /*while*/
+    if (errno != 0) {
+        count = 0;
+        return count;
+    }
+    return count;
+}
 
