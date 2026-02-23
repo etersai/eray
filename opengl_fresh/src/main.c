@@ -268,15 +268,15 @@ int main(int argc, char* argv[])
         elog_zu(content.count);
 
         for (int i = 0; i < content.count; i++) {
-            str8_print(content.entries[i].name);
             switch (content.entries[i].type)
             {
-                case OS_FILE_SYMLINK:
-                case OS_FILE_DIRECTORY:
-                case OS_FILE_REGULAR:
-                case OS_FILE_UNKNOWN:
-                case OS_FILE_SOMETHING_ELSE_TODO_BASICALLY:
+                case OS_FILE_SYMLINK: elog_s("symlink"); break;
+                case OS_FILE_DIRECTORY:elog_s("directory"); break;
+                case OS_FILE_REGULAR:elog_s("regular"); break;
+                case OS_FILE_UNKNOWN:elog_s("symlink"); break;
+                case OS_FILE_SOMETHING_ELSE_TODO_BASICALLY:elog_s("something else"); break;
             }
+            str8_print(content.entries[i].name);
         }
         
         
