@@ -263,9 +263,9 @@ int main(int argc, char* argv[])
         defaults[1] = str8_lit(PATH_TEXTURES_DEFAULT); 
         defaults[2] = str8_lit(PATH_MODELS_DEFAULT); 
         
-        os_get_directory_contets(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
-        
-        
+        OsDirectoryContents content = os_get_directory_contents(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
+        elog_p(content.entries);
+        elog_zu(content.count);
         
         
         arenka_unmap(&scratch_asset_arena);

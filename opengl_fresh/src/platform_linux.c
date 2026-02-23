@@ -46,9 +46,44 @@ OsDirectoryContents os_get_directory_contents(Arenka* arena, string8 dirpath)
     }/*Thanks GOD*/
     
     u64 file_count = os_count_files_in_driectory(dir);
-    elog_zu(file_count);
-    rewinddir(dir);
+    elog_pfx_zu("file count: ", file_count);
+    
+    OsDirectoryEntry* entries = (OsDirectoryEntry*)arenka_get_piece(arena, sizeof(OsDirectoryEntry)*file_count);
 
+    u64 count = 0;
+    errno = 0;
+    struct dirent* ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0)  continue;
+        if (strcmp(ent->d_name, "..") == 0) continue;
+        switch (ent->d_type)
+        {
+            case DT_LNK:
+                entries[count].name = str8_from_cstr(arena, ent->d_name); 
+                entries[count].type = OS_FILE_SYMLINK; 
+            break;
+            case DT_REG:
+                entries[count].name = str8_from_cstr(arena, ent->d_name); 
+                entries[count].type = OS_FILE_REGULAR; 
+            break;
+            case DT_DIR:
+                entries[count].name = str8_from_cstr(arena, ent->d_name); 
+                entries[count].type = OS_FILE_DIRECTORY; 
+            break;
+            case DT_BLK: /*fallthrough*/
+            case DT_CHR:
+            case DT_FIFO:
+            case DT_SOCK:
+            case DT_UNKNOWN:
+            default:
+                entries[count].name = str8_from_cstr(arena, ent->d_name); 
+                entries[count].type = OS_FILE_SOMETHING_ELSE_TODO_BASICALLY;  
+        }
+        count++;
+    }
+              
+
+    closedir(dir);
     return (OsDirectoryContents){NULL, 0};
 }
 
@@ -171,10 +206,10 @@ internal u64 os_count_files_in_driectory(DIR* dir) /*TODO(eter):this should be a
                 count++;
         } /*switch*/
     } /*while*/
+    rewinddir(dir);
     if (errno != 0) {
         count = 0;
         return count;
     }
     return count;
 }
-

@@ -29,15 +29,16 @@ typedef enum {
     OS_FILE_REGULAR, 
     OS_FILE_SYMLINK,
     OS_FILE_DIRECTORY,
+    OS_FILE_SOMETHING_ELSE_TODO_BASICALLY,
 } os_file_type; 
 
 typedef struct {
-    string8      path; 
+    string8      name; 
     os_file_type type;  
 } OsDirectoryEntry;
 
 typedef struct {
-    OsDirectoryEntry* data;
+    OsDirectoryEntry* entries;
     u64               count;
 } OsDirectoryContents;
 
@@ -48,7 +49,7 @@ typedef struct {
 
 MappedFile os_map_file(const char* path);
 void os_unmap_file(MappedFile* file);
-OsDirectoryContents os_get_directory_contets(Arenka* arena, string8 dirpath);
+OsDirectoryContents os_get_directory_contents(Arenka* arena, string8 dirpath);
 void os_list_directory(string8 path);
 char* os_get_cwd(char* buf, size_t size);
 

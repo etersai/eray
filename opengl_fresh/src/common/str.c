@@ -17,6 +17,11 @@ string8 str8_cstr(const char* cstr)
     return (string8){(u8*)cstr, strlen(cstr)};
 }
 
+string8 str8_from_cstr(Arenka* arenka, const char* cstr)
+{
+    
+}
+
 void str8_print(string8 str)
 {
     fwrite(str.bytes, 1, str.size, stderr);
