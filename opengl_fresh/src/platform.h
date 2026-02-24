@@ -50,7 +50,6 @@ typedef struct {
 MappedFile os_map_file(const char* path);
 void os_unmap_file(MappedFile* file);
 OsDirectoryContents os_get_directory_contents(Arenka* arena, string8 dirpath);
-void os_list_directory(string8 path);
 char* os_get_cwd(char* buf, size_t size);
 
 #endif /* ERAY_PLATFORM_H_ */

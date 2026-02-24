@@ -27,6 +27,7 @@ string8 str8_from_cstr(Arenka* arena, const char* cstr)
 
 void str8_print(string8 str)
 {
+    fprintf(stderr, "str8 bytes: ");
     fwrite(str.bytes, 1, str.size, stderr);
     putchar('\n');
     fprintf(stderr, "str8 size: %zu", str.size);

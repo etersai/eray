@@ -251,37 +251,40 @@ int main(int argc, char* argv[])
     unused(argv);
     console_post_cwd();
 
-    {// MIC TEST MIC TEST.
+    { // Asset loading kinda test.
         Arenka scratch_asset_arena = arenka_map(MB(64));
         if (scratch_asset_arena.addr_start == NULL) { 
             elog_abort("OS failed at giving you memory xd");
         }
         
-        //scratch space.
-        string8 defaults[3] = {0};
-        defaults[0] = str8_lit(PATH_SHADERS_DEFAULT); 
-        defaults[1] = str8_lit(PATH_TEXTURES_DEFAULT); 
-        defaults[2] = str8_lit(PATH_MODELS_DEFAULT); 
-        
-        OsDirectoryContents content = os_get_directory_contents(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
-        elog_p(content.entries);
-        elog_zu(content.count);
+        OsDirectoryContents shader_folder_contents = os_get_directory_contents(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
 
-        for (int i = 0; i < content.count; i++) {
-            switch (content.entries[i].type)
-            {
-                case OS_FILE_SYMLINK: elog_s("symlink"); break;
-                case OS_FILE_DIRECTORY:elog_s("directory"); break;
-                case OS_FILE_REGULAR:elog_s("regular"); break;
-                case OS_FILE_UNKNOWN:elog_s("symlink"); break;
-                case OS_FILE_SOMETHING_ELSE_TODO_BASICALLY:elog_s("something else"); break;
+        string8 extension_view; 
+        for (u64 i = 0; i < shader_folder_contents.count; i++) {
+
+            OsDirectoryEntry entry = shader_folder_contents.entries[i];
+            if (entry.type == OS_FILE_REGULAR) {
+
+                if (!str8_get_extension_after_dot(entry.name, &extension_view)) {
+                    continue;
+                }
+
+                if (str8_cmp_cstr(extension_view, "vs")) {
+                    elog_s("VERTEX SHADER");
+                }
+                else if (str8_cmp_cstr(extension_view, "fs")) {
+                    elog_s("FRAGMENT SHADER");
+                }
+                else
+                {
+                    elog_s("BAD EXTENSION");
+                }
+
+                str8_print(entry.name);
             }
-            str8_print(content.entries[i].name);
         }
         
-        
         arenka_unmap(&scratch_asset_arena);
-        abort();
     }
 
     // Setup GLFW and OpenGL Context

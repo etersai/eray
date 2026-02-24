@@ -5,10 +5,16 @@
 #include <assert.h>
 
 #define unused(var) ((void)(var))
-#define perma_assert(x) do { if (!x) { fprintf(stderr,"Perma assertion: %s, %s:%d", #x, __FILE__, __LINE__); abort(); }} while (0)
+#define perma_assert(x) do { if (!x) { fprintf(stderr,"Perma assertion: %s, %s:%d\n", #x, __FILE__, __LINE__); abort(); }} while (0)
 #ifndef arrlen
 #define arrlen(arr) (sizeof((arr)) / sizeof((arr)[0]))
 #endif /*arrlen*/
+#ifndef unreachable
+#define unreachable() do { \
+    fprintf(stderr, "Unreachable code path reached! %s:%d in function: %s\n", __FILE__, __LINE__, __func__); \
+    abort(); \
+} while (0)
+#endif /*unreachable*/
 
 // credit Ryan Fleury
 #define global static 
