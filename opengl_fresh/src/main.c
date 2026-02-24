@@ -263,9 +263,12 @@ int main(int argc, char* argv[])
         for (u64 i = 0; i < shader_folder_contents.count; i++) {
 
             OsDirectoryEntry entry = shader_folder_contents.entries[i];
+
             if (entry.type == OS_FILE_REGULAR) {
 
                 if (!str8_get_extension_after_dot(entry.name, &extension_view)) {
+                    elog_s("NO/BAD EXTENSION");
+                    str8_print(entry.name);
                     continue;
                 }
 
@@ -275,16 +278,14 @@ int main(int argc, char* argv[])
                 else if (str8_cmp_cstr(extension_view, "fs")) {
                     elog_s("FRAGMENT SHADER");
                 }
-                else
-                {
-                    elog_s("BAD EXTENSION");
-                }
 
                 str8_print(entry.name);
+
             }
         }
         
         arenka_unmap(&scratch_asset_arena);
+        elog_abort("STOP!");
     }
 
     // Setup GLFW and OpenGL Context
