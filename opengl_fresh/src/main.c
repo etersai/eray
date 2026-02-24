@@ -281,8 +281,11 @@ int main(int argc, char* argv[])
 
                 str8_print(entry.name);
 
-            }
-        }
+            } /*entry == REG*/
+        } /*for*/
+
+
+
         
         arenka_unmap(&scratch_asset_arena);
         elog_abort("STOP!");
