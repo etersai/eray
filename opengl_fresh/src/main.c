@@ -34,7 +34,14 @@ global bool move_w;
 global bool move_s;
 global bool move_a;
 global bool move_d;
+global double last_x;
+global double last_y;
+global double mouse_dx;
+global double mouse_dy;
+global bool first_mouse = true;
+global bool cursor_caputred = true;
 global const float mouse_sens = 0.05f;
+
 global const unsigned int SCR_WIDTH = 1920; // 16:9
 global const unsigned int SCR_HEIGHT = 1080; 
 //global const unsigned int SCR_WIDTH = 1280; // 16:9
@@ -52,11 +59,11 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
 }
 
-global double last_x;
-global double last_y;
-global double mouse_dx;
-global double mouse_dy;
-global bool first_mouse = true;
+void platform_capture_cursor(void)
+{
+
+}
+
 //#define MOUSE_FLIP_Y
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -77,7 +84,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     last_x = xpos;
     last_y = ypos;
 }
-
 
 
 // END PLATFORM ////////////////////////////////////////
