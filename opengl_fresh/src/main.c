@@ -40,7 +40,7 @@ global double last_y;
 global double mouse_dx;
 global double mouse_dy;
 global bool first_mouse = true;
-global bool cursor_free = false;
+global bool cursor_free = true;
 global const float mouse_sens = 0.05f;
 
 global const unsigned int SCR_WIDTH = 1920; // 16:9
@@ -313,10 +313,10 @@ int main(int argc, char* argv[])
 
     glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
     glfwSetCursorPosCallback(g_window, mouse_callback);
-    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(g_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
+    platform_capture_cursor();
 
     glfwMakeContextCurrent(g_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -465,7 +465,7 @@ int main(int argc, char* argv[])
     double curr_time;
     double prev_time = glfwGetTime();
     double prev_frame_time = prev_time;
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(g_window)) {
         // TIMING STUFF.
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
@@ -478,7 +478,7 @@ int main(int argc, char* argv[])
         }
 
         // HANDLE INPUT
-        processInput(window);
+        processInput(g_window);
         update_camera_input(&program_ctx.camera);
 
         local_persist float rotacja = 0.0f;
@@ -556,7 +556,7 @@ int main(int argc, char* argv[])
         r_flush_text(&renderer_ctx);
         rotacja += 0.01f;
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(g_window);
         glfwPollEvents();
         move_w = false;
         move_s = false;
