@@ -78,10 +78,6 @@ void r_draw_quad(RendererContext* r, float x, float y, float w, float h, Texture
     glEnable(GL_DEPTH_TEST);
 }
 
-void r_draw_block(RendererContext* r, const matf4x4* transform, Texture texture)
-{
-    
-}
 
 void r_draw_cube(RendererContext* r, const matf4x4* transform, Colorek color)
 {
