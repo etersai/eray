@@ -27,7 +27,6 @@
 // Feel free to contribute, though. Still learning myself.
 
 #include <assert.h>
-#include <iso646.h> // wierd  check it
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

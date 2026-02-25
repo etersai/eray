@@ -48,6 +48,16 @@ global const unsigned int SCR_HEIGHT = 1080;
 //global const unsigned int SCR_WIDTH = 1280; // 16:9
 //global const unsigned int SCR_HEIGHT = 720;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+        
+        elog_s("WORKS!");
+
+    }
+}
+
 void processInput(GLFWwindow *window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -58,7 +68,10 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { move_s = true; }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
+
+     
 }
+
 
 void platform_capture_cursor(void)
 {
