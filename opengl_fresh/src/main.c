@@ -30,6 +30,16 @@
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
+
+#define BUTTON_STATE_NONE (0 << 0)
+#define BUTTON_STATE_PRESS (1 << 0)
+#define BUTTON_STATE_HELD (1 << 0)
+#define BUTTON_STATE_RELEASED (1 << 0)
+
+typedef struct {
+     
+} Button;
+
 global GLFWwindow* g_window;
 global bool move_w;
 global bool move_s;
@@ -40,7 +50,7 @@ global double last_y;
 global double mouse_dx;
 global double mouse_dy;
 global bool first_mouse = true;
-global bool cursor_free = true;
+global bool cursor_free = false;
 global const float mouse_sens = 0.05f;
 
 global const unsigned int SCR_WIDTH = 1920; // 16:9
@@ -58,6 +68,7 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { move_s = true; }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
+    if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT == GLFW_PRESS) {})
 }
 
 void platform_capture_cursor(void)
