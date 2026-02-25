@@ -313,10 +313,11 @@ int main(int argc, char* argv[])
 
     glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
     glfwSetCursorPosCallback(g_window, mouse_callback);
+
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(g_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
-    platform_capture_cursor();
+    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwMakeContextCurrent(g_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
