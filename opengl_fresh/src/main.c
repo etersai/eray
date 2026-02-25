@@ -30,6 +30,7 @@
 
 /////////////////////////////////////////////
 // THIS GOES TO PLATFORM
+global GLFWwindow* g_window;
 global bool move_w;
 global bool move_s;
 global bool move_a;
@@ -39,7 +40,7 @@ global double last_y;
 global double mouse_dx;
 global double mouse_dy;
 global bool first_mouse = true;
-global bool cursor_caputred = true;
+global bool cursor_free = false;
 global const float mouse_sens = 0.05f;
 
 global const unsigned int SCR_WIDTH = 1920; // 16:9
@@ -61,7 +62,12 @@ void processInput(GLFWwindow *window)
 
 void platform_capture_cursor(void)
 {
+glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
 
+void platform_free_cursor(void)
+{
+glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 //#define MOUSE_FLIP_Y
@@ -84,8 +90,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     last_x = xpos;
     last_y = ypos;
 }
-
-
 // END PLATFORM ////////////////////////////////////////
 
 typedef enum {
@@ -300,21 +304,21 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Clonecraft", NULL, NULL);
-    if (window == NULL) {
+    g_window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Clonecraft", NULL, NULL);
+    if (g_window == NULL) {
         fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
         return 1;
     }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(g_window, mouse_callback);
+    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (glfwRawMouseMotionSupported()) {
-        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        glfwSetInputMode(g_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
 
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(g_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
