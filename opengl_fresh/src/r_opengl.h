@@ -48,6 +48,7 @@ typedef enum {
 
 void gl_enable_depth_test(void);
 void gl_set_clear_color(Colorek color);
+void gl_set_viewport(int x, int y, int width, int height);
 
 GpuPMappedBuffer gpu_p_mapped_buffer_create(size_t size_in_bytes);
 void gpu_p_mapped_buffer_destroy(GpuPMappedBuffer* buffer);

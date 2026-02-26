@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <iso646.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,6 +8,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "input.h"
 #include "platform.h"
 #include "r_main.h"
 #include "r_opengl.h"
@@ -43,18 +43,58 @@ global double mouse_dy;
 global bool first_mouse = true;
 global const float mouse_sens = 0.05f;
 
-global const unsigned int SCR_WIDTH = 1920; // 16:9
-global const unsigned int SCR_HEIGHT = 1080; 
+global const unsigned int SCR_WIDTH = 1280; // 16:9
+global const unsigned int SCR_HEIGHT = 720; 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
+// 1920
+// 1080
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) { gl_set_viewport(0, 0, width, height); }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-
-        elog_s("WORKS!");
-
+    if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+        elog_s("LETTER");
     }
+
+    if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
+        elog_s("NUMBERS");
+    }
+
+    if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F25) {
+        elog_s("EFKI");
+    }
+
+    if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_EQUAL) {
+        elog_s("NUMPAD");
+    }
+
+    if (key >= GLFW_KEY_LEFT_SHIFT && key <= GLFW_KEY_RIGHT_SUPER) {
+        elog_s("SHIFTY CONTROLE ITP");
+    }
+
+    if (key >= GLFW_KEY_CAPS_LOCK && key <= GLFW_KEY_PAUSE) {
+        elog_s("LOCKI I MISC");
+    }
+
+    if (key >= GLFW_KEY_ESCAPE && key <= GLFW_KEY_END) {
+        elog_s("ENTERY, TABY, STRZALKI");
+    }
+
+#define GLFW_KEY_SPACE              32
+#define GLFW_KEY_APOSTROPHE         39  /* ' */
+#define GLFW_KEY_COMMA              44  /* , */
+#define GLFW_KEY_MINUS              45  /* - */
+#define GLFW_KEY_PERIOD             46  /* . */
+#define GLFW_KEY_SLASH              47  /* / */
+#define GLFW_KEY_SEMICOLON          59  /* ; */
+#define GLFW_KEY_EQUAL              61  /* = */
+#define GLFW_KEY_LEFT_BRACKET       91  /* [ */
+#define GLFW_KEY_BACKSLASH          92  /* \ */
+#define GLFW_KEY_RIGHT_BRACKET      93  /* ] */
+#define GLFW_KEY_GRAVE_ACCENT       96  /* ` */
+
+
 }
 
 void processInput(GLFWwindow *window)
@@ -70,17 +110,6 @@ void processInput(GLFWwindow *window)
 }
 
 
-void platform_capture_cursor(void)
-{
-    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-}
-
-void platform_free_cursor(void)
-{
-    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-}
-
-//#define MOUSE_FLIP_Y
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (first_mouse) {
@@ -395,6 +424,7 @@ int main(int argc, char* argv[])
     }
 
 
+
     // font
     font_create(&program_ctx.font, font_arial_white, program_ctx.texture_font);  
   
@@ -474,9 +504,9 @@ int main(int argc, char* argv[])
 
     u32 frames = 0;
     f64 delta_time;
-    double curr_time;
-    double prev_time = glfwGetTime();
-    double prev_frame_time = prev_time;
+    f64 curr_time;
+    f64 prev_time = glfwGetTime();
+    f64 prev_frame_time = prev_time;
     while (!glfwWindowShouldClose(g_window)) {
         // TIMING STUFF.
         curr_time = glfwGetTime();
@@ -561,7 +591,15 @@ int main(int argc, char* argv[])
 
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
-
+        
+        int wsizew;
+        int wsizeh; 
+        int fsizew;
+        int fsizeh;
+        glfwGetWindowSize(g_window, &wsizew, &wsizeh);
+        glfwGetFramebufferSize(g_window, &fsizew, &fsizeh);
+        string8 winfo = str8_fmt(&program_ctx.arena_scratch, "[%d, %d][%d, %d]", wsizew, wsizeh, fsizew, fsizeh);
+        r_draw_text_str8(&renderer_ctx, 300.0f, 300.0f, winfo);
 
         // UI
         r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});

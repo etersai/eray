@@ -1,10 +1,7 @@
 #ifndef INPUT_H_
 #define INPUT_H_
 
-#define BUTTON_STATE_NONE     (0 << 0)
-#define BUTTON_STATE_PRESS    (1 << 0)
-#define BUTTON_STATE_REPEAT   (1 << 1)
-#define BUTTON_STATE_RELEASED (1 << 2)
+#include "common/types.h"
 
 enum
 {
@@ -15,44 +12,19 @@ enum
     BUTTON_MINUS,
     BUTTON_PERIOD,
     BUTTON_SLASH,
-    BUTTON_0,
-    BUTTON_1,
-    BUTTON_2,
-    BUTTON_3,
-    BUTTON_4,
-    BUTTON_5,
-    BUTTON_6,
-    BUTTON_7,
-    BUTTON_8,
-    BUTTON_9,
+
+    BUTTON_0, BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4,
+    BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9,
+
     BUTTON_SEMICOLON,
     BUTTON_EQUAL,
-    BUTTON_A,
-    BUTTON_B,
-    BUTTON_C,
-    BUTTON_D,
-    BUTTON_E,
-    BUTTON_F,
-    BUTTON_G,
-    BUTTON_H,
-    BUTTON_I,
-    BUTTON_J,
-    BUTTON_K,
-    BUTTON_L,
-    BUTTON_M,
-    BUTTON_N,
-    BUTTON_O,
-    BUTTON_P,
-    BUTTON_Q,
-    BUTTON_R,
-    BUTTON_S,
-    BUTTON_T,
-    BUTTON_U,
-    BUTTON_V,
-    BUTTON_W,
-    BUTTON_X,
-    BUTTON_Y,
-    BUTTON_Z,
+
+    BUTTON_A, BUTTON_B, BUTTON_C, BUTTON_D, BUTTON_E, 
+    BUTTON_F, BUTTON_G, BUTTON_H, BUTTON_I, BUTTON_J,
+    BUTTON_K, BUTTON_L, BUTTON_M, BUTTON_N, BUTTON_O,
+    BUTTON_P, BUTTON_Q, BUTTON_R, BUTTON_S, BUTTON_T,
+    BUTTON_U, BUTTON_V, BUTTON_W, BUTTON_X, BUTTON_Y, BUTTON_Z,
+
     BUTTON_LEFT_BRACKET,
     BUTTON_BACKSLASH,
     BUTTON_RIGHT_BRACKET,
@@ -78,41 +50,16 @@ enum
     BUTTON_NUM_LOCK,
     BUTTON_PRINT_SCREEN,
     BUTTON_PAUSE,
-    BUTTON_F1,
-    BUTTON_F2,
-    BUTTON_F3,
-    BUTTON_F4,
-    BUTTON_F5,
-    BUTTON_F6,
-    BUTTON_F7,
-    BUTTON_F8,
-    BUTTON_F9,
-    BUTTON_F10,
-    BUTTON_F11,
-    BUTTON_F12,
-    BUTTON_F13,
-    BUTTON_F14,
-    BUTTON_F15,
-    BUTTON_F16,
-    BUTTON_F17,
-    BUTTON_F18,
-    BUTTON_F19,
-    BUTTON_F20,
-    BUTTON_F21,
-    BUTTON_F22,
-    BUTTON_F23,
-    BUTTON_F24,
-    BUTTON_F25,
-    BUTTON_KP_0,
-    BUTTON_KP_1,
-    BUTTON_KP_2,
-    BUTTON_KP_3,
-    BUTTON_KP_4,
-    BUTTON_KP_5,
-    BUTTON_KP_6,
-    BUTTON_KP_7,
-    BUTTON_KP_8,
-    BUTTON_KP_9,
+
+    BUTTON_F1, BUTTON_F2, BUTTON_F3, BUTTON_F4, BUTTON_F5,
+    BUTTON_F6, BUTTON_F7, BUTTON_F8, BUTTON_F9, BUTTON_F10,
+    BUTTON_F11, BUTTON_F12, BUTTON_F13, BUTTON_F14, BUTTON_F15,
+    BUTTON_F16, BUTTON_F17, BUTTON_F18, BUTTON_F19, BUTTON_F20,
+    BUTTON_F21, BUTTON_F22, BUTTON_F23, BUTTON_F24, BUTTON_F25,
+
+    BUTTON_KP_0, BUTTON_KP_1, BUTTON_KP_2, BUTTON_KP_3, BUTTON_KP_4,
+    BUTTON_KP_5, BUTTON_KP_6, BUTTON_KP_7, BUTTON_KP_8, BUTTON_KP_9,
+
     BUTTON_KP_DECIMAL,
     BUTTON_KP_DIVIDE,
     BUTTON_KP_MULTIPLY,
@@ -120,6 +67,7 @@ enum
     BUTTON_KP_ADD,
     BUTTON_KP_ENTER,
     BUTTON_KP_EQUAL,
+
     BUTTON_LEFT_SHIFT,
     BUTTON_LEFT_CONTROL,
     BUTTON_LEFT_ALT,
@@ -128,18 +76,32 @@ enum
     BUTTON_RIGHT_CONTROL,
     BUTTON_RIGHT_ALT,
     BUTTON_RIGHT_SUPER,
-    BUTTON_MENU,
 
     BUTTON_COUNT    
 };
 
-typedef struct {
-    int state; // bitwise flag
-} Button;
+#define BUTTON_STATE_NONE     (0 << 0)
+#define BUTTON_STATE_PRESS    (1 << 0)
+#define BUTTON_STATE_REPEAT   (1 << 1)
+#define BUTTON_STATE_RELEASED (1 << 2)
 
 typedef struct {
+    int buttons_current[BUTTON_COUNT];
+    int buttons_previous[BUTTON_COUNT];
+} Keyboard;
+
+typedef struct {
+    f64 dx;
+    f64 dy;
+    f64 x_pos;
+    f64 y_pos;
 } Mouse;
 
+typedef struct {
+    Keyboard keyboard;
+    Mouse mouse; 
+} InputState;
 
+extern InputState g_input_state;
 
 #endif /* INPUT_H_ */

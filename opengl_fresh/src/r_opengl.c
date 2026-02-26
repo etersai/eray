@@ -173,6 +173,11 @@ void gl_set_clear_color(Colorek color)
     glClearColor(color.r, color.g, color.b, color.a);
 }
 
+void gl_set_viewport(int x, int y, int width, int height)
+{
+    glViewport(x, y, width, height);
+}
+
 Texture texture_create_from_memory(unsigned char* data, int width, int height, int color_channels)
 {
     assert(data);
