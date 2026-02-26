@@ -51,10 +51,12 @@ global const unsigned int SCR_HEIGHT = 720;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { gl_set_viewport(0, 0, width, height); }
 
+
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-        elog_s("LETTER");
+        elog_d(key - GLFW_KEY_A + BUTTON_A);
     }
 
     if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
