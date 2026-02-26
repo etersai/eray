@@ -80,14 +80,14 @@ enum
     BUTTON_COUNT    
 };
 
-#define BUTTON_STATE_NONE     (0 << 0)
-#define BUTTON_STATE_PRESS    (1 << 0)
-#define BUTTON_STATE_REPEAT   (1 << 1)
-#define BUTTON_STATE_RELEASED (1 << 2)
+// #define BUTTON_STATE_NONE     (0 << 0)
+// #define BUTTON_STATE_PRESS    (1 << 0)
+// #define BUTTON_STATE_REPEAT   (1 << 1)
+// #define BUTTON_STATE_RELEASED (1 << 2)
 
 typedef struct {
-    int buttons_current[BUTTON_COUNT];
-    int buttons_previous[BUTTON_COUNT];
+    b32 buttons_pressed[BUTTON_COUNT];
+    b32 buttons_released[BUTTON_COUNT];
 } Keyboard;
 
 typedef struct {

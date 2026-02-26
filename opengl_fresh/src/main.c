@@ -81,20 +81,53 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         elog_s("ENTERY, TABY, STRZALKI");
     }
 
-#define GLFW_KEY_SPACE              32
-#define GLFW_KEY_APOSTROPHE         39  /* ' */
-#define GLFW_KEY_COMMA              44  /* , */
-#define GLFW_KEY_MINUS              45  /* - */
-#define GLFW_KEY_PERIOD             46  /* . */
-#define GLFW_KEY_SLASH              47  /* / */
-#define GLFW_KEY_SEMICOLON          59  /* ; */
-#define GLFW_KEY_EQUAL              61  /* = */
-#define GLFW_KEY_LEFT_BRACKET       91  /* [ */
-#define GLFW_KEY_BACKSLASH          92  /* \ */
-#define GLFW_KEY_RIGHT_BRACKET      93  /* ] */
-#define GLFW_KEY_GRAVE_ACCENT       96  /* ` */
+    if (key == GLFW_KEY_SPACE) {
 
+    }
 
+    if (key == GLFW_KEY_APOSTROPHE) {
+
+    }
+
+    if (key == GLFW_KEY_COMMA) {
+
+    }
+
+    if (key == GLFW_KEY_MINUS) {
+
+    }
+
+    if (key == GLFW_KEY_PERIOD) {
+
+    }
+
+    if (key == GLFW_KEY_SLASH) {
+
+    }
+
+    if (key == GLFW_KEY_SEMICOLON) {
+
+    }
+
+    if (key == GLFW_KEY_EQUAL) {
+
+    }
+
+    if (key == GLFW_KEY_LEFT_BRACKET) {
+
+    }
+
+    if (key == GLFW_KEY_BACKSLASH) {
+
+    }
+
+    if (key == GLFW_KEY_RIGHT_BRACKET) {
+
+    }
+
+    if (key == GLFW_KEY_GRAVE_ACCENT) {
+
+    }
 }
 
 void processInput(GLFWwindow *window)
