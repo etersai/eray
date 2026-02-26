@@ -137,6 +137,9 @@ typedef struct {
     int state; // bitwise flag
 } Button;
 
+typedef struct {
+} Mouse;
+
 
 
 #endif /* INPUT_H_ */

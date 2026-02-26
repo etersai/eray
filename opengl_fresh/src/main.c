@@ -45,8 +45,7 @@ global const float mouse_sens = 0.05f;
 
 global const unsigned int SCR_WIDTH = 1920; // 16:9
 global const unsigned int SCR_HEIGHT = 1080; 
-//global const unsigned int SCR_WIDTH = 1280; // 16:9
-//global const unsigned int SCR_HEIGHT = 720;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -68,19 +67,17 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { move_s = true; }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
-
-     
 }
 
 
 void platform_capture_cursor(void)
 {
-glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void platform_free_cursor(void)
 {
-glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 //#define MOUSE_FLIP_Y
