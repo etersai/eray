@@ -52,7 +52,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glVi
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-        
+
         elog_s("WORKS!");
 
     }
@@ -326,6 +326,7 @@ int main(int argc, char* argv[])
 
     glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
     glfwSetCursorPosCallback(g_window, mouse_callback);
+    glfwSetKeyCallback(g_window, key_callback);
 
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(g_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
