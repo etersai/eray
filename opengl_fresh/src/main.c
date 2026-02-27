@@ -378,11 +378,16 @@ int main(int argc, char* argv[])
 
         // RENDER START
         r_begin_frame(&renderer_ctx);
+#if 1 
         r_draw_text_str8(&renderer_ctx, 0.0f, 0.0f, str8_lit("CLONECRAFT V0.001")); 
         r_draw_text_str8(&renderer_ctx, 0.0f, 36.0f, program_ctx.time_fps); 
         r_draw_text_str8(&renderer_ctx, 0.0f, 72.0f, program_ctx.time_dt); 
         r_draw_text_str8(&renderer_ctx, 0.0f, 108.0f, program_ctx.player_pos); 
         r_draw_text_str8(&renderer_ctx, 0.0f, 144.0f, program_ctx.player_orient); 
+#endif
+    
+        string8 str_test = str8_lit("heh");
+     //   r_draw_text_str8(&renderer_ctx, 0.0f, 0.0f, str_test);
 
         r_draw_skybox(&renderer_ctx, program_ctx.texture_skybox);        
 

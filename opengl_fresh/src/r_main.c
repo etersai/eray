@@ -254,8 +254,8 @@ void r_draw_text_str8(RendererContext* r, float x, float y, string8 str)
         float uv_x = (float)character.x/r->text_font->texture.width;
         float uv_y = (float)character.y/r->text_font->texture.height;
 
-        float char_width_norm = 2*((float)character.width / r->viewport_width); // hacky
-        float char_height_norm = 2*((float)character.height / r->viewport_height); // wacky
+        float char_width_norm = 1.5*((float)character.width / r->viewport_width); // hacky
+        float char_height_norm = 1.5*((float)character.height / r->viewport_height); // wacky
 
         // Generate 2 triangles 
         // box top left. 0
@@ -303,7 +303,7 @@ void r_draw_text_str8(RendererContext* r, float x, float y, string8 str)
                               byte_offset_into_buffer,
                               internal_text_fv_count*sizeof(float),
                               &r->text_cpu_buffer);
-     
+
     r->text_fv_count+=internal_text_fv_count;
 }
 
@@ -311,6 +311,7 @@ void r_flush_text(RendererContext *r)
 {
     assert(r);
     assert(r->text_font);
+    i32 vertex_count = r->text_fv_count / 4;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -318,7 +319,7 @@ void r_flush_text(RendererContext *r)
     shader_prog_use(r->shader_font.prog);
     glBindVertexArray(r->text_vao);
     glBindTexture(GL_TEXTURE_2D, r->text_font->texture.id);
-    glDrawArrays(GL_TRIANGLES, 0, r->text_fv_count);
+    glDrawArrays(GL_TRIANGLES, 0, vertex_count);
 
     glDisable(GL_BLEND);
     r->text_fv_count = 0;
