@@ -8,6 +8,7 @@
 #include <assert.h>
 
 #include "filesystem.h" 
+#include "common/elog.h"
 #include "common/da.h"
 #include "common/types.h"
 #include "common/elog.h"
@@ -167,12 +168,11 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
     da_init(&gl_vertex_data, align_to_the_next_power_of_two(obj->faces.count*FLOATS_PER_VERTEX));
     da_init(&gl_index_data, align_to_the_next_power_of_two(obj->faces.count));
 
-
     u64 c = 0;
     for (u64 i = 0; i < obj->faces.count; i++) {
-        elog_u(obj->faces.data[i].v);
-        elog_u(obj->faces.data[i].vt);
-        elog_u(obj->faces.data[i].vn);
+       // elog_u(obj->faces.data[i].v);
+       // elog_u(obj->faces.data[i].vt);
+       // elog_u(obj->faces.data[i].vn);
         
         // v
         gl_vertex_data.data[c] = obj->vertices.data[obj->faces.data[i].v*3];
@@ -195,6 +195,11 @@ void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size)
         // elog_f(obj->vertices.data[obj->faces.data[i].v*3+2]); 
         c+=FLOATS_PER_VERTEX;
     }
+
+    elog_zu(gl_vertex_data.capacity);
+    elog_zu(gl_vertex_data.count);
+
+
 }
 
 void load_obj_to_buffers_not_safe(obj_in_memory* obj, char* file, size_t size)
