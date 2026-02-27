@@ -103,10 +103,11 @@ void console_post_cwd(void)
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
 
-void update_camera_input(Camerka* camera, InputState* input_state)
+void update_camera(Camerka* camera, InputState* input_state)
 {
     assert(camera);
     local_persist const f32 mouse_sens = 0.05f;
+
     camera->yaw   += input_state->mouse.dx * mouse_sens;
     camera->pitch += input_state->mouse.dy * mouse_sens;
     if (camera->pitch > 89.0f)  camera->pitch = 89.0f;
@@ -116,16 +117,16 @@ void update_camera_input(Camerka* camera, InputState* input_state)
     vecf3 movement_vector = VECF3_ZERO;
     vecf3 orient = camerka_orientation(camera);
     camera->orientation = orient; // cache it.
-    if (input_state->keyboard.buttons_pressed[BUTTON_W]) {
+    if (input_kb_is_button_held(BUTTON_W)) {
         vecf3_apply_add(&movement_vector, orient);
     }
-    if (input_state->keyboard.buttons_pressed[BUTTON_S]) {
+    if (input_kb_is_button_held(BUTTON_S)) {
         vecf3_apply_sub(&movement_vector, orient);
     }
-    if (input_state->keyboard.buttons_pressed[BUTTON_A] || input_state->keyboard.buttons_pressed[BUTTON_D]) {
+    if (input_kb_is_button_held(BUTTON_A) || input_kb_is_button_held(BUTTON_D)) {
         vecf3 right = vecf3_cross(orient, world_up);
         right = vecf3_norm(right);
-        if (input_state->keyboard.buttons_pressed[BUTTON_A]) {
+        if (input_kb_is_button_held(BUTTON_A)) {
             right.x = -right.x;
             right.y = -right.y;
             right.z = -right.z;
@@ -205,7 +206,7 @@ int main(int argc, char* argv[])
         elog_abort("Os failed at giving you memory xd");
     }
     
-    if (window_open_and_setup_gl_context("Clonecraft", 1280, 720) != 0) {
+    if (window_open_and_setup_gl_context("Clonecraft", 1920, 1080) != 0) {
         elog_abort("Opening a window failed!");
     }
 
@@ -350,10 +351,15 @@ int main(int argc, char* argv[])
         }
 
         // HANDLE INPUT
-        update_camera_input(&program_ctx.camera, &g_input_state);
-        if (g_input_state.keyboard.buttons_pressed[BUTTON_ESCAPE]) {
+        input_process();
+
+        update_camera(&program_ctx.camera, &g_input_state);
+        if (input_kb_is_button_pressed(BUTTON_ESCAPE)) {
+            elog_s("Good bye!");
             running = false;
         }
+
+
 
         local_persist float rotacja = 0.0f;
         update_camera_info_strings(&program_ctx);
@@ -429,7 +435,7 @@ int main(int argc, char* argv[])
         r_flush_text(&renderer_ctx);
         rotacja += 0.01f;
     
-        memset(&g_input_state, 0, sizeof(InputState));
+        input_process_end();
         window_swap_buffers_and_poll_events();
     }
 

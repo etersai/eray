@@ -8,6 +8,7 @@ extern u32 g_window_height;
 
 b32 window_open_and_setup_gl_context(const char* name, i32 window_width, i32 window_height);
 void window_swap_buffers_and_poll_events(void);
+void window_go_fullscreen(void);
 void platform_terminate(void);
 
 f64 platform_get_time(void);

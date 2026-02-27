@@ -2,7 +2,7 @@
 #define INPUT_H_
 
 #include "common/types.h"
-
+#include <stdbool.h>
 
 typedef enum
 {
@@ -84,6 +84,7 @@ typedef enum
 typedef struct {
     b32 buttons_pressed[BUTTON_COUNT];
     b32 buttons_released[BUTTON_COUNT];
+    b32 buttons_held[BUTTON_COUNT];
 } Keyboard;
 
 typedef struct {
@@ -99,9 +100,10 @@ typedef struct {
 } InputState;
 
 extern InputState g_input_state;
-void input_kb_is_button_held(button_type button);
-void input_kb_is_button_pressed(button_type button);
-void input_kb_is_button_released(button_type button);
-void input_reset(void);
+bool input_kb_is_button_held(button_type button);
+bool input_kb_is_button_pressed(button_type button);
+bool input_kb_is_button_released(button_type button);
+void input_process(void);
+void input_process_end(void);
 
 #endif /* INPUT_H_ */

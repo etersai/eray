@@ -44,7 +44,8 @@ internal void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     if (action == GLFW_PRESS) { \
         g_input_state.keyboard.buttons_pressed[input_layer_key_index] = 1; \
     } \
-    else if (action == GLFW_RELEASE) { \
+    else if (action == GLFW_RELEASE) \
+    { \
         g_input_state.keyboard.buttons_released[input_layer_key_index] = 1; \
     }
 
@@ -55,7 +56,7 @@ internal void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     else if (action == GLFW_RELEASE) \
     { \
         g_input_state.keyboard.buttons_released[(button_code)] = 1; \
-    }
+    } 
 
 internal void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 { 
