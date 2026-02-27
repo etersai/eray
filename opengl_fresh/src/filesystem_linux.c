@@ -1,5 +1,5 @@
 #define _DEFAULT_SOURCE /* for DT_REG, DT_DIR etc. */
-#include "platform.h"
+#include "filesystem.h"
 #include "common/types.h"
 #include "common/arena.h"
 #include "common/str.h"

@@ -99,7 +99,6 @@ typedef struct {
 
 void r_begin_frame(RendererContext* r);
 
-void r_draw_text(RendererContext* r, float x, float y, const char* text); //deprecated
 void r_draw_text_str8(RendererContext* r, float x, float y, string8 str);
 void r_flush_text(RendererContext* r);
 

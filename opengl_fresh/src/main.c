@@ -9,7 +9,7 @@
 
 #include "input.h"
 #include "window.h"
-#include "platform.h"
+#include "filesystem.h"
 #include "r_main.h"
 #include "r_opengl.h"
 #include "r_camerka.h"
@@ -19,8 +19,6 @@
 #include "common/arena.h"
 #include "common/str.h"
 #include "common/types.h"
-
-#include "string.h" // memset test.
 
 // VERY IMPORTANT TODOS //
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
@@ -135,7 +133,13 @@ void update_camera(Camerka* camera, InputState* input_state)
     }
     if (vecf3_len(movement_vector) > 0.0f) {
         movement_vector = vecf3_norm(movement_vector);
-        movement_vector = vecf3_scale(0.1f, movement_vector); // hackyyy
+        f32 hacky_speed_scale;
+        if (input_kb_is_button_held(BUTTON_LEFT_SHIFT)) {
+            hacky_speed_scale = 0.2f;
+        } else {
+            hacky_speed_scale = 0.1f;
+        }
+        movement_vector = vecf3_scale(hacky_speed_scale, movement_vector); // hackyyy
         vecf3_apply_add(&camera->pos, movement_vector);
     }
 }

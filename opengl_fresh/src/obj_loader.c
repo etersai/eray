@@ -7,8 +7,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "filesystem.h" 
 #include "common/da.h"
-#include "platform.h" // for file mapping
 #include "common/types.h"
 #include "common/elog.h"
 

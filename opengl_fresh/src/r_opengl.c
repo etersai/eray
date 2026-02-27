@@ -1,5 +1,5 @@
 #include "r_opengl.h"
-#include "platform.h"
+#include "filesystem.h"
 #include "common/types.h"
 #include <string.h> // memcpy
 #include <assert.h>
