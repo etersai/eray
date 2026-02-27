@@ -6,13 +6,15 @@
 #include <stdbool.h>
 
 global GLFWwindow* glfw_window;
-global bool mouse_first = true;
-global f64 mouse_last_x;
-global f64 mouse_last_y;
+u32 window_width;
+u32 window_width;
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height) { gl_set_viewport(0, 0, width, height); }
 
 //#define MOUSE_FLIP_Y
+global bool mouse_first = true;
+global f64 mouse_last_x;
+global f64 mouse_last_y;
 internal void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (mouse_first) {
@@ -118,6 +120,40 @@ internal void key_callback(GLFWwindow* window, int key, int scancode, int action
    
 }
 
+b32 open_window_and_setup_gl_context(const char* name, i32 width, i32 height)
+{
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    glfw_window = glfwCreateWindow(width, height, name, NULL, NULL);
+    if (glfw_window == NULL) {
+        glfwTerminate();
+        return 1;
+    }
+
+    glfwSetFramebufferSizeCallback(glfw_window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(glfw_window, mouse_callback);
+    glfwSetKeyCallback(glfw_window, key_callback);
+
+    if (glfwRawMouseMotionSupported()) {
+        glfwSetInputMode(glfw_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
+    glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwMakeContextCurrent(glfw_window);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        return 1;
+    }    
+
+    glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
+
+    window_width = width;
+    window_height = height;
+    return 0;
+}
+
 void platform_disable_cursor(void)
 {
     glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -127,4 +163,5 @@ void platform_normal_cursor(void)
 {
     glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
+
 
