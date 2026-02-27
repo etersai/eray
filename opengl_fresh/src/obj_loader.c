@@ -156,11 +156,6 @@ ObjInMemory load_obj_final(char* file, u64 size)
         ptr++;
     }
 
-    da_free(&obj.faces);
-    da_free(&obj.vertices);
-    da_free(&obj.texcoords);
-    da_free(&obj.normals);
-
     // 2904 structs each 3 v,vt,vn.
     // 2904*8 = 23232 :D vertex array. 
     // 2904 = 2904 index array.
@@ -172,6 +167,7 @@ ObjInMemory load_obj_final(char* file, u64 size)
     enum { FLOATS_PER_VERTEX = 8 }; // shaky shaky.
     da_init(&gl_vertex_data, align_to_the_next_power_of_two(obj.faces.count*FLOATS_PER_VERTEX));
     da_init(&gl_index_data, align_to_the_next_power_of_two(obj.faces.count));
+
 
     for (u64 i = 0; i < obj.faces.count; i++) {
         
@@ -189,7 +185,11 @@ ObjInMemory load_obj_final(char* file, u64 size)
 
         da_append(&gl_index_data, i);
     }
-    elog_zu(gl_index_data.capacity);
+
+    da_free(&obj.faces);
+    da_free(&obj.vertices);
+    da_free(&obj.texcoords);
+    da_free(&obj.normals);
 
     return (ObjInMemory){gl_vertex_data, gl_index_data};
 }

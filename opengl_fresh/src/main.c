@@ -267,6 +267,9 @@ int main(int argc, char* argv[])
     MappedFile file_suzi = os_map_file(path_suzanne);
     ObjInMemory suzi = load_obj_final(file_suzi.data, file_suzi.size);
     os_unmap_file(&file_suzi);
+
+    elog_zu(suzi.gl_vertex_data.count);
+    elog_zu(suzi.gl_index_data.count);
     
     abort();
 
