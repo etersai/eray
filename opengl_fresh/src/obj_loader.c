@@ -189,8 +189,7 @@ ObjInMemory load_obj_final(char* file, u64 size)
 
         da_append(&gl_index_data, i);
     }
-
-
+    elog_zu(gl_index_data.capacity);
 
     return (ObjInMemory){gl_vertex_data, gl_index_data};
 }
