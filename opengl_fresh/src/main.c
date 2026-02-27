@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "input.h"
+#include "window.h"
 #include "platform.h"
 #include "r_main.h"
 #include "r_opengl.h"
@@ -26,64 +27,6 @@
 // TODO: ADD ERROR CHECKS FOR GL STUFF.
 // TODO: ADD AND ENABLE GL DEBUG FUNCTIONALITY.
 // TODO: PROPER LOGGING FUNCTIONALITY
-// TODO: SEPERATE PLATFORM LAYER
-
-/////////////////////////////////////////////
-// THIS GOES TO PLATFORM
-
-global GLFWwindow* g_window;
-global bool move_w;
-global bool move_s;
-global bool move_a;
-global bool move_d;
-global double last_x;
-global double last_y;
-global double mouse_dx;
-global double mouse_dy;
-global bool first_mouse = true;
-global const float mouse_sens = 0.05f;
-
-global const unsigned int SCR_WIDTH = 1280; // 16:9
-global const unsigned int SCR_HEIGHT = 720; 
-
-// 1920
-// 1080
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) { gl_set_viewport(0, 0, width, height); }
-
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-    // hackyy
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { move_w = true; }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { move_s = true; }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { move_a = true; }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { move_d = true; }
-}
-
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    if (first_mouse) {
-        last_x = xpos;
-        last_y = ypos;
-        first_mouse = false;
-        return;
-    }
-
-    mouse_dx += xpos - last_x;
-#ifdef MOUSE_FLIP_Y
-    mouse_dy += ypos - last_y;
-#else
-    mouse_dy += last_y - ypos;
-#endif /* INVERSE_MOUSE */
-
-    last_x = xpos;
-    last_y = ypos;
-}
-// END PLATFORM ////////////////////////////////////////
 
 typedef enum {
     PIXEL_FORMAT_R8,
@@ -161,30 +104,31 @@ void console_post_cwd(void)
     else {fprintf(stderr, "%s\n", "[err: getcwd failed]");}
 }
 
-void update_camera_input(Camerka* camera)
+void update_camera_input(Camerka* camera, InputState* input_state)
 {
     assert(camera);
-    camera->yaw   += mouse_dx * mouse_sens;
-    camera->pitch += mouse_dy * mouse_sens;
+    local_persist const f32 mouse_sens = 0.05f;
+    camera->yaw   += input_state->mouse.dx * mouse_sens;
+    camera->pitch += input_state->mouse.dy * mouse_sens;
     if (camera->pitch > 89.0f)  camera->pitch = 89.0f;
     if (camera->pitch < -89.0f) camera->pitch = -89.0f;
-    mouse_dx = 0.0;
-    mouse_dy = 0.0;
+    input_state->mouse.dx = 0.0f;
+    input_state->mouse.dy = 0.0f;
 
     vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
     vecf3 movement_vector = VECF3_ZERO;
     vecf3 orient = camerka_orientation(camera);
     camera->orientation = orient; // cache it.
-    if (move_w) {
+    if (input_state->keyboard.buttons_pressed[BUTTON_W]) {
         vecf3_apply_add(&movement_vector, orient);
     }
-    if (move_s) {
+    if (input_state->keyboard.buttons_pressed[BUTTON_S]) {
         vecf3_apply_sub(&movement_vector, orient);
     }
-    if (move_a || move_d) {
+    if (input_state->keyboard.buttons_pressed[BUTTON_A] || input_state->keyboard.buttons_pressed[BUTTON_D]) {
         vecf3 right = vecf3_cross(orient, world_up);
         right = vecf3_norm(right);
-        if (move_a) {
+        if (input_state->keyboard.buttons_pressed[BUTTON_A]) {
             right.x = -right.x;
             right.y = -right.y;
             right.z = -right.z;
@@ -254,76 +198,6 @@ int main(int argc, char* argv[])
     unused(argv);
     console_post_cwd();
 
-    { // Asset loading kinda test.
-        Arenka scratch_asset_arena = arenka_map(MB(64));
-        if (scratch_asset_arena.addr_start == NULL) { 
-            elog_abort("OS failed at giving you memory xd");
-        }
-        
-        OsDirectoryContents shader_folder_contents = os_get_directory_contents(&scratch_asset_arena, str8_lit(PATH_SHADERS_DEFAULT));
-
-        string8 extension_view; 
-        for (u64 i = 0; i < shader_folder_contents.count; i++) {
-
-            OsDirectoryEntry entry = shader_folder_contents.entries[i];
-
-            if (entry.type == OS_FILE_REGULAR) {
-
-                if (!str8_get_extension_after_dot(entry.name, &extension_view)) {
-                    elog_s("NO/BAD EXTENSION");
-                    str8_print(entry.name);
-                    continue;
-                }
-
-                if (str8_cmp_cstr(extension_view, "vs")) {
-                    elog_s("VERTEX SHADER");
-                }
-                else if (str8_cmp_cstr(extension_view, "fs")) {
-                    elog_s("FRAGMENT SHADER");
-                }
-
-                str8_print(entry.name);
-
-            } /*entry == REG*/
-        } /*for*/
-
-        arenka_unmap(&scratch_asset_arena);
-//        elog_abort("STOP!");
-    }
-
-    // Setup GLFW and OpenGL Context
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    g_window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Clonecraft", NULL, NULL);
-    if (g_window == NULL) {
-        fprintf(stderr, "Failed to create GLFW window\n");
-        glfwTerminate();
-        return 1;
-    }
-
-    glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(g_window, mouse_callback);
-    glfwSetKeyCallback(g_window, key_callback);
-
-    if (glfwRawMouseMotionSupported()) {
-        glfwSetInputMode(g_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-    }
-    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    glfwMakeContextCurrent(g_window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        fprintf(stderr, "Failed to initialize GLAD\n");
-        return 1;
-    }    
-    glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
-
-    /*******************/
-    /* END BOILERPLATE */
-    /*******************/
-    
     // GET MEMORY
     program_ctx.arena_scratch = arenka_map(MB(8));
     if (program_ctx.arena_scratch.addr_start == NULL) { 
@@ -332,6 +206,10 @@ int main(int argc, char* argv[])
     program_ctx.arena_obj_loading = arenka_map(MB(8));
     if (program_ctx.arena_obj_loading.addr_start == NULL) { 
         elog_abort("Os failed at giving you memory xd");
+    }
+    
+    if (window_open_and_setup_gl_context("Clonecraft", 1280, 720) != 0) {
+        elog_abort("Opening a window failed!");
     }
 
     // MEDIA LOADING
@@ -401,7 +279,7 @@ int main(int argc, char* argv[])
 
   
     // RENDERER INIT
-    if (r_renderer_init(&renderer_ctx, SCR_WIDTH, SCR_HEIGHT) != 0) {
+    if (r_renderer_init(&renderer_ctx, g_window_width, g_window_height) != 0) {
         elog_abort("Renderer initialization failed!");
     }
     r_set_font(&renderer_ctx, &program_ctx.font);
@@ -429,7 +307,7 @@ int main(int argc, char* argv[])
     camerka_set_pos(program_ctx.camera, pos);
     matf4x4 projection;
     float camera_fov = 90.0f;
-    float aspect = (float)SCR_WIDTH / SCR_HEIGHT;
+    float aspect = (float)g_window_width / g_window_height;
     lamath_projection_matrix(&projection, camera_fov, aspect, 0.1f, 100.0);
     shader_set_mat4(renderer_ctx.shader_basic_3d.prog, renderer_ctx.shader_basic_3d.projection, &projection.col1.x);
     shader_set_mat4(renderer_ctx.shader_lighting.prog, renderer_ctx.shader_lighting.projection, &projection.col1.x);
@@ -439,7 +317,7 @@ int main(int argc, char* argv[])
 
     // 2d camera kinda setup.
     matf4x4 ortho;
-    lamath_orthographic_matrix(&ortho, 0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -1.0f, 1.0f);
+    lamath_orthographic_matrix(&ortho, 0.0f, g_window_width, g_window_height, 0.0f, -1.0f, 1.0f);
     shader_set_mat4(renderer_ctx.shader_basic_2d.prog, renderer_ctx.shader_basic_2d.projection, &ortho.col1.x);
 
     // "should i put it here?" section // kinda game init ???
@@ -461,7 +339,8 @@ int main(int argc, char* argv[])
     f64 curr_time;
     f64 prev_time = glfwGetTime();
     f64 prev_frame_time = prev_time;
-    while (!glfwWindowShouldClose(g_window)) {
+    bool running = true;
+    while (running) {
         // TIMING STUFF.
         curr_time = glfwGetTime();
         delta_time = curr_time - prev_time;
@@ -474,8 +353,7 @@ int main(int argc, char* argv[])
         }
 
         // HANDLE INPUT
-        processInput(g_window);
-        update_camera_input(&program_ctx.camera);
+        update_camera_input(&program_ctx.camera, &g_input_state);
 
         local_persist float rotacja = 0.0f;
         update_camera_info_strings(&program_ctx);
@@ -546,26 +424,14 @@ int main(int argc, char* argv[])
         matf4x4 tfull2 = lamath_create_transform((vecf3){0.0f, 5.0f, 0.0f}, (vecf3){0.5f, 0.5f, 0.5f}, (vecf3){1.0f, 1.0f, 1.0f});
         r_draw_mesh_indexed(&renderer_ctx, program_ctx.mesh_teapot, &tfull2, *(Colorek*)&teapot_color[0]);
         
-        int wsizew;
-        int wsizeh; 
-        int fsizew;
-        int fsizeh;
-        glfwGetWindowSize(g_window, &wsizew, &wsizeh);
-        glfwGetFramebufferSize(g_window, &fsizew, &fsizeh);
-        string8 winfo = str8_fmt(&program_ctx.arena_scratch, "[%d, %d][%d, %d]", wsizew, wsizeh, fsizew, fsizeh);
-        r_draw_text_str8(&renderer_ctx, 300.0f, 300.0f, winfo);
-
         // UI
-        r_draw_quad(&renderer_ctx, SCR_WIDTH/2.0f, SCR_HEIGHT/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
+        r_draw_quad(&renderer_ctx, g_window_width/2.0f, g_window_height/2.0f, 24.0f, 24.0f, program_ctx.texture_crosshair, (Colorek){1.0f, 1.0f, 1.0f, 1.0f});
         r_flush_text(&renderer_ctx);
         rotacja += 0.01f;
+    
 
-        glfwSwapBuffers(g_window);
-        glfwPollEvents();
-        move_w = false;
-        move_s = false;
-        move_a = false;
-        move_d = false;
+        memset(&g_input_state, 0, sizeof(InputState));
+        window_swap_buffers_and_poll_events();
     }
     r_renderer_shutdown(&renderer_ctx);    
     arenka_unmap(&program_ctx.arena_obj_loading);

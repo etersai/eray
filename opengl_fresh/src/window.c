@@ -6,8 +6,8 @@
 #include <stdbool.h>
 
 global GLFWwindow* glfw_window;
-u32 window_width;
-u32 window_width;
+u32 g_window_width;
+u32 g_window_height;
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height) { gl_set_viewport(0, 0, width, height); }
 
@@ -120,7 +120,7 @@ internal void key_callback(GLFWwindow* window, int key, int scancode, int action
    
 }
 
-b32 open_window_and_setup_gl_context(const char* name, i32 width, i32 height)
+b32 window_open_and_setup_gl_context(const char* name, i32 width, i32 height)
 {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -149,9 +149,15 @@ b32 open_window_and_setup_gl_context(const char* name, i32 width, i32 height)
 
     glfwSwapInterval(1); // 1 VSYNC ON / 0 OFF
 
-    window_width = width;
-    window_height = height;
+    g_window_width = width;
+    g_window_height = height;
     return 0;
+}
+
+void window_swap_buffers_and_poll_events(void)
+{
+    glfwSwapBuffers(glfw_window);
+    glfwPollEvents();
 }
 
 void platform_disable_cursor(void)
