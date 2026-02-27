@@ -5,11 +5,9 @@ InputState g_input_state = {0};
 void input_process(void)
 {
     for (int i = 0; i < BUTTON_COUNT; i++) {
-        
         if (g_input_state.keyboard.buttons_pressed[i] && !g_input_state.keyboard.buttons_released[i]) {
             g_input_state.keyboard.buttons_held[i] = 1;
         }
-
     }    
 }
 

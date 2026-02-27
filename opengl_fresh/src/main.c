@@ -271,8 +271,6 @@ int main(int argc, char* argv[])
     elog_zu(suzi.gl_vertex_data.count);
     elog_zu(suzi.gl_index_data.count);
     
-    abort();
-
     
     // Rudimentary obj loading.
     obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&program_ctx.arena_obj_loading, sizeof(obj_in_memory));
