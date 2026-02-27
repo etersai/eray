@@ -160,6 +160,16 @@ void window_swap_buffers_and_poll_events(void)
     glfwPollEvents();
 }
 
+void platform_terminate(void)
+{
+    glfwTerminate();
+}
+
+f64 platform_get_time(void)
+{
+    return glfwGetTime();
+}
+
 void platform_disable_cursor(void)
 {
     glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

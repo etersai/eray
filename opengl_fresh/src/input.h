@@ -3,7 +3,8 @@
 
 #include "common/types.h"
 
-enum
+
+typedef enum
 {
     /*printable buttons*/
     BUTTON_SPACE = 0,
@@ -78,12 +79,7 @@ enum
     BUTTON_RIGHT_SUPER,
 
     BUTTON_COUNT    
-};
-
-// #define BUTTON_STATE_NONE     (0 << 0)
-// #define BUTTON_STATE_PRESS    (1 << 0)
-// #define BUTTON_STATE_REPEAT   (1 << 1)
-// #define BUTTON_STATE_RELEASED (1 << 2)
+} button_type;
 
 typedef struct {
     b32 buttons_pressed[BUTTON_COUNT];
@@ -103,5 +99,9 @@ typedef struct {
 } InputState;
 
 extern InputState g_input_state;
+void input_kb_is_button_held(button_type button);
+void input_kb_is_button_pressed(button_type button);
+void input_kb_is_button_released(button_type button);
+void input_reset(void);
 
 #endif /* INPUT_H_ */

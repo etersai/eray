@@ -1,5 +1,4 @@
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -112,8 +111,6 @@ void update_camera_input(Camerka* camera, InputState* input_state)
     camera->pitch += input_state->mouse.dy * mouse_sens;
     if (camera->pitch > 89.0f)  camera->pitch = 89.0f;
     if (camera->pitch < -89.0f) camera->pitch = -89.0f;
-    input_state->mouse.dx = 0.0f;
-    input_state->mouse.dy = 0.0f;
 
     vecf3 world_up = (vecf3){0.0f, 1.0f, 0.0f};
     vecf3 movement_vector = VECF3_ZERO;
@@ -337,12 +334,12 @@ int main(int argc, char* argv[])
     u32 frames = 0;
     f64 delta_time;
     f64 curr_time;
-    f64 prev_time = glfwGetTime();
+    f64 prev_time = platform_get_time();
     f64 prev_frame_time = prev_time;
     bool running = true;
     while (running) {
         // TIMING STUFF.
-        curr_time = glfwGetTime();
+        curr_time = platform_get_time();
         delta_time = curr_time - prev_time;
         prev_time = curr_time;
         frames++;
@@ -354,6 +351,9 @@ int main(int argc, char* argv[])
 
         // HANDLE INPUT
         update_camera_input(&program_ctx.camera, &g_input_state);
+        if (g_input_state.keyboard.buttons_pressed[BUTTON_ESCAPE]) {
+            running = false;
+        }
 
         local_persist float rotacja = 0.0f;
         update_camera_info_strings(&program_ctx);
@@ -429,13 +429,13 @@ int main(int argc, char* argv[])
         r_flush_text(&renderer_ctx);
         rotacja += 0.01f;
     
-
         memset(&g_input_state, 0, sizeof(InputState));
         window_swap_buffers_and_poll_events();
     }
+
     r_renderer_shutdown(&renderer_ctx);    
     arenka_unmap(&program_ctx.arena_obj_loading);
     arenka_unmap(&program_ctx.arena_scratch);
-    glfwTerminate();
+    platform_terminate();
     return 0;
 }
