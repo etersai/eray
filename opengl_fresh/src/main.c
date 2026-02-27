@@ -264,10 +264,12 @@ int main(int argc, char* argv[])
   
     
     // TODO(eter): Come back to this.
-    obj_in_memory_v2* obj_suzanne = (obj_in_memory_v2*)calloc(1,sizeof(obj_in_memory_v2)); 
-    MappedFile suzi = os_map_file(path_suzanne);
-    load_obj_test(obj_suzanne, suzi.data, suzi.size);
-    os_unmap_file(&suzi);
+    MappedFile file_suzi = os_map_file(path_suzanne);
+    ObjInMemory suzi = load_obj_final(file_suzi.data, file_suzi.size);
+    os_unmap_file(&file_suzi);
+    
+    abort();
+
     
     // Rudimentary obj loading.
     obj_in_memory* obj_teapot = (obj_in_memory*)arenka_get_piece(&program_ctx.arena_obj_loading, sizeof(obj_in_memory));

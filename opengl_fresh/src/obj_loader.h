@@ -33,9 +33,15 @@ typedef struct {
     Daobj_face_index faces;
 } obj_in_memory_v2;
 
+typedef struct {
+    Daf32 gl_vertex_data;
+    Dau32 gl_index_data;
+} ObjInMemory;
+
 int load_obj_from_path(obj_in_memory* obj, const char* path);
 void load_obj_to_buffers_not_safe(obj_in_memory* obj, char* file, size_t size);
 void load_obj_test(obj_in_memory_v2* obj, char* file, u64 size);
+ObjInMemory load_obj_final(char* file, u64 size);
 
 #endif /* OBJ_LOADER_H_ */
 
