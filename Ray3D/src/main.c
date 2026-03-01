@@ -1,118 +1,162 @@
 #include "../include/raylib.h"
-#include "../include/raymath.h"
+#include "../elog.h"
+#include <stdio.h>
+#include <math.h>
+
+#define local_persist static
+
+typedef struct {
+    float x;
+    float y;
+} float_v2; 
+
+typedef struct {
+    float_v2 pos;
+    float angle;
+    float fov;
+} Playa;
+
+#define DEBUG_DRAW_STARY_X (50)
+#define DEBUG_DRAW_STARY_Y (50)
+#define DEBUG_CELL_SIZE (50)
+
+#define TILE_WALL (1)
+#define TILE_EMPTY (0)
+#define MAP_SIZE (10)
+int map[MAP_SIZE][MAP_SIZE] = 
+{
+    {1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,0,1,0,0,0,0,1},
+    {1,0,0,0,1,0,0,0,1,1},
+    {1,0,1,1,1,0,0,0,0,1},
+    {1,0,0,0,0,0,0,0,0,1},
+    {1,0,0,0,0,0,0,0,0,1},
+    {1,0,0,0,1,0,0,0,0,1},
+    {1,0,0,0,0,0,0,1,0,1},
+    {1,0,0,0,0,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1},
+};
+
+void draw_debug_cells(int draw_start_x, int draw_start_y, float player_angle, float player_pos_x, float player_pos_y, int* map)
+{
+    local_persist int cell_draw_size = 50;
+    for (int j = 0; j < MAP_SIZE; j++) {
+        for (int i = 0; i < MAP_SIZE; i++) {
+            Color cell_color; 
+            
+            if (i == (int)player_pos_x && j == (int)player_pos_y) {
+                cell_color = DARKGRAY;
+            }
+
+            else if (map[i*MAP_SIZE+j] == TILE_WALL) {
+                cell_color = ORANGE; 
+            }
+            else // TILE_EMPTY
+            {
+                cell_color = GRAY;
+            }
+
+            DrawRectangle((j*cell_draw_size)+draw_start_x, (i*cell_draw_size)+draw_start_y, cell_draw_size-1, cell_draw_size-1, cell_color); 
+        }
+    }
+
+    // draw actuall player pos.
+    float on_board_player_x = (float)(draw_start_x)+((float)(cell_draw_size) * player_pos_x);
+    float on_board_player_y = (float)(draw_start_y)+((float)(cell_draw_size) * player_pos_y);
+    DrawCircleV((Vector2){on_board_player_y, on_board_player_x}, 3.5f, GREEN);
+
+    // draw player orientation line.
+    float line_draw_start_x = on_board_player_x;
+    float line_draw_start_y = on_board_player_y;
+    float line_draw_end_x = cosf(player_angle)*50.0f+on_board_player_x;
+    float line_draw_end_y = sinf(player_angle)*50.0f+on_board_player_y;
+    DrawLineV((Vector2){line_draw_start_y, line_draw_start_x}, (Vector2){line_draw_end_y, line_draw_end_x}, RED);
+
+
+}
+
+
+void update_player(Playa* player)
+{
+    float_v2 movement_vector = {0};
+    if (IsKeyDown(KEY_W)) {
+        movement_vector.x -= 1.0f;
+    }
+    if (IsKeyDown(KEY_S)) {
+        movement_vector.x += 1.0f;
+    }
+    if (IsKeyDown(KEY_A)) {
+        movement_vector.y -= 1.0f;
+    }
+    if (IsKeyDown(KEY_D)) {
+        movement_vector.y += 1.0f;
+    }
+
+    if (IsKeyDown(KEY_Q)) {
+        player->angle += 0.05f;
+    }
+    if (IsKeyDown(KEY_E)) {
+        player->angle -= 0.05f;
+    }
+
+    float movlen = sqrtf(movement_vector.x*movement_vector.x+movement_vector.y*movement_vector.y);
+    if (movlen > 0.0) {
+        movement_vector.x = movement_vector.x / movlen;
+        movement_vector.y = movement_vector.y / movlen;
+    }
+
+    local_persist float speed_scale_factor = 0.05f;
+
+    float new_player_x = player->pos.x+(movement_vector.x*speed_scale_factor);
+    float new_player_y = player->pos.y+(movement_vector.y*speed_scale_factor);
+
+    int to_be_cell_x = (int)(new_player_x);
+    int to_be_cell_y = (int)(new_player_y);
+
+    if (map[to_be_cell_x][to_be_cell_y] == TILE_EMPTY) {
+        player->pos.x = new_player_x;
+        player->pos.y = new_player_y;
+    }
+}
+
+
 
 int main(void)
 {
-    const int screenWidth = 1920;
-    const int screenHeight = 1080;
-    InitWindow(screenWidth, screenHeight, "raylib [models] example - basic voxel");
-
-    DisableCursor();                    // Lock mouse to window center
-    
-    Model my_model = LoadModel("models/bizzare.gltf");
-    Camera2D camera_2d; 
-    camera_2d.offset;
-
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
+    InitWindow(screenWidth, screenHeight, "raycasting");
     SetTargetFPS(60);
-    //--------------------------------------------------------------------------------------
 
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
+#if 0 
+    for (int i = 0; i < MAP_SIZE; i++) {
+        for (int j = 0; j < MAP_SIZE; j++) {
+            printf("%d", map[i][j]);
+        }
+        putchar('\n');
+    }
+#endif
+
+    Playa player = {0};
+    player.pos.x = 4.23f;
+    player.pos.y = 3.24f;
+    bool debug_view = true; 
+    while (!WindowShouldClose())
     {
-        UpdateCamera(&camera_2d, CAMERA_ORTHOGRAPHIC);
+        update_player(&player);
+        if (IsKeyPressed(KEY_GRAVE)) {
+        
+        }
 
         BeginDrawing();
-
-            ClearBackground(RAYWHITE);
-
-            BeginMode3D(camera);
-
-                DrawGrid(10, 1.0f);
-                DrawModel(my_model, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, WHITE);
-
-            EndMode3D();
-
-
+            ClearBackground(BLACK);
+            if (debug_view) {
+                draw_debug_cells(DEBUG_DRAW_STARY_X, DEBUG_DRAW_STARY_Y, player.angle, player.pos.x, player.pos.y, (int*)map);
+                DrawFPS(0, 0);
+            }
         EndDrawing();
-        //----------------------------------------------------------------------------------
     }
 
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    UnloadModel(my_model);
     CloseWindow();
-    //--------------------------------------------------------------------------------------
-
     return 0;
 }
-// //------------------------------------------------------------------------------------
-// // Program main entry point
-// //------------------------------------------------------------------------------------
-// int main(void)
-// {
-//     // Initialization
-//     //--------------------------------------------------------------------------------------
-//     const int screenWidth = 800;
-//     const int screenHeight = 450;
-//
-//     InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera free");
-//
-//     // Define the camera to look into our 3d world
-//     Camera3D camera = { 0 };
-//     camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
-//     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-//     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-//     camera.fovy = 45.0f;                                // Camera field-of-view Y
-//     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
-//
-//     Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
-//
-//     DisableCursor();                    // Limit cursor to relative movement inside the window
-//
-//     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
-//     //--------------------------------------------------------------------------------------
-//
-//     // Main game loop
-//     while (!WindowShouldClose())        // Detect window close button or ESC key
-//     {
-//         // Update
-//         //----------------------------------------------------------------------------------
-//         UpdateCamera(&camera, CAMERA_FREE);
-//
-//         if (IsKeyPressed(KEY_Z)) camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
-//         //----------------------------------------------------------------------------------
-//
-//         // Draw
-//         //----------------------------------------------------------------------------------
-//         BeginDrawing();
-//
-//             ClearBackground(RAYWHITE);
-//
-//             BeginMode3D(camera);
-//
-//                 DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, RED);
-//                 DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
-//
-//                 DrawGrid(10, 1.0f);
-//
-//             EndMode3D();
-//
-//             DrawRectangle( 10, 10, 320, 93, Fade(SKYBLUE, 0.5f));
-//             DrawRectangleLines( 10, 10, 320, 93, BLUE);
-//
-//             DrawText("Free camera default controls:", 20, 20, 10, BLACK);
-//             DrawText("- Mouse Wheel to Zoom in-out", 40, 40, 10, DARKGRAY);
-//             DrawText("- Mouse Wheel Pressed to Pan", 40, 60, 10, DARKGRAY);
-//             DrawText("- Z to zoom to (0, 0, 0)", 40, 80, 10, DARKGRAY);
-//
-//         EndDrawing();
-//         //----------------------------------------------------------------------------------
-//     }
-//
-//     // De-Initialization
-//     //--------------------------------------------------------------------------------------
-//     CloseWindow();        // Close window and OpenGL context
-//     //--------------------------------------------------------------------------------------
-//
-//     return 0;
-// }
