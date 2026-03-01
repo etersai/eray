@@ -56,7 +56,7 @@ void draw_debug_view(int draw_start_x, int draw_start_y, Playa player, int* map)
                 cell_color = DARKGRAY;
             }
 
-            else if (map[j*MAP_SIZE+i] == TILE_WALL) {
+            else if (map[i*MAP_SIZE+j] == TILE_WALL) {
                 cell_color = ORANGE; 
             }
             else // TILE_EMPTY
@@ -166,6 +166,8 @@ int main(void)
         if (IsKeyPressed(KEY_GRAVE)) {
             debug_view = !debug_view; 
         }
+
+        
 
         BeginDrawing();
             ClearBackground(BLACK);
