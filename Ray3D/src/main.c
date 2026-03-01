@@ -78,6 +78,22 @@ void draw_debug_view(int draw_start_x, int draw_start_y, Playa player, int* map)
     float line_draw_end_x = cosf(player.angle)*view_line_scale+on_board_player_x;
     float line_draw_end_y = sinf(player.angle)*view_line_scale+on_board_player_y;
     DrawLineV((Vector2){on_board_player_y, on_board_player_x}, (Vector2){line_draw_end_y, line_draw_end_x}, RED);
+
+    float forward_x = cosf(player.angle);
+    float forward_y = sinf(player.angle); 
+    float fov_half_in_rad = (player.fov/2.0f)*DEG_TO_RAD;
+
+    float start_fov_x1 = cosf(fov_half_in_rad)*forward_x + forward_y*(-sinf(fov_half_in_rad));
+    float start_fov_y1 = sinf(fov_half_in_rad)*forward_x + forward_y*cos(fov_half_in_rad);
+    float start_fov_x2 = cosf(-fov_half_in_rad)*forward_x + forward_y*(-sinf(-fov_half_in_rad));
+    float start_fov_y2 = sinf(-fov_half_in_rad)*forward_x + forward_y*cos(-fov_half_in_rad);
+    float fov_line_end_x1 = start_fov_x1*view_line_scale+on_board_player_x;
+    float fov_line_end_y1 = start_fov_y1*view_line_scale+on_board_player_y;
+    float fov_line_end_x2 = start_fov_x2*view_line_scale+on_board_player_x;
+    float fov_line_end_y2 = start_fov_y2*view_line_scale+on_board_player_y;
+
+    DrawLineV((Vector2){on_board_player_y, on_board_player_x}, (Vector2){fov_line_end_y1, fov_line_end_x1}, PURPLE);
+    DrawLineV((Vector2){on_board_player_y, on_board_player_x}, (Vector2){fov_line_end_y2, fov_line_end_x2}, PURPLE);
 }
 
 
@@ -143,14 +159,6 @@ int main(void)
     player.angle = 0.0f;
     player.fov = 70.0f;
     
-
-    float forward_x = cosf(player.angle);
-    float forward_y = sinf(player.angle); 
-    float fov_halve = player.fov/2.0f;
-    
-
-    float x2 = cosf(fov_halve);
-
     bool debug_view = true; 
     while (!WindowShouldClose())
     {
