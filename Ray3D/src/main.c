@@ -4,6 +4,7 @@
 #include <math.h>
 
 #define local_persist static
+#define DEG_TO_RAD (M_PI/180.0)
 
 typedef struct {
     float x;
@@ -15,6 +16,11 @@ typedef struct {
     float angle;
     float fov;
 } Playa;
+
+typedef struct {
+    float_v2 pos; 
+    float_v2 dir; 
+} Rayek;
 
 #define DEBUG_DRAW_STARY_X (50)
 #define DEBUG_DRAW_STARY_Y (50)
@@ -124,8 +130,6 @@ void update_player(Playa* player)
     }
 }
 
-
-
 int main(void)
 {
     const int screenWidth = 1280;
@@ -138,6 +142,14 @@ int main(void)
     player.pos.y = 3.24f;
     player.angle = 0.0f;
     player.fov = 70.0f;
+    
+
+    float forward_x = cosf(player.angle);
+    float forward_y = sinf(player.angle); 
+    float fov_halve = player.fov/2.0f;
+    
+
+    float x2 = cosf(fov_halve);
 
     bool debug_view = true; 
     while (!WindowShouldClose())
