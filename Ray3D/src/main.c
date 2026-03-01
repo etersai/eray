@@ -20,6 +20,8 @@ typedef struct {
 #define DEBUG_DRAW_STARY_Y (50)
 #define DEBUG_CELL_SIZE (50)
 
+#define PLAYER_SPEED_SCALE (0.05f)
+
 #define TILE_WALL (1)
 #define TILE_EMPTY (0)
 #define MAP_SIZE (10)
@@ -37,14 +39,14 @@ int map[MAP_SIZE][MAP_SIZE] =
     {1,1,1,1,1,1,1,1,1,1},
 };
 
-void draw_debug_cells(int draw_start_x, int draw_start_y, float player_angle, float player_pos_x, float player_pos_y, int* map)
+void draw_debug_view(int draw_start_x, int draw_start_y, Playa player, int* map)
 {
     local_persist int cell_draw_size = 50;
     for (int j = 0; j < MAP_SIZE; j++) {
         for (int i = 0; i < MAP_SIZE; i++) {
             Color cell_color; 
             
-            if (i == (int)player_pos_x && j == (int)player_pos_y) {
+            if (i == (int)player.pos.x && j == (int)player.pos.y) {
                 cell_color = DARKGRAY;
             }
 
@@ -61,36 +63,41 @@ void draw_debug_cells(int draw_start_x, int draw_start_y, float player_angle, fl
     }
 
     // draw actuall player pos.
-    float on_board_player_x = (float)(draw_start_x)+((float)(cell_draw_size) * player_pos_x);
-    float on_board_player_y = (float)(draw_start_y)+((float)(cell_draw_size) * player_pos_y);
+    float on_board_player_x = (float)(draw_start_x)+((float)(cell_draw_size) * player.pos.x);
+    float on_board_player_y = (float)(draw_start_y)+((float)(cell_draw_size) * player.pos.y);
     DrawCircleV((Vector2){on_board_player_y, on_board_player_x}, 3.5f, GREEN);
 
     // draw player orientation line.
-    float line_draw_start_x = on_board_player_x;
-    float line_draw_start_y = on_board_player_y;
-    float line_draw_end_x = cosf(player_angle)*50.0f+on_board_player_x;
-    float line_draw_end_y = sinf(player_angle)*50.0f+on_board_player_y;
-    DrawLineV((Vector2){line_draw_start_y, line_draw_start_x}, (Vector2){line_draw_end_y, line_draw_end_x}, RED);
-
-
+    local_persist float view_line_scale = 50.0f;
+    float line_draw_end_x = cosf(player.angle)*view_line_scale+on_board_player_x;
+    float line_draw_end_y = sinf(player.angle)*view_line_scale+on_board_player_y;
+    DrawLineV((Vector2){on_board_player_y, on_board_player_x}, (Vector2){line_draw_end_y, line_draw_end_x}, RED);
 }
 
 
 void update_player(Playa* player)
 {
-    float_v2 movement_vector = {0};
+    // player forward vector.
+    float forward_x = cosf(player->angle);
+    float forward_y = sinf(player->angle); 
+    float_v2 movement_vector = {0, 0};
     if (IsKeyDown(KEY_W)) {
-        movement_vector.x -= 1.0f;
+        movement_vector.x += forward_x;
+        movement_vector.y += forward_y;
     }
     if (IsKeyDown(KEY_S)) {
-        movement_vector.x += 1.0f;
+        movement_vector.x -= forward_x;
+        movement_vector.y -= forward_y;
     }
     if (IsKeyDown(KEY_A)) {
-        movement_vector.y -= 1.0f;
+        movement_vector.x += -forward_y;
+        movement_vector.y += forward_x;
     }
     if (IsKeyDown(KEY_D)) {
-        movement_vector.y += 1.0f;
+        movement_vector.x -= -forward_y;
+        movement_vector.y -= forward_x;
     }
+
 
     if (IsKeyDown(KEY_Q)) {
         player->angle += 0.05f;
@@ -100,16 +107,14 @@ void update_player(Playa* player)
     }
 
     float movlen = sqrtf(movement_vector.x*movement_vector.x+movement_vector.y*movement_vector.y);
-    if (movlen > 0.0) {
+    if (movlen > 0.0f) {
         movement_vector.x = movement_vector.x / movlen;
         movement_vector.y = movement_vector.y / movlen;
     }
 
-    local_persist float speed_scale_factor = 0.05f;
-
-    float new_player_x = player->pos.x+(movement_vector.x*speed_scale_factor);
-    float new_player_y = player->pos.y+(movement_vector.y*speed_scale_factor);
-
+    // player forward vector.
+    float new_player_x = player->pos.x+(movement_vector.x*PLAYER_SPEED_SCALE);
+    float new_player_y = player->pos.y+(movement_vector.y*PLAYER_SPEED_SCALE);
     int to_be_cell_x = (int)(new_player_x);
     int to_be_cell_y = (int)(new_player_y);
 
@@ -128,35 +133,28 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "raycasting");
     SetTargetFPS(60);
 
-#if 0 
-    for (int i = 0; i < MAP_SIZE; i++) {
-        for (int j = 0; j < MAP_SIZE; j++) {
-            printf("%d", map[i][j]);
-        }
-        putchar('\n');
-    }
-#endif
-
     Playa player = {0};
     player.pos.x = 4.23f;
     player.pos.y = 3.24f;
+    player.angle = 0.0f;
+    player.fov = 70.0f;
+
     bool debug_view = true; 
     while (!WindowShouldClose())
     {
         update_player(&player);
         if (IsKeyPressed(KEY_GRAVE)) {
-        
+            debug_view = !debug_view; 
         }
 
         BeginDrawing();
             ClearBackground(BLACK);
             if (debug_view) {
-                draw_debug_cells(DEBUG_DRAW_STARY_X, DEBUG_DRAW_STARY_Y, player.angle, player.pos.x, player.pos.y, (int*)map);
+                draw_debug_view(DEBUG_DRAW_STARY_X, DEBUG_DRAW_STARY_Y, player, (int*)map);
                 DrawFPS(0, 0);
             }
         EndDrawing();
     }
-
     CloseWindow();
     return 0;
 }
