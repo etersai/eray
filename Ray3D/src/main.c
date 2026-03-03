@@ -4,7 +4,11 @@
 #include <math.h>
 
 #define local_persist static
+
 #define DEG_TO_RAD (M_PI/180.0)
+#define RAD_TO_DEG (180.0/M_PI)
+
+#define max(a, b) ((a)>(b)?(a):(b))
 
 typedef struct {
     float x;
@@ -83,6 +87,21 @@ void draw_debug_view(int draw_start_x, int draw_start_y, Playa player, int* map)
     float forward_y = sinf(player.angle); 
     float fov_half_in_rad = (player.fov/2.0f)*DEG_TO_RAD;
 
+    // TEST
+    float step;
+    for (step = 0.0; step <= 10.0f; step+=0.01f) {
+        float ray_x = player.pos.x+step*forward_x; 
+        float ray_y = player.pos.y+step*forward_y; 
+
+        if (map[(int)ray_x * MAP_SIZE + (int)ray_y] == TILE_WALL) {
+            break;
+        }
+    }
+    float hit_x = forward_x*step*50.0f+on_board_player_x;
+    float hit_y = forward_y*step*50.0f+on_board_player_y;
+    DrawCircleV((Vector2){hit_y, hit_x}, 5.0f, RED);
+    // END TEST
+
     float start_fov_x1 = cosf(fov_half_in_rad)*forward_x + forward_y*(-sinf(fov_half_in_rad));
     float start_fov_y1 = sinf(fov_half_in_rad)*forward_x + forward_y*cos(fov_half_in_rad);
     float start_fov_x2 = cosf(-fov_half_in_rad)*forward_x + forward_y*(-sinf(-fov_half_in_rad));
@@ -95,6 +114,8 @@ void draw_debug_view(int draw_start_x, int draw_start_y, Playa player, int* map)
     DrawLineV((Vector2){on_board_player_y, on_board_player_x}, (Vector2){fov_line_end_y1, fov_line_end_x1}, PURPLE);
     DrawLineV((Vector2){on_board_player_y, on_board_player_x}, (Vector2){fov_line_end_y2, fov_line_end_x2}, PURPLE);
 }
+
+
 
 
 void update_player(Playa* player)
@@ -146,6 +167,8 @@ void update_player(Playa* player)
     }
 }
 
+
+
 int main(void)
 {
     const int screenWidth = 1280;
@@ -167,7 +190,32 @@ int main(void)
             debug_view = !debug_view; 
         }
 
-        
+        float angle_step_size = player.fov / screenWidth;
+        float forward_x = cosf(player.angle);
+        float forward_y = sinf(player.angle); 
+        float fov_half_in_rad = (player.fov/2.0f)*DEG_TO_RAD;
+        float start_fov_x1 = cosf(fov_half_in_rad)*forward_x + forward_y*(-sinf(fov_half_in_rad));
+        float start_fov_y1 = sinf(fov_half_in_rad)*forward_x + forward_y*cos(fov_half_in_rad);
+        float accumulated_angle = 0.0f;
+        while (accumulated_angle < player.fov) {
+
+            float step;
+            for (step = 0.0; step <= 10.0f; step+=0.01f) {
+                float ray_x = player.pos.x+step*forward_x; 
+                float ray_y = player.pos.y+step*forward_y; 
+
+                if (map[(int)ray_y][(int)ray_x] == TILE_WALL) {
+                    break;
+                }
+            }              
+
+
+            start_fov_x1 = cosf(-angle_step_size)*forward_x + forward_y*(-sinf(-angle_step_size));
+            start_fov_y1 = sinf(-angle_step_size)*forward_x + forward_y*cos(-angle_step_size);
+            accumulated_angle+=angle_step_size; 
+        }
+
+                
 
         BeginDrawing();
             ClearBackground(BLACK);
