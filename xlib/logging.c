@@ -1,6 +1,7 @@
 #include "elog.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,7 +13,6 @@
 #define internal      static
 #define global        static
 #define local_persist static
-
 #define unused(var) ((void)(var))
 // ENDBASE
 
@@ -30,23 +30,6 @@
     } \
 } while (0)
 
-// Bascially this \/
-// cbuffer[head] = i;
-// head = (head + 1) % CBUFFER_MAX_SIZE;
-// if (head == tail) {
-//     tail = (tail + 1) % CBUFFER_MAX_SIZE;
-// }
-// if (count < CBUFFER_MAX_SIZE) {
-//     count++;
-// }
-
-// typedef struct {
-//     LogEntry entries[LOG_ENTRIES_MAX];
-//     uint32_t head;
-//     uint32_t tail; 
-//     uint32_t count;
-// } LogEntryCbuffer;
-
 #define LOG_MESSAGE_MAX (256)
 #define LOG_ENTRIES_MAX (128)
 #define LOG_STANDARD_STREAM_OUT (stderr) 
@@ -61,13 +44,19 @@ typedef enum {
 } log_level;
 
 typedef struct {
-    char      message[LOG_MESSAGE_MAX];
+    char      message[LOG_MESSAGE_MAX]; // TODO(eter): USE STRING8 TYPEEEEE
     time_t    time;
     log_level level;
 } LogEntry;
 
 // expand circular buffer type.
 CB_TYPE(LogEntry, LOG_ENTRIES_MAX)
+// typedef struct {
+//     LogEntry entries[LOG_ENTRIES_MAX];
+//     uint32_t head;
+//     uint32_t tail; 
+//     uint32_t count;
+// } LogEntryCbuffer;
 
 typedef struct {
     CBLogEntry entries;
@@ -82,6 +71,7 @@ void log_set_min_level(log_level level);
 internal LogEntry create_log_entry(log_level level, const char* msg);
 internal const char* log_level_to_string(log_level level);
 
+// TODO(eter): Add args vargs ...
 #define log_trace(msg) log_message(LEVEL_TRACE, (msg))
 #define log_debug(msg) log_message(LEVEL_DEBUG, (msg))
 #define log_info(msg) log_message(LEVEL_INFO, (msg))
@@ -91,14 +81,12 @@ internal const char* log_level_to_string(log_level level);
 
 int main(void)
 {
-    elog_u(g_state.entries.count);
+    LogEntry e = create_log_entry(LEVEL_FATAL, "Fatality!");
+    char log_entry_buffer[256*2];
 
-    LogEntry xd = {0};
-    cb_insert(g_state.entries, xd);
-
-
-    elog_u(g_state.entries.count);
-
+    elog_s(e.message);
+    elog_s(ctime(&e.time));
+    elog_s(log_level_to_string(e.level));
 
 #if 0 
     log_trace("");     
@@ -127,22 +115,33 @@ const char* log_level_to_string(log_level level)
 
 void log_message(log_level level, const char* msg)
 {
-    unused(msg);
     if (level < g_state.min_accepted_level) {
         return;
     }
 
-    LogEntry entry;
-    strncpy()
-   // entry.message = msg; // copy this somehow.
-    entry.time = time(NULL); 
-    entry.level = level;
+    LogEntry entry = create_log_entry(level, msg);
+    cb_insert(g_state.entries, entry); 
 
+    if (g_state.terminal_output) {
+        char log_output_form[LOG_MESSAGE_MAX+LOG_MESSAGE_MAX/2]; 
+        // basically convert LogEntry to this form.
+        // [16:46:12][INFO]: Engine initialized succesfuly.
+    }
 }
 
 internal LogEntry create_log_entry(log_level level, const char* msg)
 {
+    LogEntry entry;
 
+    size_t l = strlen(msg);
+    strncpy(entry.message, msg, LOG_MESSAGE_MAX);
+    if (l > LOG_MESSAGE_MAX) {
+        entry.message[LOG_MESSAGE_MAX-1] = '\0';
+    }
+    entry.time = time(NULL);
+    entry.level = level;
+    
+    return entry;
 }
 
 void log_set_min_level(log_level level) 
@@ -150,7 +149,6 @@ void log_set_min_level(log_level level)
     g_state.min_accepted_level = level;
 }
 
-// HEHE
 //#define CBUFFER_MAX_SIZE 4
 //// circular buffer type shit.
 // uint32_t head = 0;
