@@ -1,5 +1,6 @@
 #include "elog.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -18,6 +19,7 @@
 
 #define LOG_MESSAGE_MAX (256)
 #define LOG_ENTRIES_MAX (64)
+#define LOG_STANDARD_STREAM_OUT (stderr) 
 
 typedef enum {
     LEVEL_TRACE = 0,
@@ -53,24 +55,43 @@ internal const char* log_level_to_string(log_level level);
 #define log_error(msg) log_message(LEVEL_ERROR, (msg))
 #define log_fatal(msg) log_message(LEVEL_FATAL, (msg))
 
+#define CBUFFER_MAX_SIZE 4
 int main(void)
 {
     // circular buffer type shit.
-    const size_t cbuffer_max_size = 256;
+    uint32_t head_idx = 0;
+    uint32_t tail_idx = 0; 
+    uint64_t count = 0;
+    int cbuffer[CBUFFER_MAX_SIZE] = {0};
     
-    
-    uint32_t head = 0;
-    uint32_t tail = 1;
-    int cbuffer[cbuffer_max_size];
+    for (int i = 0; i < 8; i++) {
+
+        cbuffer[head_idx] = i;
+        head_idx = (head_idx + 1) % CBUFFER_MAX_SIZE;
+        if (head_idx == tail_idx) {
+            tail_idx = (tail_idx + 1) % CBUFFER_MAX_SIZE;
+        }
+        if (count < CBUFFER_MAX_SIZE) {
+            count++;
+        }
+
+    }
+
+    int dummy_i = tail_idx;
+    for (uint64_t i = 0; i < count; i++) {
+        printf("%d ", cbuffer[dummy_i]);
+        dummy_i = (dummy_i + 1) % CBUFFER_MAX_SIZE;
+    }
 
 
-
+#if 0 
     log_trace("");     
     log_debug("");
     log_info("");
     log_warning("");
     log_error("");
     log_fatal("");
+#endif
     return 0;
 }
 
@@ -92,10 +113,10 @@ void log_message(log_level level, const char* msg)
 {
     unused(msg);
 
-    LogEntry entry; 
-    entry.level = level;
-    entry.message = msg; // copy this somehow.
+    LogEntry entry;
+   // entry.message = msg; // copy this somehow.
     entry.time = time(NULL); 
+    entry.level = level;
 
 
     if (level >= g_state.min_accepted_level) {
